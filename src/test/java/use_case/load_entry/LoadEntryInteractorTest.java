@@ -4,6 +4,7 @@ import entity.DiaryEntry;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -74,7 +75,7 @@ class LoadEntryInteractorTest {
     @Test
     void loadEntryOutputData_exposesDate() {
         LocalDateTime now = LocalDateTime.now();
-        LoadEntryOutputData data = new LoadEntryOutputData("title", "text", now, true);
+        LoadEntryOutputData data = new LoadEntryOutputData("title", "text", now, "entries/1.json", List.of(), true);
         assertEquals(now, data.getDate());
     }
 

@@ -1,11 +1,13 @@
 package app;
 
 import data_access.DBNoteDataObject;
+import data_access.NLPKeywordExtractor;
 import data_access.RecommendationAPIAccessObject;
 import data_access.NLPAnalysisDataAccessObject;
 import data_access.VerifyPasswordDataAccessObject;
 import interface_adapter.GoBackPresenter;
 import interface_adapter.ViewManagerModel;
+import interface_adapter.home_menu.DeleteEntryPresenter;
 import interface_adapter.home_menu.HomeMenuController;
 import interface_adapter.home_menu.HomeMenuPresenter;
 import interface_adapter.home_menu.HomeMenuViewModel;
@@ -40,8 +42,8 @@ import view.NewDocumentView;
 import view.RecommendationView;
 import view.ViewManager;
 
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
 
 /**
  * Builder for the MoodVerse Note Application.
@@ -64,6 +66,7 @@ public class NoteAppBuilder {
     private HomeMenuViewModel homeMenuViewModel;
     private HomeMenuPresenter homeMenuPresenter;
     private NewDocumentViewModel newDocumentViewModel;
+    private NewDocumentPresenter newDocumentPresenter;
     private RecommendationMenuViewModel recommendationMenuViewModel;
 
     // Views
@@ -140,9 +143,16 @@ public class NoteAppBuilder {
      * @return this builder
      */
     public NoteAppBuilder addHomeMenuUseCases() {
+        if (homeMenuViewModel == null) {
+            addHomeMenuView();
+        }
+        if (newDocumentViewModel == null) {
+            addNewDocumentView();
+        }
+        if (newDocumentPresenter == null) {
+            newDocumentPresenter = new NewDocumentPresenter(newDocumentViewModel, viewManagerModel);
+        }
         // Create Entry Use Case
-        final NewDocumentPresenter newDocumentPresenter = new NewDocumentPresenter(
-                newDocumentViewModel, viewManagerModel);
         final CreateEntryInputBoundary createEntryInteractor = new CreateEntryInteractor(newDocumentPresenter);
 
         // Load Entry Use Case
@@ -150,19 +160,9 @@ public class NoteAppBuilder {
                 newDocumentPresenter, noteDataAccess);
 
         // Delete Entry Use Case
+        final DeleteEntryPresenter deleteEntryPresenter = new DeleteEntryPresenter(homeMenuViewModel);
         final DeleteEntryInputBoundary deleteEntryInteractor = new DeleteEntryInteractor(
-                new use_case.delete_entry.DeleteEntryOutputBoundary() {
-                    @Override
-                    public void prepareSuccessView(use_case.delete_entry.DeleteEntryOutputData outputData) {
-                        // Refresh the home menu view after deletion
-                        // Could add logic here to refresh the home menu
-                    }
-
-                    @Override
-                    public void prepareFailView(String errorMessage) {
-                        JOptionPane.showMessageDialog(null, errorMessage, "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                },
+                deleteEntryPresenter,
                 noteDataAccess
         );
 
@@ -182,11 +182,20 @@ public class NoteAppBuilder {
         if (recommendationMenuViewModel == null) {
             recommendationMenuViewModel = new RecommendationMenuViewModel();
         }
+        if (homeMenuViewModel == null) {
+            addHomeMenuView();
+        }
+        if (newDocumentViewModel == null) {
+            addNewDocumentView();
+        }
+        if (newDocumentPresenter == null) {
+            newDocumentPresenter = new NewDocumentPresenter(newDocumentViewModel, viewManagerModel);
+        }
         // Save Entry Use Case
-        final NewDocumentPresenter savePresenter = new NewDocumentPresenter(
-                newDocumentViewModel, viewManagerModel);
         final SaveEntryInputBoundary saveEntryInteractor = new SaveEntryInteractor(
-                savePresenter, noteDataAccess);
+                newDocumentPresenter,
+                noteDataAccess,
+                new NLPKeywordExtractor(nlpAnalysisDataAccessObject));
 
         // Get Recommendations Use Case (results go to recommendation menu)
         final RecommendationMenuPresenter recommendationPresenter = new RecommendationMenuPresenter(
@@ -196,7 +205,7 @@ public class NoteAppBuilder {
 
         // Analyze Keywords Use Case (stays within new document view)
         final AnalyzeKeywordsInputBoundary analyzeKeywordsInteractor = new AnalyzeKeywordsInteractor(
-                nlpAnalysisDataAccessObject, savePresenter);
+                nlpAnalysisDataAccessObject, newDocumentPresenter);
 
         // Go Back Use Case (from NewDocument to HomeMenu)
         final GoBackPresenter goBackPresenter = new GoBackPresenter(

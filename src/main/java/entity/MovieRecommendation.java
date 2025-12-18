@@ -8,8 +8,8 @@ public class MovieRecommendation {
     private String overview;
 
     public MovieRecommendation(String releaseYear, String imageUrl,
-                             String movieTitle, String movieRating,
-                             String overview) {
+            String movieTitle, String movieRating,
+            String overview) {
         this.releaseYear = releaseYear;
         this.imageUrl = imageUrl;
         this.movieTitle = movieTitle;

@@ -11,6 +11,7 @@ public class NewDocumentState {
     private String date = "";
     private String textBody = "";
     private List<String> keywords = new ArrayList<>();
+    private String storagePath = null;
     private String error = null;
     private String successMessage = null;
 
@@ -44,6 +45,14 @@ public class NewDocumentState {
 
     public void setKeywords(List<String> keywords) {
         this.keywords = keywords;
+    }
+
+    public String getStoragePath() {
+        return storagePath;
+    }
+
+    public void setStoragePath(String storagePath) {
+        this.storagePath = storagePath;
     }
 
     public String getError() {

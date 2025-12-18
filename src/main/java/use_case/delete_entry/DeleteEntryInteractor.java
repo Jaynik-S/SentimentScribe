@@ -19,17 +19,20 @@ public class DeleteEntryInteractor implements DeleteEntryInputBoundary {
             return;
         }
         try {
-            dataAccess.deleteByPath(entryPath);
+            boolean deleted = dataAccess.deleteByPath(entryPath);
+            if (!deleted) {
+                presenter.prepareFailView("Failed to delete entry: file not found.");
+                return;
+            }
         }
         catch (Exception error) {
             String message = "Failed to delete entry: " + error.getMessage();
             presenter.prepareFailView(message);
             return;
         }
-        DeleteEntryOutputData outputData = new DeleteEntryOutputData(true);
+        DeleteEntryOutputData outputData = new DeleteEntryOutputData(true, entryPath);
 
         presenter.prepareSuccessView(outputData);
     }
 
 }
-

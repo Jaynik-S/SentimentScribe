@@ -183,6 +183,15 @@ public class HomeMenuView extends JPanel implements PropertyChangeListener {
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         refreshTable();
+
+        HomeMenuState state = viewModel.getState();
+        String error = state.getErrorMessage();
+        if (error != null && !error.isBlank()) {
+            JOptionPane.showMessageDialog(this, error, "Error", JOptionPane.ERROR_MESSAGE);
+            state.setErrorMessage("");
+            viewModel.setState(state);
+            viewModel.firePropertyChanged();
+        }
     }
 }
 
@@ -301,11 +310,6 @@ class DeleteButtonEditor extends AbstractCellEditor
         int modelRow = table.convertRowIndexToModel(viewRow);
 
         HomeMenuState state = viewModel.getState();
-
-        java.util.List<String> titles = state.getTitles();
-        java.util.List<String> created = state.getCreatedDates();
-        java.util.List<String> updated = state.getUpdatedDates();
-        java.util.List<String> keywords = state.getKeywords();
         java.util.List<String> paths = state.getStoragePaths();
 
         if (modelRow < 0 || modelRow >= paths.size()) {
@@ -325,23 +329,6 @@ class DeleteButtonEditor extends AbstractCellEditor
         if (choice != javax.swing.JOptionPane.YES_OPTION) {
             // Clicked NO
             return;
-        }
-
-        titles.remove(modelRow);
-        if (modelRow < created.size()) {
-            created.remove(modelRow);
-        }
-        if (modelRow < updated.size()) {
-            updated.remove(modelRow);
-        }
-        if (modelRow < keywords.size()) {
-            keywords.remove(modelRow);
-        }
-        paths.remove(modelRow);
-
-        DefaultTableModel tableModel = (DefaultTableModel) table.getModel();
-        if (modelRow < tableModel.getRowCount()) {
-            tableModel.removeRow(modelRow);
         }
 
         controller.deleteEntry(storagePath);

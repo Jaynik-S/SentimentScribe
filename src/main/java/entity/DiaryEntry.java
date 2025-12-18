@@ -4,25 +4,24 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class DiaryEntry {
-    public static final String BASE_DIR = "src/main/java/data_access/diary_entry_database";
     public static final int MAX_TITLE_LENGTH = 30;
     public static final int MIN_TEXT_LENGTH = 50;
     public static final int MAX_TEXT_LENGTH = 1000;
-    private static int idGenerator = 0;
 
-    private final int entryId;
     private String title;
     private String text;
     private List<String> keywords;
-    private String storagePath;            // BASE_DIR + entryId + title ".json";
+    /**
+     * Storage identifier owned by the persistence layer (e.g., a file path).
+     * This is kept on the entity so use cases can preserve identity across edits.
+     */
+    private String storagePath;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<SongRecommendation> songRecommendations;
-    private List<MovieRecommendation> MovieRecommendations;
+    private List<MovieRecommendation> movieRecommendations;
 
     public DiaryEntry() {
-        this.entryId = idGenerator;
-        idGenerator++;
         this.title = "Untitled Document";
         this.text = "Enter your text here...";
         this.createdAt = LocalDateTime.now();
@@ -30,17 +29,24 @@ public class DiaryEntry {
     }
 
     public DiaryEntry(String title, String textBody, LocalDateTime date) {
-        this.entryId = idGenerator;
-        idGenerator++;
         this.title = title;
-        this.createdAt = date;
-        this.updatedAt = LocalDateTime.now();
         this.text = textBody;
+        this.createdAt = date;
+        this.updatedAt = date;
     }
 
-    public int getEntryId() {
-        return entryId;
-
+    public DiaryEntry(String title,
+                      String textBody,
+                      List<String> keywords,
+                      String storagePath,
+                      LocalDateTime createdAt,
+                      LocalDateTime updatedAt) {
+        this.title = title;
+        this.text = textBody;
+        this.keywords = keywords;
+        this.storagePath = storagePath;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public String getTitle() {
@@ -56,22 +62,6 @@ public class DiaryEntry {
     }
 
     public String getStoragePath() {
-        String safeTitle = title;
-        if (safeTitle == null || safeTitle.length() == 0) {
-            safeTitle = "untitled";
-        }
-        safeTitle = safeTitle.replaceAll("[\\\\/:*?\"<>|]", "_");
-
-        StringBuilder builder = new StringBuilder();
-        builder.append(BASE_DIR);
-        builder.append("/");
-        builder.append(entryId);
-        builder.append(") ");
-        builder.append(safeTitle);
-        builder.append(".json");
-
-        storagePath = builder.toString();
-
         return storagePath;
     }
 
@@ -83,12 +73,12 @@ public class DiaryEntry {
         return updatedAt;
     }
 
-    public List<SongRecommendation> getRecommendations() {
+    public List<SongRecommendation> getSongRecommendations() {
         return songRecommendations;
     }
 
     public List<MovieRecommendation> getMovieRecommendations() {
-        return MovieRecommendations;
+        return movieRecommendations;
     }
 
     public void setTitle(String title) {
@@ -103,16 +93,24 @@ public class DiaryEntry {
         this.keywords = keyword;
     }
 
-    public void setRecommendations(java.util.List<entity.SongRecommendation> songRecommendations) {
+    public void setStoragePath(String storagePath) {
+        this.storagePath = storagePath;
+    }
+
+    public void setSongRecommendations(List<SongRecommendation> songRecommendations) {
         this.songRecommendations = songRecommendations;
     }
 
-    public void setMovieRecommendations(java.util.List<entity.MovieRecommendation> movieRecommendations) {
-        this.MovieRecommendations = movieRecommendations;
+    public void setMovieRecommendations(List<MovieRecommendation> movieRecommendations) {
+        this.movieRecommendations = movieRecommendations;
+    }
+
+    public void touchUpdatedAt() {
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void updatedTime() {
-        this.updatedAt = LocalDateTime.now();
+        touchUpdatedAt();
     }
 
 }

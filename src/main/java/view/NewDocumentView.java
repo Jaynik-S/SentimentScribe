@@ -6,8 +6,6 @@ import interface_adapter.new_document.NewDocumentViewModel;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.List;
@@ -15,7 +13,7 @@ import java.util.List;
 /**
  * The View for when the user is creating or editing a document in the program.
  */
-public class NewDocumentView extends JPanel implements ActionListener, PropertyChangeListener {
+public class NewDocumentView extends JPanel implements PropertyChangeListener {
 
     private final NewDocumentViewModel newDocumentViewModel;
     private NewDocumentController newDocumentController;
@@ -157,45 +155,38 @@ public class NewDocumentView extends JPanel implements ActionListener, PropertyC
 
         // Behaviour wiring remains the same
         saveButton.addActionListener(evt -> {
-            if (evt.getSource().equals(saveButton)) {
-                final String title = titleInputField.getText();
-                final String date = dateInputField.getText();
-                final String textBody = textBodyInputField.getText();
-                newDocumentController.executeSave(title, date, textBody);
-            }
+            final String title = titleInputField.getText();
+            final String date = dateInputField.getText();
+            final String textBody = textBodyInputField.getText();
+            NewDocumentState state = newDocumentViewModel.getState();
+            newDocumentController.executeSave(title, date, textBody, state.getStoragePath(), state.getKeywords());
         });
 
         backButton.addActionListener(evt -> {
-            if (evt.getSource().equals(backButton)) {
-                newDocumentController.executeBack();
-            }
+            newDocumentController.executeBack();
         });
 
         recommendButton.addActionListener(evt -> {
-            if (evt.getSource().equals(recommendButton)) {
-                final String textBody = textBodyInputField.getText();
-                newDocumentController.executeGetRecommendations(textBody);
-            }
+            final String textBody = textBodyInputField.getText();
+            newDocumentController.executeGetRecommendations(textBody);
         });
 
         toggleKeywordsButton.addActionListener(evt -> {
-            if (evt.getSource().equals(toggleKeywordsButton)) {
-                if (!keywordsVisible) {
-                    keywordsVisible = true;
-                    keywordsPanel.setVisible(true);
-                    toggleKeywordsButton.setText("Hide Keywords");
-                    keywordsDisplayField.setText("Extracting keywords...");
-                    final String textBody = textBodyInputField.getText();
-                    newDocumentController.executeAnalyzeKeywords(textBody);
-                }
-                else {
-                    keywordsVisible = false;
-                    keywordsPanel.setVisible(false);
-                    toggleKeywordsButton.setText("Show Keywords");
-                }
-                revalidate();
-                repaint();
+            if (!keywordsVisible) {
+                keywordsVisible = true;
+                keywordsPanel.setVisible(true);
+                toggleKeywordsButton.setText("Hide Keywords");
+                keywordsDisplayField.setText("Extracting keywords...");
+                final String textBody = textBodyInputField.getText();
+                newDocumentController.executeAnalyzeKeywords(textBody);
             }
+            else {
+                keywordsVisible = false;
+                keywordsPanel.setVisible(false);
+                toggleKeywordsButton.setText("Show Keywords");
+            }
+            revalidate();
+            repaint();
         });
     }
 
@@ -219,15 +210,6 @@ public class NewDocumentView extends JPanel implements ActionListener, PropertyC
                 BorderFactory.createEmptyBorder(6, 12, 6, 12))
         );
         button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-    }
-
-    /**
-     * React to a button click that results in evt.
-     * @param evt the ActionEvent to react to
-     */
-    @Override
-    public void actionPerformed(ActionEvent evt) {
-        System.out.println("Click " + evt.getActionCommand());
     }
 
     @Override

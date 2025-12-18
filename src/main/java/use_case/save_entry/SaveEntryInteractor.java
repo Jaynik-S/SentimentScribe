@@ -2,20 +2,27 @@ package use_case.save_entry;
 
 import entity.DiaryEntry;
 
+import java.util.List;
+
 public class SaveEntryInteractor implements SaveEntryInputBoundary {
 
     private final SaveEntryOutputBoundary presenter;
     private final SaveEntryUserDataAccessInterface dataAccess;
+    private final SaveEntryKeywordExtractor keywordExtractor;
 
-    public SaveEntryInteractor(SaveEntryOutputBoundary presenter, SaveEntryUserDataAccessInterface dataAccess) {
+    public SaveEntryInteractor(SaveEntryOutputBoundary presenter,
+                              SaveEntryUserDataAccessInterface dataAccess,
+                              SaveEntryKeywordExtractor keywordExtractor) {
         this.presenter = presenter;
         this.dataAccess = dataAccess;
+        this.keywordExtractor = keywordExtractor;
     }
 
     @Override
     public void execute(SaveEntryInputData inputData) {
 
         DiaryEntry entry = new DiaryEntry(inputData.getTitle(), inputData.getTextBody(), inputData.getDate());
+        entry.setStoragePath(inputData.getStoragePath());
 
         String title = entry.getTitle();
         if (title == null || title.length() == 0) {
@@ -44,6 +51,17 @@ public class SaveEntryInteractor implements SaveEntryInputBoundary {
             return;
         }
 
+        List<String> keywords = inputData.getKeywords();
+        if ((keywords == null || keywords.isEmpty()) && keywordExtractor != null) {
+            try {
+                keywords = keywordExtractor.extractKeywords(text);
+            }
+            catch (Exception ignored) {
+                keywords = List.of();
+            }
+        }
+        entry.setKeywords(keywords);
+
         entry.updatedTime();
         try {
             dataAccess.save(entry);
@@ -58,9 +76,10 @@ public class SaveEntryInteractor implements SaveEntryInputBoundary {
                 entry.getTitle(),
                 entry.getText(),
                 entry.getCreatedAt(),
+                entry.getStoragePath(),
+                entry.getKeywords(),
                 true);
 
         presenter.prepareSuccessView(outputData);
     }
 }
-

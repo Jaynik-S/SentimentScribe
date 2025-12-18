@@ -16,6 +16,7 @@ class DeleteEntryInteractorTest {
         interactor.execute(new DeleteEntryInputData("entries/1.json"));
 
         assertTrue(presenter.successData.isSuccess());
+        assertEquals("entries/1.json", presenter.successData.getEntryPath());
         assertNull(presenter.errorMessage);
         assertEquals("entries/1.json", dataAccess.lastDeletedPath);
         assertTrue(dataAccess.deleteCalled);

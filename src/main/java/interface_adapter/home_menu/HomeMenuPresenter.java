@@ -76,6 +76,7 @@ public class HomeMenuPresenter{
         state.setErrorMessage("");
 
         viewModel.setState(state);
+        viewModel.firePropertyChanged();
     }
 
     //Error message
@@ -83,6 +84,7 @@ public class HomeMenuPresenter{
         HomeMenuState state = viewModel.getState();
         state.setErrorMessage(errorMessage);
         viewModel.setState(state);
+        viewModel.firePropertyChanged();
     }
 
     public void presentEntriesFromData(List<Map<String, Object>> rawEntries) {

@@ -9,21 +9,12 @@ import interface_adapter.ViewModel;
  * view model, and views listen for property changes to refresh the screen.
  */
 
-public class HomeMenuViewModel extends ViewModel{
+public class HomeMenuViewModel extends ViewModel<HomeMenuState> {
 
-    public static final String Title = "MoodVerse";
-    private HomeMenuState state = new HomeMenuState();
+    public static final String TITLE = "MoodVerse";
 
     public HomeMenuViewModel() {
         super("HomeMenu");
-    }
-
-    public HomeMenuState getState() {
-        return state;
-    }
-
-    public void setState(HomeMenuState state) {
-        this.state = state;
-        this.firePropertyChanged();
+        setState(new HomeMenuState());
     }
 }

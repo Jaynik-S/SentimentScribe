@@ -97,7 +97,6 @@ public final class NLPAnalysisDataAccessObject implements AnalyzeKeywordsDataAcc
                         total == 0 ? 0.0 : entry.getValue() / (double) total))
                 .toList();
 
-        keywords.forEach(k -> System.out.println(k.text()));
         return new AnalysisResult(keywords);
     }
 }

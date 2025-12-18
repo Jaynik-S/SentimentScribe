@@ -1,21 +1,16 @@
 Prio:
 ALL REFACTOR 
-(4) TECHNICAL
-
+(4) REACT CODE
 
 Bugs:
 - Updated Time
 - Diary Naming
-
-
 
 Refactor:
 - Simplify Views/Adapters to be consistent and minimal
 - Everything follows consistent clean architeure
 - Simplify NoteAppBuilder
 - Style formatting (short if statements one line)
-
-
 
 Technical Changes:
 - (1) Spring Boot App (entrypoint, expose REST endpoints)
@@ -25,8 +20,6 @@ Technical Changes:
 - (5) Auth: JTW Session Management, Password (BCrypt)
 - (6) Testing: GitHub Actions, Docker Image
 - (7) Deployment: Docker + Deploy Railway
-
-
 
 Feats:
 - User Login System

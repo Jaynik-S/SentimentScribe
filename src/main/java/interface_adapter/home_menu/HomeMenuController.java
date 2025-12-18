@@ -37,14 +37,12 @@ public class HomeMenuController {
     }
 
     public void newEntry() {
-        System.out.println("New Entry Clicked");
         if (createEntryUseCase != null) {
             createEntryUseCase.execute();
         }
     }
 
     public void openEntry(String storagePath) {
-        System.out.println("Open Entry Clicked:" + storagePath);
         if (loadEntryUseCase != null) {
             LoadEntryInputData inputData = new LoadEntryInputData(storagePath);
             loadEntryUseCase.execute(inputData);
@@ -52,8 +50,6 @@ public class HomeMenuController {
     }
 
     public void deleteEntry(String storagePath) {
-        System.out.println("Delete Entry Clicked:" + storagePath);
-
         if (deleteEntryUseCase != null) {
             DeleteEntryInputData inputData = new DeleteEntryInputData(storagePath);
             deleteEntryUseCase.execute(inputData);

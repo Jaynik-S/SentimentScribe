@@ -10,6 +10,7 @@ import use_case.save_entry.SaveEntryInputData;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class NewDocumentController {
 
@@ -18,7 +19,7 @@ public class NewDocumentController {
     private final SaveEntryInputBoundary saveEntryInteractor;
     private final AnalyzeKeywordsInputBoundary analyzeKeywordsInteractor;
 
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM-dd-yyyy h:mm a");
 
     public NewDocumentController(GetRecommendationsInputBoundary getRecommendationsInteractor,
                                  GoBackInputBoundary goBackInteractor,
@@ -30,7 +31,11 @@ public class NewDocumentController {
         this.analyzeKeywordsInteractor = analyzeKeywordsInteractor;
     }
 
-    public void executeSave(String title, String dateString, String textBody) {
+    public void executeSave(String title,
+                            String dateString,
+                            String textBody,
+                            String storagePath,
+                            List<String> keywords) {
         LocalDateTime date;
         if (dateString == null || dateString.isEmpty()) {
             date = LocalDateTime.now();
@@ -44,7 +49,7 @@ public class NewDocumentController {
             }
         }
 
-        final SaveEntryInputData inputData = new SaveEntryInputData(title, date, textBody);
+        final SaveEntryInputData inputData = new SaveEntryInputData(title, date, textBody, storagePath, keywords);
 
         saveEntryInteractor.execute(inputData);
     }

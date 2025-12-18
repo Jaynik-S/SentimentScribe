@@ -12,7 +12,6 @@ public class DiaryEntryTest {
     @Test
     public void testDefaultConstructorInitializesFields() {
         DiaryEntry entry = new DiaryEntry();
-        assertTrue(entry.getEntryId() >= 0);
         assertEquals("Untitled Document", entry.getTitle());
         assertEquals("Enter your text here...", entry.getText());
         assertNotNull(entry.getCreatedAt());
@@ -24,11 +23,10 @@ public class DiaryEntryTest {
         LocalDateTime created = LocalDateTime.of(2024, 1, 1, 12, 0);
         DiaryEntry entry = new DiaryEntry("My Day", "Some body text", created);
 
-        assertTrue(entry.getEntryId() >= 0);
         assertEquals("My Day", entry.getTitle());
         assertEquals("Some body text", entry.getText());
         assertEquals(created, entry.getCreatedAt());
-        assertNotNull(entry.getUpdatedAt());
+        assertEquals(created, entry.getUpdatedAt());
     }
 
     @Test
@@ -54,25 +52,10 @@ public class DiaryEntryTest {
     }
 
     @Test
-    public void testGetStoragePathUsesBaseDirAndIdAndTitle() {
+    public void testStoragePathCanBeSet() {
         DiaryEntry entry = new DiaryEntry();
-        entry.setTitle("My / invalid : title?");
-        String path = entry.getStoragePath();
-
-        assertTrue(path.startsWith(DiaryEntry.BASE_DIR + "/"));
-        assertTrue(path.endsWith(".json"));
-        assertFalse(path.contains(":"));
-        assertFalse(path.substring(path.indexOf(')') + 1).contains("/"));
-        assertFalse(path.contains("?"));
-    }
-
-    @Test
-    public void testGetStoragePathUsesUntitledWhenTitleEmpty() {
-        DiaryEntry entry = new DiaryEntry();
-        entry.setTitle("");
-        String path = entry.getStoragePath();
-
-        assertTrue(path.contains(") untitled.json"));
+        entry.setStoragePath("entries/1.json");
+        assertEquals("entries/1.json", entry.getStoragePath());
     }
 
     @Test
@@ -81,11 +64,11 @@ public class DiaryEntryTest {
         SongRecommendation song = new SongRecommendation("2020", "img", "song", "artist", "90", "url");
         MovieRecommendation movie = new MovieRecommendation("2019", "img2", "title", "8", "overview");
 
-        entry.setRecommendations(List.of(song));
+        entry.setSongRecommendations(List.of(song));
         entry.setMovieRecommendations(List.of(movie));
 
-        assertEquals(1, entry.getRecommendations().size());
-        assertEquals(song, entry.getRecommendations().get(0));
+        assertEquals(1, entry.getSongRecommendations().size());
+        assertEquals(song, entry.getSongRecommendations().get(0));
         assertEquals(1, entry.getMovieRecommendations().size());
         assertEquals(movie, entry.getMovieRecommendations().get(0));
     }

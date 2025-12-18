@@ -35,6 +35,7 @@ public class NewDocumentPresenter implements
         state.setTitle(outputData.getTitle());
         state.setTextBody(outputData.getText());
         state.setKeywords(List.of());
+        state.setStoragePath(null);
 
         if (outputData.getDate() != null) {
             state.setDate(outputData.getDate().format(formatter));
@@ -58,7 +59,8 @@ public class NewDocumentPresenter implements
         final NewDocumentState state = newDocumentViewModel.getState();
         state.setTitle(outputData.getTitle());
         state.setTextBody(outputData.getText());
-        state.setKeywords(List.of());
+        state.setKeywords(outputData.getKeywords() == null ? List.of() : outputData.getKeywords());
+        state.setStoragePath(outputData.getStoragePath());
 
         if (outputData.getDate() != null) {
             state.setDate(outputData.getDate().format(formatter));
@@ -84,6 +86,8 @@ public class NewDocumentPresenter implements
 
         state.setTitle(outputData.getTitle());
         state.setTextBody(outputData.getText());
+        state.setStoragePath(outputData.getStoragePath());
+        state.setKeywords(outputData.getKeywords() == null ? List.of() : outputData.getKeywords());
 
         if (outputData.getDate() != null) {
             state.setDate(outputData.getDate().format(formatter));

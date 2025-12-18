@@ -38,9 +38,10 @@ public class LoadEntryInteractor implements LoadEntryInputBoundary {
                 entry.getTitle(),
                 entry.getText(),
                 entry.getCreatedAt(),
+                entry.getStoragePath() == null || entry.getStoragePath().isBlank() ? entryPath : entry.getStoragePath(),
+                entry.getKeywords(),
                 true);
 
         presenter.prepareSuccessView(outputData);
     }
 }
-

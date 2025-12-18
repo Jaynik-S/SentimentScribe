@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DBNoteDataObjectTest {
 
     private Path tempBaseDir;
-    private final List<String> testFilesToCleanup = new java.util.ArrayList<>();
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -41,26 +40,6 @@ public class DBNoteDataObjectTest {
                         } catch (IOException ignored) {
                         }
                     });
-        }
-
-        // Clean up any test files created under the real DiaryEntry.BASE_DIR
-        Path baseDir = Paths.get(DiaryEntry.BASE_DIR);
-        if (Files.exists(baseDir)) {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(baseDir, "*.json")) {
-                for (Path file : stream) {
-                    String fileName = file.getFileName().toString();
-                    // Delete test files created by testGetAllReturnsAllEntries and testSavePersistsDiaryEntryToFile
-                    if (fileName.contains("Entry One") ||
-                        fileName.contains("Entry Two") ||
-                        fileName.contains("Save Test")) {
-                        try {
-                            Files.deleteIfExists(file);
-                        } catch (IOException ignored) {
-                        }
-                    }
-                }
-            } catch (IOException ignored) {
-            }
         }
     }
 
@@ -83,7 +62,7 @@ public class DBNoteDataObjectTest {
 
     @Test
     public void testGetByPathLoadsDiaryEntry() throws Exception {
-        DBNoteDataObject dao = new DBNoteDataObject();
+        DBNoteDataObject dao = new DBNoteDataObject(tempBaseDir);
 
         String title = "My Day";
         String text = "Today was a good day.";
@@ -106,7 +85,7 @@ public class DBNoteDataObjectTest {
 
     @Test
     public void testDeleteByPathDeletesExistingFile() throws Exception {
-        DBNoteDataObject dao = new DBNoteDataObject();
+        DBNoteDataObject dao = new DBNoteDataObject(tempBaseDir);
 
         String path = createEntryFile("entry_to_delete.json", new HashMap<>());
         assertTrue(Files.exists(Paths.get(path)));
@@ -119,7 +98,7 @@ public class DBNoteDataObjectTest {
 
     @Test
     public void testDeleteByPathReturnsFalseWhenFileMissing() {
-        DBNoteDataObject dao = new DBNoteDataObject();
+        DBNoteDataObject dao = new DBNoteDataObject(tempBaseDir);
 
         String nonExistentPath = tempBaseDir.resolve("no_such_file.json").toString();
 
@@ -130,29 +109,25 @@ public class DBNoteDataObjectTest {
 
     @Test
     public void testGetAllReturnsAllEntries() throws Exception {
-        DBNoteDataObject dao = new DBNoteDataObject();
-
-        // Create two entry files under the default BASE_DIR location
-        Path baseDir = Paths.get(DiaryEntry.BASE_DIR);
-        Files.createDirectories(baseDir);
+        DBNoteDataObject dao = new DBNoteDataObject(tempBaseDir);
 
         Map<String, Object> fields1 = new HashMap<>();
         fields1.put("title", "Entry One");
         fields1.put("text", "First entry text");
         fields1.put("created_date", LocalDateTime.of(2024, 1, 1, 10, 0).toString());
-        String path1 = baseDir.resolve("1) Entry One.json").toString();
+        String path1 = tempBaseDir.resolve("1) Entry One.json").toString();
         fields1.put("storage_path", path1);
 
         Map<String, Object> fields2 = new HashMap<>();
         fields2.put("title", "Entry Two");
         fields2.put("text", "Second entry text");
         fields2.put("created_date", LocalDateTime.of(2024, 1, 2, 11, 0).toString());
-        String path2 = baseDir.resolve("2) Entry Two.json").toString();
+        String path2 = tempBaseDir.resolve("2) Entry Two.json").toString();
         fields2.put("storage_path", path2);
 
         // Actually write the files
-        createEntryFileInBaseDir(baseDir, "1) Entry One.json", fields1);
-        createEntryFileInBaseDir(baseDir, "2) Entry Two.json", fields2);
+        createEntryFileInBaseDir(tempBaseDir, "1) Entry One.json", fields1);
+        createEntryFileInBaseDir(tempBaseDir, "2) Entry Two.json", fields2);
 
         List<Map<String, Object>> all = dao.getAll();
 
@@ -162,9 +137,6 @@ public class DBNoteDataObjectTest {
         assertTrue(all.stream().anyMatch(e -> "Entry Two".equals(e.get("title"))));
     }
 
-    /**
-     * Helper used in getAll test to write directly under DiaryEntry.BASE_DIR.
-     */
     private void createEntryFileInBaseDir(Path baseDir, String fileName, Map<String, Object> fields) throws IOException {
         JSONObject json = new JSONObject();
         json.put("title", fields.getOrDefault("title", "Test Title"));
@@ -180,7 +152,7 @@ public class DBNoteDataObjectTest {
 
     @Test
     public void testSavePersistsDiaryEntryToFile() throws Exception {
-        DBNoteDataObject dao = new DBNoteDataObject();
+        DBNoteDataObject dao = new DBNoteDataObject(tempBaseDir);
 
         DiaryEntry entry = new DiaryEntry("Save Test", "This is a test body that is sufficiently long to be realistic.", LocalDateTime.of(2024, 1, 3, 9, 0));
 
@@ -189,6 +161,7 @@ public class DBNoteDataObjectTest {
         assertTrue(saved);
 
         String storagePath = entry.getStoragePath();
+        assertNotNull(storagePath);
         assertTrue(Files.exists(Paths.get(storagePath)));
 
         String content = Files.readString(Paths.get(storagePath));
@@ -199,4 +172,3 @@ public class DBNoteDataObjectTest {
         assertEquals(storagePath, json.getString("storage_path"));
     }
 }
-

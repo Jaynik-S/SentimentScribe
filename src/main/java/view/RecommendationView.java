@@ -118,8 +118,8 @@ public class RecommendationView extends JPanel implements ActionListener, Proper
 
         backButton.addActionListener(
                 evt -> {
-                    if (evt.getSource().equals(backButton) && recommendationController != null) {
-                        recommendationController.executeBack();
+                    if (evt.getSource().equals(backButton) && this.recommendationController != null) {
+                        this.recommendationController.executeBack();
                     }
                 }
         );
@@ -179,6 +179,11 @@ public class RecommendationView extends JPanel implements ActionListener, Proper
 
         add(topCard, BorderLayout.NORTH);
         add(columnsCard, BorderLayout.CENTER);
+
+        // Populate initial recommendations (uses the injected state and avoids unused-field warnings)
+        if (this.recommendationState != null) {
+            setFields(this.recommendationState);
+        }
     }
 
     /**
@@ -187,7 +192,7 @@ public class RecommendationView extends JPanel implements ActionListener, Proper
     private ImageIcon loadAndScale(String imageUrl, int targetW, int targetH) {
         if (imageUrl == null || imageUrl.isEmpty()) return null;
         try {
-            URL url = new URL(imageUrl);
+            URL url = new URI(imageUrl).toURL();
             BufferedImage img = ImageIO.read(url);
             if (img == null) return null;
             Image scaled = img.getScaledInstance(targetW, targetH, Image.SCALE_SMOOTH);

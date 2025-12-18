@@ -27,7 +27,6 @@ import java.beans.PropertyChangeListener;
  * are delegated to the HomeMenuController.
  */
 
-
 // General format of home menu UIs. Will changed based on use cases
 
 public class HomeMenuView extends JPanel implements PropertyChangeListener {
@@ -60,7 +59,7 @@ public class HomeMenuView extends JPanel implements PropertyChangeListener {
         newEntryButton.setBackground(new Color(37, 99, 235));
         newEntryButton.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
         newEntryButton.addActionListener(e -> {
-            controller.newEntry();
+            this.controller.newEntry();
         });
 
         JPanel topPanel = new JPanel(new BorderLayout());
@@ -72,15 +71,14 @@ public class HomeMenuView extends JPanel implements PropertyChangeListener {
         this.add(topPanel, BorderLayout.NORTH);
 
         // Table
-        // String[] columnNames = {"Title", "Created", "Updated", "Delete"};
-        String[] columnNames = {"Title", "Created", "Keywords", "Delete Entry"};
+        String[] columnNames = { "Title", "Created", "Updated", "Keywords", "Delete Entry" };
 
         // Made the table row can be highlighted but can not edit
         model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // only the Delete column is editable (button)
-                return column == 3;
+                return column == 4;
             }
         };
 
@@ -93,23 +91,23 @@ public class HomeMenuView extends JPanel implements PropertyChangeListener {
         Font baseTableFont = table.getFont();
         table.setFont(baseTableFont.deriveFont(16f));
 
-        StripedTableCellRenderer leftRenderer =
-                new StripedTableCellRenderer(SwingConstants.LEFT);
-        StripedTableCellRenderer centerRenderer =
-                new StripedTableCellRenderer(SwingConstants.CENTER);
+        StripedTableCellRenderer leftRenderer = new StripedTableCellRenderer(SwingConstants.LEFT);
+        StripedTableCellRenderer centerRenderer = new StripedTableCellRenderer(SwingConstants.CENTER);
 
-        table.getColumnModel().getColumn(0).setCellRenderer(leftRenderer);   // Title
+        table.getColumnModel().getColumn(0).setCellRenderer(leftRenderer); // Title
         table.getColumnModel().getColumn(1).setCellRenderer(centerRenderer); // Created
-        table.getColumnModel().getColumn(2).setCellRenderer(leftRenderer); // Keywords
+        table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer); // Updated
+        table.getColumnModel().getColumn(3).setCellRenderer(leftRenderer); // Keywords
 
-        table.getColumnModel().getColumn(3).setCellRenderer(new DeleteButtonRenderer());
-        table.getColumnModel().getColumn(3).setCellEditor(new DeleteButtonEditor(controller, viewModel));
+        table.getColumnModel().getColumn(4).setCellRenderer(new DeleteButtonRenderer());
+        table.getColumnModel().getColumn(4).setCellEditor(new DeleteButtonEditor(this.controller, this.viewModel));
 
         TableColumnModel columnModel = table.getColumnModel();
         columnModel.getColumn(0).setPreferredWidth(250);
         columnModel.getColumn(1).setPreferredWidth(75);
-        columnModel.getColumn(2).setPreferredWidth(500);
-        columnModel.getColumn(3).setPreferredWidth(35);
+        columnModel.getColumn(2).setPreferredWidth(75);
+        columnModel.getColumn(3).setPreferredWidth(400);
+        columnModel.getColumn(4).setPreferredWidth(35);
 
         // Grid
         table.setShowGrid(true);
@@ -128,14 +126,10 @@ public class HomeMenuView extends JPanel implements PropertyChangeListener {
         tableCard.setBackground(Color.WHITE);
         tableCard.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(226, 232, 240)),
-                BorderFactory.createEmptyBorder(8, 8, 8, 8)
-        ));
+                BorderFactory.createEmptyBorder(8, 8, 8, 8)));
         tableCard.add(scrollPane, BorderLayout.CENTER);
 
         add(tableCard, BorderLayout.CENTER);
-
-        // Fake data table for demo
-//        initDummyData(); // removed for actual use
         refreshTable();
 
         table.addMouseListener(new MouseAdapter() {
@@ -152,7 +146,7 @@ public class HomeMenuView extends JPanel implements PropertyChangeListener {
                     java.util.List<String> paths = state.getStoragePaths();
                     if (row < paths.size()) {
                         String storagePath = paths.get(row);
-                        controller.openEntry(storagePath);
+                        HomeMenuView.this.controller.openEntry(storagePath);
                     }
                 }
             }
@@ -175,8 +169,7 @@ public class HomeMenuView extends JPanel implements PropertyChangeListener {
             String createdToShow = i < createdDates.size() ? createdDates.get(i) : "";
             String updateToShow = i < updatedDates.size() ? updatedDates.get(i) : "";
             String keywordsToShow = i < keywords.size() ? keywords.get(i) : "";
-            // model.addRow(new Object[]{titles.get(i), createdToShow, updateToShow, "Delete"});
-            model.addRow(new Object[]{titles.get(i), createdToShow, keywordsToShow, "Delete"});
+            model.addRow(new Object[] { titles.get(i), createdToShow, updateToShow, keywordsToShow, "Delete" });
         }
     }
 
@@ -216,12 +209,10 @@ class StripedTableCellRenderer extends DefaultTableCellRenderer {
         if (!isSelected) {
             if (row % 2 == 0) {
                 c.setBackground(new Color(250, 252, 255));
-            }
-            else {
+            } else {
                 c.setBackground(Color.WHITE);
             }
-        }
-        else {
+        } else {
             c.setBackground(new Color(219, 234, 254)); // 选中高亮
         }
         return c;
@@ -249,8 +240,7 @@ class DeleteButtonRenderer extends JButton implements TableCellRenderer {
 
         if (isSelected) {
             setBackground(new Color(220, 38, 38));
-        }
-        else {
+        } else {
             setBackground(new Color(220, 68, 68));
         }
         return this;
@@ -323,8 +313,7 @@ class DeleteButtonEditor extends AbstractCellEditor
                 "Are you sure you want to delete this entry?",
                 "Confirm Delete",
                 javax.swing.JOptionPane.YES_NO_OPTION,
-                javax.swing.JOptionPane.WARNING_MESSAGE
-        );
+                javax.swing.JOptionPane.WARNING_MESSAGE);
 
         if (choice != javax.swing.JOptionPane.YES_OPTION) {
             // Clicked NO

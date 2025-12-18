@@ -80,7 +80,7 @@ public final class NLPAnalysisDataAccessObject implements AnalyzeKeywordsDataAcc
                     String phrase = String.join(" ", words.subList(i, k)).toLowerCase(Locale.ROOT);
                     phrase = phrase.replaceAll("^[^a-z0-9]+|[^a-z0-9]+$", "");
                     if (phrase.length() > 2) {
-                        counts.merge(phrase, 1, Integer::sum);
+                        counts.merge(phrase, 1, (oldVal, newVal) -> oldVal + newVal);
                     }
                     i = k - 1;
                 }

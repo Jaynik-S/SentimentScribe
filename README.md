@@ -5,11 +5,24 @@ MoodVerse is a desktop diary app that lets users create, save, edit, and organiz
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Features](#features)
-3. [How It Works (with Screenshots)](#how-it-works-with-screenshots)
-4. [Getting Started](#getting-started)
-5. [Technologies & APIs](#technologies--apis)
-6. [Future Features](#future-features-not-in-mvp)
+2. [Target Architecture / API](#target-architecture--api)
+3. [Features](#features)
+4. [How It Works (with Screenshots)](#how-it-works-with-screenshots)
+5. [Getting Started](#getting-started)
+6. [Technologies & APIs](#technologies--apis)
+7. [Future Features](#future-features-not-in-mvp)
+
+## Target Architecture / API
+
+MoodVerse is moving to a Spring Boot web backend. The initial REST API surface will cover:
+
+- Auth/session: login, verify password (or equivalent strategy)
+- Diary entries: create, list, load, update, delete
+- Analysis: analyze keywords/sentiment
+- Recommendations: songs + movies for an entry
+
+Persistence choice for the first web iteration: file-based storage.  
+Frontend approach: separate SPA consuming the backend API.
 
 ## Features
 

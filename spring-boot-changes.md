@@ -93,19 +93,23 @@ This is the **only** place to record step-by-step implementation changes during 
 
 ---
 
-## Step 4 – Replace AppBuilder/Bootstrap With Spring Configuration
+## Step 4 - Replace AppBuilder/Bootstrap With Spring Configuration
 
 ### Summary of changes made in this step
-- (Fill in after completing Step 4)
+- Removed the Swing composition root and UI-only wiring helpers.
+- Added Spring configuration beans for data access and external API adapters.
 
 ### Key technical details and decisions
-- Deleted builders/bootstrap classes:
-- Spring-managed wiring approach (annotations/config):
-- Error handling strategy (`@ControllerAdvice`, etc.):
-- Service boundaries chosen (what became a `@Service`):
+- Deleted builders/bootstrap classes: `NoteAppBuilder`, `HomeMenuRefreshListener`, `com.moodverse.adapter/**`
+- Spring-managed wiring approach (annotations/config): `AppConfig` with constructor-injected `@Bean` definitions
+- Error handling strategy (`@ControllerAdvice`, etc.): deferred (only health endpoint exists)
+- Service boundaries chosen (what became a `@Service`): not introduced yet (use cases remain unchanged)
 
 ### Files added / modified / deleted
-- (List paths)
+- `src/main/java/com/moodverse/config/AppConfig.java`
+- `src/main/java/com/moodverse/app/NoteAppBuilder.java` (deleted)
+- `src/main/java/com/moodverse/app/HomeMenuRefreshListener.java` (deleted)
+- `src/main/java/com/moodverse/adapter/**` (deleted)
 
 ### Verification notes
 - Application starts and does not reference removed builders.

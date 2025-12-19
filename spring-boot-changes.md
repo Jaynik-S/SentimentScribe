@@ -47,22 +47,25 @@ This is the **only** place to record step-by-step implementation changes during 
 
 ---
 
-## Step 2 – Package Restructuring for Spring Boot Component Scanning
+## Step 2 - Package Restructuring for Spring Boot Component Scanning
 
 ### Summary of changes made in this step
-- (Fill in after completing Step 2)
+- Moved all code under the `com.moodverse` root package and updated package declarations/imports accordingly.
+- Relocated diary entry JSON fixtures alongside the new data access package and updated their stored paths.
 
 ### Key technical details and decisions
-- Root package chosen:
-- Packages moved:
-- Any renames performed:
-- Notes on how imports/tests were updated:
+- Root package chosen: `com.moodverse`
+- Packages moved: `app` → `com.moodverse.app`, `use_case` → `com.moodverse.usecase`, `interface_adapter` → `com.moodverse.adapter`, `data_access` → `com.moodverse.data`, `entity` → `com.moodverse.domain`, `view` → `com.moodverse.view`
+- Any renames performed: package segments normalized (e.g., `use_case` → `usecase`, `interface_adapter` → `adapter`)
+- Notes on how imports/tests were updated: package declarations and imports updated across `src/main/java` and `src/test/java` to the new root
 
 ### Files added / modified / deleted
-- (List paths)
+- `src/main/java/com/moodverse/**`
+- `src/test/java/com/moodverse/**`
+- `src/main/java/com/moodverse/data/diary_entry_database/*.json`
 
 ### Verification notes
-- `mvn -q test` after refactor:
+- `mvn -q test` after refactor: failed (unhandled `org.json.JSONException` in `com.moodverse.data.DBNoteDataObjectTest`)
 
 ---
 

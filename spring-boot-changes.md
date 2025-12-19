@@ -69,18 +69,23 @@ This is the **only** place to record step-by-step implementation changes during 
 
 ---
 
-## Step 3 – Spring Boot Becomes the Sole Runtime (Delete Desktop Runtime)
+## Step 3 - Spring Boot Becomes the Sole Runtime (Delete Desktop Runtime)
 
 ### Summary of changes made in this step
-- (Fill in after completing Step 3)
+- Added the Spring Boot application entry point and a health endpoint for runtime validation.
+- Removed the Swing main entry point, its UI-only test, and the Swing view package.
 
 ### Key technical details and decisions
-- Boot main class:
-- Health endpoint:
-- Desktop runtime removed (what was deleted):
+- Boot main class: `com.moodverse.MoodVerseApplication`
+- Health endpoint: `GET /api/health` → `{ "status": "ok" }`
+- Desktop runtime removed (what was deleted): `MainNoteApplication`, `MainNoteApplicationTest`, `com.moodverse.view/**`
 
 ### Files added / modified / deleted
-- (List paths)
+- `src/main/java/com/moodverse/MoodVerseApplication.java`
+- `src/main/java/com/moodverse/web/HealthController.java`
+- `src/main/java/com/moodverse/app/MainNoteApplication.java` (deleted)
+- `src/test/java/com/moodverse/app/MainNoteApplicationTest.java` (deleted)
+- `src/main/java/com/moodverse/view/**` (deleted)
 
 ### Verification notes
 - `mvn -q spring-boot:run`:

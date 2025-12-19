@@ -1,64 +1,31 @@
 package com.moodverse.data;
 
-import io.github.cdimascio.dotenv.Dotenv;
+import com.moodverse.config.AuthProperties;
 import com.moodverse.usecase.verify_password.VerifyPasswordUserDataAccessInterface;
-
-import java.nio.file.*;
-import java.util.*;
 
 public class VerifyPasswordDataAccessObject implements VerifyPasswordUserDataAccessInterface {
     public String passwordStatus;
 
-    private static final Dotenv dotenv = Dotenv.load();
+    private static String sysPassword;
 
-    private static String SYS_PASSWORD = dotenv.get("PASSWORD");
-
-    private static Path envPath = Paths.get(".env");
+    public VerifyPasswordDataAccessObject(AuthProperties authProperties) {
+        String configured = authProperties.password();
+        if (configured != null && !configured.isBlank()) {
+            sysPassword = configured;
+        }
+    }
 
     public static void setSysPasswordForTesting(String password) {
-        SYS_PASSWORD = password;
-    }
-
-    public static void setEnvPathForTesting(Path path) {
-        envPath = path;
-    }
-
-    public static void writeEnvValue(String key, String value) throws Exception {
-        if (!Files.exists(envPath)) {
-            Files.createFile(envPath);
-            Files.write(envPath, Collections.singletonList("PASSWORD="));
-        }
-
-        List<String> lines = Files.readAllLines(envPath);
-        boolean keyFound = false;
-
-        for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).startsWith(key + "=")) {
-                lines.set(i, key + "=" + value);
-                keyFound = true;
-                break;
-            }
-        }
-        if (!keyFound) {
-            lines.add(key + "=" + value);
-        }
-        Files.write(envPath, lines);
+        sysPassword = password;
     }
 
     public String verifyPassword(String password) throws Exception {
-        if (SYS_PASSWORD != null && SYS_PASSWORD.equals(password)) {
+        if (sysPassword != null && sysPassword.equals(password)) {
             passwordStatus = "Correct Password";
-
         }
-        else if (SYS_PASSWORD == null || SYS_PASSWORD.isEmpty()) {
-            try {
-                writeEnvValue("PASSWORD", password);
-                passwordStatus = "Created new password.";
-            }
-            catch (Exception error) {
-                throw new Exception("Failed to set new password: ", error);
-            }
-
+        else if (sysPassword == null || sysPassword.isEmpty()) {
+            sysPassword = password;
+            passwordStatus = "Created new password.";
         }
         else {
             passwordStatus = "Incorrect Password";

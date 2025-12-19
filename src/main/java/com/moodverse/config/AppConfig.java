@@ -37,12 +37,14 @@ public class AppConfig {
     }
 
     @Bean
-    public VerifyPasswordDataAccessObject verifyPasswordDataAccessObject() {
-        return new VerifyPasswordDataAccessObject();
+    public VerifyPasswordDataAccessObject verifyPasswordDataAccessObject(AuthProperties authProperties) {
+        return new VerifyPasswordDataAccessObject(authProperties);
     }
 
     @Bean
-    public RecommendationAPIAccessObject recommendationAPIAccessObject(NLPAnalysisDataAccessObject analysisDao) {
-        return new RecommendationAPIAccessObject(analysisDao);
+    public RecommendationAPIAccessObject recommendationAPIAccessObject(NLPAnalysisDataAccessObject analysisDao,
+                                                                       SpotifyProperties spotifyProperties,
+                                                                       TmdbProperties tmdbProperties) {
+        return new RecommendationAPIAccessObject(analysisDao, spotifyProperties, tmdbProperties);
     }
 }

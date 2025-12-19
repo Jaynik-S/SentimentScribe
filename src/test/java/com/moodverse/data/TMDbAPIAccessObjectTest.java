@@ -1,5 +1,6 @@
 package com.moodverse.data;
 
+import com.moodverse.config.TmdbProperties;
 import com.moodverse.domain.MovieRecommendation;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,8 @@ public class TMDbAPIAccessObjectTest {
                 .put("overview", "Great movie")
                 .put("poster_path", "/poster.jpg");
 
-        TMDbAPIAccessObject dao = new TMDbAPIAccessObject(List.of("adventure"));
+        TMDbAPIAccessObject dao = new TMDbAPIAccessObject(List.of("adventure"),
+                new TmdbProperties(""));
         MovieRecommendation rec = dao.JSONtoMovieRecommendation(movie);
 
         assertEquals("2015", rec.getReleaseYear());
@@ -37,7 +39,8 @@ public class TMDbAPIAccessObjectTest {
                 .put("release_date", "")
                 .put("vote_average", "7.0");
 
-        TMDbAPIAccessObject dao = new TMDbAPIAccessObject(List.of("drama"));
+        TMDbAPIAccessObject dao = new TMDbAPIAccessObject(List.of("drama"),
+                new TmdbProperties(""));
         MovieRecommendation rec = dao.JSONtoMovieRecommendation(movie);
 
         assertEquals("—", rec.getReleaseYear());
@@ -54,7 +57,8 @@ public class TMDbAPIAccessObjectTest {
             return;
         }
 
-        TMDbAPIAccessObject dao = new TMDbAPIAccessObject(List.of("adventure", "friendship"));
+        TMDbAPIAccessObject dao = new TMDbAPIAccessObject(List.of("adventure", "friendship"),
+                new TmdbProperties(apiKey));
         List<MovieRecommendation> recs = dao.fetchMovieRecommendations();
 
         assertNotNull(recs);

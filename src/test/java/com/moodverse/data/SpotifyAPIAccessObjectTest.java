@@ -1,5 +1,6 @@
 package com.moodverse.data;
 
+import com.moodverse.config.SpotifyProperties;
 import com.moodverse.domain.SongRecommendation;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,7 +29,8 @@ public class SpotifyAPIAccessObjectTest {
                 .put("external_urls", externalUrls)
                 .put("popularity", "87");
 
-        SpotifyAPIAccessObject dao = new SpotifyAPIAccessObject(List.of("happy"));
+        SpotifyAPIAccessObject dao = new SpotifyAPIAccessObject(List.of("happy"),
+                new SpotifyProperties("", ""));
         SongRecommendation rec = dao.JSONtoSongRecommendation(track);
 
         assertEquals("2020", rec.getReleaseYear());
@@ -44,7 +46,8 @@ public class SpotifyAPIAccessObjectTest {
         JSONObject track = new JSONObject()
                 .put("name", "Unknown Song");
 
-        SpotifyAPIAccessObject dao = new SpotifyAPIAccessObject(List.of("sad"));
+        SpotifyAPIAccessObject dao = new SpotifyAPIAccessObject(List.of("sad"),
+                new SpotifyProperties("", ""));
         SongRecommendation rec = dao.JSONtoSongRecommendation(track);
 
         assertEquals("Unknown", rec.getReleaseYear());
@@ -64,7 +67,9 @@ public class SpotifyAPIAccessObjectTest {
             return;
         }
 
-        SpotifyAPIAccessObject dao = new SpotifyAPIAccessObject(List.of("adventure", "friendship"));
+        SpotifyAPIAccessObject dao = new SpotifyAPIAccessObject(
+                List.of("adventure", "friendship"),
+                new SpotifyProperties(clientId, clientSecret));
         List<SongRecommendation> recs = dao.fetchSongRecommendations();
         assertNotNull(recs);
         assertFalse(recs.isEmpty());

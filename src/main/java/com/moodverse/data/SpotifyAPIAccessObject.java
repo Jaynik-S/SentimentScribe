@@ -6,41 +6,45 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
 
+import com.moodverse.config.SpotifyProperties;
 import com.moodverse.domain.SongRecommendation;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import io.github.cdimascio.dotenv.Dotenv;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class SpotifyAPIAccessObject {
-    private static Dotenv dotenv = Dotenv.load();
-    private static final String CLIENT_ID = dotenv.get("SPOTIFY_CLIENT_ID");
-    private static final String CLIENT_SECRET = dotenv.get("SPOTIFY_CLIENT_SECRET");
-    private static String accessToken;
+    private final String clientId;
+    private final String clientSecret;
+    private String accessToken;
     private static String yearRange = "2006-2025";
     private static int limit = 5;
     private static final int MIN_POPULARITY = 15;
 
-    private List<String> terms;
+    private final List<String> terms;
 
-    public SpotifyAPIAccessObject(List<String> terms) {
+    public SpotifyAPIAccessObject(List<String> terms, SpotifyProperties properties) {
         this.terms = terms;
+        this.clientId = properties.clientId();
+        this.clientSecret = properties.clientSecret();
     }
 
     // Retrieve Spotify API token using Client Credentials Flow
-    private static String getAccessToken() throws Exception {
+    private String getAccessToken() throws Exception {
+        if (clientId == null || clientId.isBlank() || clientSecret == null || clientSecret.isBlank()) {
+            throw new IllegalStateException("Spotify credentials are not configured.");
+        }
         final String AUTH_URL = "https://accounts.spotify.com/api/token";
         final String BODY = "grant_type=client_credentials";
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(AUTH_URL))
                 .header("Authorization", "Basic " + java.util.Base64.getEncoder()
-                        .encodeToString((CLIENT_ID + ":" + CLIENT_SECRET).getBytes()))
+                        .encodeToString((clientId + ":" + clientSecret).getBytes()))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(HttpRequest.BodyPublishers.ofString(BODY))
                 .build();
@@ -184,7 +188,9 @@ public class SpotifyAPIAccessObject {
 
 //    public static void main(String[] args) {
 //        List<String> terms = List.of("adventure", "friendship", "heroism");
-//        SpotifyAPIAccessObject spotifyDAO = new SpotifyAPIAccessObject(terms);
+//        SpotifyAPIAccessObject spotifyDAO = new SpotifyAPIAccessObject(
+//                terms,
+//                new SpotifyProperties("client-id", "client-secret"));
 //        try {
 //            List<SongRecommendation> recommendations = spotifyDAO.fetchSongRecommendations();
 //            for (SongRecommendation rec : recommendations) {

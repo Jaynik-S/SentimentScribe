@@ -152,20 +152,38 @@ This is the **only** place to record step-by-step implementation changes during 
 ## Step 6 – Configuration: `application.yml` + Secrets + Profiles
 
 ### Summary of changes made in this step
-- (Fill in after completing Step 6)
+- Added Spring Boot configuration in application.yml with env-backed secrets, CORS, and logging settings.
+- Introduced typed configuration properties for external APIs and moved data access classes off dotenv.
+- Removed dotenv usage and the repository .env file; updated related tests and wiring.
 
 ### Key technical details and decisions
-- Configuration keys introduced:
-- Secret handling approach (env vars, vault, etc.):
-- Profiles introduced (if any):
-- Removed config approaches:
+- Configuration keys introduced: `server.port`, `server.servlet.context-path`, `moodverse.spotify.client-id`, `moodverse.spotify.client-secret`, `moodverse.tmdb.api-key`, `moodverse.auth.password`, `moodverse.cors.allowed-origins`, `logging.level.com.moodverse.data`
+- Secret handling approach (env vars, vault, etc.): environment variables via application.yml placeholders
+- Profiles introduced (if any): none
+- Removed config approaches: dotenv-java + .env file; Dotenv usage removed from data access classes
 
 ### Files added / modified / deleted
-- (List paths)
+- `src/main/resources/application.yml`
+- `src/main/java/com/moodverse/config/SpotifyProperties.java`
+- `src/main/java/com/moodverse/config/TmdbProperties.java`
+- `src/main/java/com/moodverse/config/AuthProperties.java`
+- `src/main/java/com/moodverse/config/CorsProperties.java`
+- `src/main/java/com/moodverse/config/WebConfig.java`
+- `src/main/java/com/moodverse/MoodVerseApplication.java`
+- `src/main/java/com/moodverse/config/AppConfig.java`
+- `src/main/java/com/moodverse/data/SpotifyAPIAccessObject.java`
+- `src/main/java/com/moodverse/data/TMDbAPIAccessObject.java`
+- `src/main/java/com/moodverse/data/RecommendationAPIAccessObject.java`
+- `src/main/java/com/moodverse/data/VerifyPasswordDataAccessObject.java`
+- `src/test/java/com/moodverse/data/SpotifyAPIAccessObjectTest.java`
+- `src/test/java/com/moodverse/data/TMDbAPIAccessObjectTest.java`
+- `src/test/java/com/moodverse/data/VerifyPasswordDataAccessObjectTest.java`
+- `pom.xml`
+- `.env` (deleted)
 
 ### Verification notes
-- App starts with real config:
-- Missing config behavior is clear:
+- App starts with real config: not run
+- Missing config behavior is clear: not run
 
 ---
 

@@ -11,23 +11,25 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
+import com.moodverse.config.TmdbProperties;
 import com.moodverse.domain.MovieRecommendation;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import io.github.cdimascio.dotenv.Dotenv;
-
 public class TMDbAPIAccessObject {
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String TMDB_API_KEY = dotenv.get("TMDB_API_KEY");
+    private final String apiKey;
     private static int limit = 4;
-    private List<String> terms;
+    private final List<String> terms;
 
-    public TMDbAPIAccessObject(List<String> terms) {
+    public TMDbAPIAccessObject(List<String> terms, TmdbProperties properties) {
         this.terms = terms;
+        this.apiKey = properties.apiKey();
     }
     
-    private static List<String> getKeywordIds(List<String> terms) throws Exception {
+    private List<String> getKeywordIds(List<String> terms) throws Exception {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException("TMDb API key is not configured.");
+        }
         List<String> ids = new ArrayList<>();
         HttpClient client = HttpClient.newHttpClient();
 
@@ -35,7 +37,7 @@ public class TMDbAPIAccessObject {
             // System.out.print((t));
             String url = String.format(
                     "https://api.themoviedb.org/3/search/keyword?api_key=%s&query=%s&page=1",
-                    TMDB_API_KEY,
+                    apiKey,
                     URLEncoder.encode(t, StandardCharsets.UTF_8)
             );
 
@@ -56,7 +58,7 @@ public class TMDbAPIAccessObject {
         return ids;
     }
 
-    private static List<JSONObject> discoverMovies(List<String> ids)
+    private List<JSONObject> discoverMovies(List<String> ids)
             throws Exception {
         if (ids == null || ids.isEmpty()) return List.of();
 
@@ -79,7 +81,7 @@ public class TMDbAPIAccessObject {
             String url = String.format(
                     "https://api.themoviedb.org/3/discover/movie?api_key=%s&with_keywords=%s&include_adult=false" +
                             "&sort_by=vote_average.desc&vote_count.gte=350&language=en-US&page=1",
-                    TMDB_API_KEY,
+                    apiKey,
                     encoded
             );
 
@@ -144,7 +146,7 @@ public class TMDbAPIAccessObject {
 
 //    public static void main(String[] args) {
 //        List<String> terms = List.of("adventure", "friendship", "heroism");
-//        TMDbAPIAccessObject DAO = new TMDbAPIAccessObject(terms);
+//        TMDbAPIAccessObject DAO = new TMDbAPIAccessObject(terms, new TmdbProperties("api-key"));
 //        try {
 //            List<MovieRecommendation> recommendations = DAO.fetchMovieRecommendations();
 //            for (MovieRecommendation rec : recommendations) {

@@ -19,8 +19,8 @@ import org.json.JSONObject;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-public class DBNoteDataObject implements DeleteEntryUserDataAccessInterface, LoadEntryUserDataAccessInterface,
-        SaveEntryUserDataAccessInterface, RenderEntriesUserDataInterface {
+public class DBNoteDataObject implements DiaryEntryRepository, DeleteEntryUserDataAccessInterface,
+        LoadEntryUserDataAccessInterface, SaveEntryUserDataAccessInterface, RenderEntriesUserDataInterface {
 
     public static final Path DEFAULT_BASE_DIR = Paths.get("src/main/java/com/moodverse/data/diary_entry_database");
 

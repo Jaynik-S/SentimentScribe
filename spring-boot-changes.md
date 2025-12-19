@@ -119,20 +119,33 @@ This is the **only** place to record step-by-step implementation changes during 
 ## Step 5 – Build the Backend API (Controllers → Services → Repositories)
 
 ### Summary of changes made in this step
-- (Fill in after completing Step 5)
+- Added REST controllers and DTOs for entries, analysis, recommendations, and auth/session flows.
+- Implemented service layer orchestration around existing use cases and added a file-based repository interface.
+- Removed remaining Swing-only use case packages/tests that are superseded by the REST API.
 
 ### Key technical details and decisions
-- Controllers added:
-- DTOs and mapping approach:
-- Service layer responsibilities:
-- Persistence implementation:
-- Notes on concurrency/locking (if file-based persistence):
+- Controllers added: `EntriesController`, `AnalysisController`, `RecommendationsController`, `AuthController`
+- DTOs and mapping approach: request/response DTOs under `com.moodverse.web.dto`, mapped from use case output data and persisted entry summaries
+- Service layer responsibilities: services invoke existing interactors (save/load/delete/analyze/recommendations/verify password) and return structured results for controllers
+- Persistence implementation: `DiaryEntryRepository` interface backed by `DBNoteDataObject` (file-based JSON)
+- Notes on concurrency/locking (if file-based persistence): unchanged (current file IO is single-process, no explicit locking)
 
 ### Files added / modified / deleted
-- (List paths)
+- `src/main/java/com/moodverse/web/EntriesController.java`
+- `src/main/java/com/moodverse/web/AnalysisController.java`
+- `src/main/java/com/moodverse/web/RecommendationsController.java`
+- `src/main/java/com/moodverse/web/AuthController.java`
+- `src/main/java/com/moodverse/web/dto/**`
+- `src/main/java/com/moodverse/service/**`
+- `src/main/java/com/moodverse/data/DiaryEntryRepository.java`
+- `src/main/java/com/moodverse/data/DBNoteDataObject.java`
+- `src/main/java/com/moodverse/usecase/create_entry/**` (deleted)
+- `src/main/java/com/moodverse/usecase/go_back/**` (deleted)
+- `src/test/java/com/moodverse/usecase/create_entry/**` (deleted)
+- `src/test/java/com/moodverse/usecase/go_back/**` (deleted)
 
 ### Verification notes
-- Manual API smoke checks performed:
+- Manual API smoke checks performed: not run
 
 ---
 

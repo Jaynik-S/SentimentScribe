@@ -67,7 +67,21 @@
   background: #fbfaf7;
 }
 
+.field textarea {
+  border: 1px solid #d6d0c3;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fbfaf7;
+  resize: vertical;
+}
+
 .field input:focus {
+  outline: none;
+  border-color: #415347;
+  box-shadow: 0 0 0 2px rgba(65, 83, 71, 0.18);
+}
+
+.field textarea:focus {
   outline: none;
   border-color: #415347;
   box-shadow: 0 0 0 2px rgba(65, 83, 71, 0.18);
@@ -334,6 +348,94 @@
   margin-bottom: 16px;
 }
 
+.entry-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 24px;
+  align-items: start;
+}
+
+.entry-form {
+  background: #ffffff;
+  border: 1px solid #e5e1d6;
+  border-radius: 18px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 18px 35px rgba(26, 24, 19, 0.06);
+}
+
+.entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.entry-meta {
+  background: #fdfaf3;
+  border: 1px solid #e5e1d6;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.entry-meta h2 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: #3c3832;
+}
+
+.entry-meta__row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.entry-meta__row dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #7a736a;
+}
+
+.entry-meta__row dd {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4f4a44;
+  word-break: break-word;
+}
+
+.keywords-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.keywords-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: #f7f3ea;
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #e2dbcf;
+}
+
+.keywords-empty {
+  margin: 0;
+  color: #6b655d;
+}
+
+.keyword-chip {
+  background: #ffffff;
+  border: 1px solid #d6d0c3;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  color: #3d3932;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -378,5 +480,13 @@
     display: block;
     padding: 6px 0;
     border: none;
+  }
+
+  .entry-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-meta {
+    order: -1;
   }
 }

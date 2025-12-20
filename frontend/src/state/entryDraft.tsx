@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { formatLocalDateTime } from '../api/localDateTime'
 import type { LocalDateTime } from '../api/types'
 
-type EntryDraft = {
+export type EntryDraft = {
   title: string
   text: string
   storagePath: string | null

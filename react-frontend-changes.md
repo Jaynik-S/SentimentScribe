@@ -146,23 +146,34 @@ Implemented the Home Menu page with entry listing, row navigation, delete confir
 
 ---
 
-## Step 4 — Diary Entry Page (Load + Keywords Toggle + Save + Recs)
+## Step 4 - Diary Entry Page (Load + Keywords Toggle + Save + Recs)
 
 ### Summary of changes
 
-_TODO_
+Built the Diary Entry page with edit-mode loading, keyword analysis toggling, save (create/update) logic, and recommendation requests that store the response for View D. Added inline validation, metadata display, and supporting UI styles.
 
 ### Files modified/created
 
-_TODO_
+- Added: `frontend/src/components/KeywordsDropdown.tsx`
+- Added: `frontend/src/state/recommendations.tsx`
+- Updated: `frontend/src/pages/DiaryEntryPage.tsx`
+- Updated: `frontend/src/state/entryDraft.tsx`
+- Updated: `frontend/src/App.tsx`
+- Updated: `frontend/src/App.css`
 
 ### Per-file notes (what changed + why + backend/API connection)
 
-_TODO_
+- `frontend/src/pages/DiaryEntryPage.tsx`: loads entries via `GET /api/entries/by-path`, toggles keywords via `POST /api/analysis`, saves via `POST/PUT /api/entries`, and fetches recommendations via `POST /api/recommendations`.
+- `frontend/src/components/KeywordsDropdown.tsx`: renders keywords list under the title input when visible.
+- `frontend/src/state/recommendations.tsx`: stores the last `RecommendationResponse` for View D.
+- `frontend/src/state/entryDraft.tsx`: exports draft type for keyword UI and continues to manage draft state.
+- `frontend/src/App.tsx`: wires in the recommendations provider.
+- `frontend/src/App.css`: styles the diary entry form, metadata panel, keywords, and textarea.
 
 ### How to verify (commands + manual checks)
 
-_TODO_
+- `cd frontend; npm install; npm run dev`
+- Create/edit an entry: verify load by path, keyword toggle, save (POST vs PUT), and recommendations request navigation.
 
 ---
 

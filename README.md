@@ -5,11 +5,24 @@ MoodVerse is a desktop diary app that lets users create, save, edit, and organiz
 ## Table of Contents
 
 1. [Overview](#overview)
-2. [Features](#features)
-3. [How It Works (with Screenshots)](#how-it-works-with-screenshots)
-4. [Getting Started](#getting-started)
-5. [Technologies & APIs](#technologies--apis)
-6. [Future Features](#future-features-not-in-mvp)
+2. [Target Architecture / API](#target-architecture--api)
+3. [Features](#features)
+4. [How It Works (with Screenshots)](#how-it-works-with-screenshots)
+5. [Getting Started](#getting-started)
+6. [Technologies & APIs](#technologies--apis)
+7. [Future Features](#future-features-not-in-mvp)
+
+## Target Architecture / API
+
+MoodVerse is moving to a Spring Boot web backend. The initial REST API surface will cover:
+
+- Auth/session: login, verify password (or equivalent strategy)
+- Diary entries: create, list, load, update, delete
+- Analysis: analyze keywords/sentiment
+- Recommendations: songs + movies for an entry
+
+Persistence choice for the first web iteration: file-based storage.  
+Frontend approach: separate SPA consuming the backend API.
 
 ## Features
 
@@ -45,27 +58,25 @@ MoodVerse is a desktop diary app that lets users create, save, edit, and organiz
 
 ### Prerequisites
 
-- Java 11 or higher
+- Java 21
 - Maven
 - Access tokens / API keys for:
   - Spotify Web API
   - TMDb API
-- `.env` file configured for API keys (via `dotenv-java`).
 
-### `.env` Configuration
+### Environment Configuration
 
-Create a `.env` file in the project root with the following structure:
+Set the following environment variables before running the app:
 
-```dotenv
+```
 SPOTIFY_CLIENT_ID={your-spotify-client-id}
 SPOTIFY_CLIENT_SECRET={your-spotify-client-secret}
 TMDB_API_KEY={your-tmdb-api-key}
-PASSWORD=
+MOODVERSE_PASSWORD=
 ```
 
 - All API credentials can be obtained for free by following the official documentation links for Spotify and TMDb listed below.
-- Leave `PASSWORD` blank when first creating a new password. The application will then set and store the password the first time you configure it.
-- To change the password later, you can update this field.
+- Leave `MOODVERSE_PASSWORD` blank when first creating a new password. The application will then set it on first use for the runtime.
 
 ## Technologies & APIs
 

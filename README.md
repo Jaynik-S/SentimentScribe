@@ -78,6 +78,53 @@ MOODVERSE_PASSWORD=
 - All API credentials can be obtained for free by following the official documentation links for Spotify and TMDb listed below.
 - Leave `MOODVERSE_PASSWORD` blank when first creating a new password. The application will then set it on first use for the runtime.
 
+### Local Development
+
+Backend:
+
+```
+cd backend
+mvn spring-boot:run
+```
+
+Frontend:
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
+### Production Build / Deployment
+
+Frontend build (static hosting):
+
+```
+cd frontend
+npm install
+npm run build
+```
+
+- Set `VITE_API_BASE_URL` in the frontend build environment to the deployed backend URL.
+- Deploy the frontend build output from `frontend/dist`.
+
+Backend deployment:
+
+```
+cd backend
+mvn clean package
+```
+
+- Deploy the generated Spring Boot artifact and configure CORS for the frontend origin.
+- Set `MOODVERSE_CORS_ORIGIN` (or `moodverse.cors.allowed-origins`) to the deployed frontend URL.
+
+Release checklist:
+
+- Backend API is reachable from the frontend host.
+- Backend CORS allows the frontend origin.
+- Frontend `VITE_API_BASE_URL` points to the backend URL.
+- Spotify/TMDb keys are set in the backend environment.
+
 ## Technologies & APIs
 
 - **Language:** Java

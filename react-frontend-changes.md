@@ -113,23 +113,36 @@ Added React Router routing with a global layout, auth guard, and a Verify Passwo
 
 ---
 
-## Step 3 — Home Menu Page (List + Open/Edit + Delete Modal)
+## Step 3 - Home Menu Page (List + Open/Edit + Delete Modal)
 
 ### Summary of changes
 
-_TODO_
+Implemented the Home Menu page with entry listing, row navigation, delete confirmation modal, and a simple success toast. Added entry draft state initialization for the New Entry flow, plus retry-capable error handling for list failures.
 
 ### Files modified/created
 
-_TODO_
+- Added: `frontend/src/components/EntriesTable.tsx`
+- Added: `frontend/src/components/DeleteEntryModal.tsx`
+- Added: `frontend/src/state/entryDraft.tsx`
+- Updated: `frontend/src/pages/HomeMenuPage.tsx`
+- Updated: `frontend/src/state/ui.tsx`
+- Updated: `frontend/src/components/PageErrorBanner.tsx`
+- Updated: `frontend/src/App.tsx`
+- Updated: `frontend/src/App.css`
 
 ### Per-file notes (what changed + why + backend/API connection)
 
-_TODO_
+- `frontend/src/pages/HomeMenuPage.tsx`: calls `GET /api/entries` on load, routes row clicks to `/entry?path=...`, triggers `DELETE /api/entries?path=...` via modal, and shows `Deleted entry` toast on success.
+- `frontend/src/components/EntriesTable.tsx`: renders entry list with title, storage path, created/edited dates, keywords, and delete button.
+- `frontend/src/components/DeleteEntryModal.tsx`: confirmation modal showing backend error messages on delete failure.
+- `frontend/src/state/entryDraft.tsx`: provides `startNewEntry()` to initialize a new draft (with `keywordsVisible=false`) before navigating to `/entry`.
+- `frontend/src/state/ui.tsx` and `frontend/src/components/PageErrorBanner.tsx`: allow an action button (Retry) when list loading fails.
+- `frontend/src/App.tsx` / `frontend/src/App.css`: wires the draft provider and styles the Home Menu layout, table, modal, and toast.
 
 ### How to verify (commands + manual checks)
 
-_TODO_
+- `cd frontend; npm install; npm run dev`
+- Visit `/home` after unlocking; confirm list loads, row click navigates to `/entry?path=...`, delete modal works, and retry loads entries after a forced error.
 
 ---
 

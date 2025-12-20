@@ -3,10 +3,16 @@ import type { ReactNode } from 'react'
 
 export type UiContextValue = {
   pageError: string | null
-  setPageError: (message: string | null) => void
+  pageErrorAction: PageErrorAction | null
+  setPageError: (message: string | null, action?: PageErrorAction | null) => void
   clearPageError: () => void
   isPageLoading: boolean
   setPageLoading: (value: boolean) => void
+}
+
+export type PageErrorAction = {
+  label: string
+  onClick: () => void
 }
 
 const UiContext = createContext<UiContextValue | undefined>(undefined)
@@ -17,14 +23,18 @@ type UiProviderProps = {
 
 export const UiProvider = ({ children }: UiProviderProps) => {
   const [pageError, setPageErrorState] = useState<string | null>(null)
+  const [pageErrorAction, setPageErrorAction] =
+    useState<PageErrorAction | null>(null)
   const [isPageLoading, setPageLoadingState] = useState(false)
 
-  const setPageError = (message: string | null) => {
+  const setPageError = (message: string | null, action: PageErrorAction | null = null) => {
     setPageErrorState(message)
+    setPageErrorAction(message ? action : null)
   }
 
   const clearPageError = () => {
     setPageErrorState(null)
+    setPageErrorAction(null)
   }
 
   const setPageLoading = (value: boolean) => {
@@ -34,12 +44,13 @@ export const UiProvider = ({ children }: UiProviderProps) => {
   const contextValue = useMemo(
     () => ({
       pageError,
+      pageErrorAction,
       setPageError,
       clearPageError,
       isPageLoading,
       setPageLoading,
     }),
-    [pageError, isPageLoading],
+    [pageError, pageErrorAction, isPageLoading],
   )
 
   return <UiContext.Provider value={contextValue}>{children}</UiContext.Provider>

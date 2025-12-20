@@ -177,23 +177,30 @@ Built the Diary Entry page with edit-mode loading, keyword analysis toggling, sa
 
 ---
 
-## Step 5 — Recommendation Page
+## Step 5 - Recommendation Page
 
 ### Summary of changes
 
-_TODO_
+Implemented the Recommendation page to render stored song/movie results, handle empty lists, and show a banner error when the page is refreshed without state.
 
 ### Files modified/created
 
-_TODO_
+- Added: `frontend/src/components/SongsTable.tsx`
+- Added: `frontend/src/components/MoviesTable.tsx`
+- Updated: `frontend/src/pages/RecommendationPage.tsx`
+- Updated: `frontend/src/App.css`
 
 ### Per-file notes (what changed + why + backend/API connection)
 
-_TODO_
+- `frontend/src/pages/RecommendationPage.tsx`: reads the in-memory `RecommendationResponse` and renders songs/movies; shows the required banner message if state is missing.
+- `frontend/src/components/SongsTable.tsx`: renders song metadata fields from `RecommendationResponse.songs`.
+- `frontend/src/components/MoviesTable.tsx`: renders movie metadata fields from `RecommendationResponse.movies`.
+- `frontend/src/App.css`: adds layout styles for the recommendations sections/cards and empty states.
 
 ### How to verify (commands + manual checks)
 
-_TODO_
+- `cd frontend; npm install; npm run dev`
+- Navigate to `/recommendations` after requesting recs and verify song/movie fields render; refresh the page to see the missing-state banner.
 
 ---
 

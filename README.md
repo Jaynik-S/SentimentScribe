@@ -78,6 +78,23 @@ MOODVERSE_PASSWORD=
 - All API credentials can be obtained for free by following the official documentation links for Spotify and TMDb listed below.
 - Leave `MOODVERSE_PASSWORD` blank when first creating a new password. The application will then set it on first use for the runtime.
 
+### Local Development
+
+Backend:
+
+```
+cd backend
+mvn spring-boot:run
+```
+
+Frontend:
+
+```
+cd frontend
+npm install
+npm run dev
+```
+
 ## Technologies & APIs
 
 - **Language:** Java

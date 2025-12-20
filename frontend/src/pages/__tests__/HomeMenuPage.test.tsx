@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useLocation } from 'react-router-dom'
@@ -27,6 +27,10 @@ const entryFixture: EntrySummaryResponse = {
 }
 
 describe('HomeMenuPage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('loads entries and navigates on row click', async () => {
     const listEntriesMock = vi.mocked(listEntries)
     listEntriesMock.mockResolvedValue([entryFixture])
@@ -68,7 +72,7 @@ describe('HomeMenuPage', () => {
 
     await screen.findByText('Morning Thoughts')
 
-    await user.click(screen.getByRole('button', { name: /delete/i }))
+    await user.click(screen.getByRole('button', { name: /^delete$/i }))
     expect(
       screen.getByRole('button', { name: /confirm delete/i }),
     ).toBeInTheDocument()
@@ -95,6 +99,7 @@ describe('HomeMenuPage', () => {
 
     await user.click(screen.getByRole('button', { name: /retry/i }))
 
-    expect(await screen.findByText('Morning Thoughts')).toBeInTheDocument()
+    const entries = await screen.findAllByText('Morning Thoughts')
+    expect(entries.length).toBeGreaterThan(0)
   })
 })

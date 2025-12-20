@@ -9,8 +9,10 @@ describe('api/http', () => {
       jsonResponse({ error: 'Incorrect Password' }, { status: 400 }),
     )
 
-    await expect(request('/api/auth/verify')).rejects.toBeInstanceOf(ApiError)
-    await expect(request('/api/auth/verify')).rejects.toMatchObject({
+    const error = await request('/api/auth/verify').catch((err) => err)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({
       status: 400,
       data: { error: 'Incorrect Password' },
     })

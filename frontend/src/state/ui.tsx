@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 export type UiContextValue = {
@@ -27,19 +27,22 @@ export const UiProvider = ({ children }: UiProviderProps) => {
     useState<PageErrorAction | null>(null)
   const [isPageLoading, setPageLoadingState] = useState(false)
 
-  const setPageError = (message: string | null, action: PageErrorAction | null = null) => {
-    setPageErrorState(message)
-    setPageErrorAction(message ? action : null)
-  }
+  const setPageError = useCallback(
+    (message: string | null, action: PageErrorAction | null = null) => {
+      setPageErrorState(message)
+      setPageErrorAction(message ? action : null)
+    },
+    [],
+  )
 
-  const clearPageError = () => {
+  const clearPageError = useCallback(() => {
     setPageErrorState(null)
     setPageErrorAction(null)
-  }
+  }, [])
 
-  const setPageLoading = (value: boolean) => {
+  const setPageLoading = useCallback((value: boolean) => {
     setPageLoadingState(value)
-  }
+  }, [])
 
   const contextValue = useMemo(
     () => ({
@@ -50,7 +53,7 @@ export const UiProvider = ({ children }: UiProviderProps) => {
       isPageLoading,
       setPageLoading,
     }),
-    [pageError, pageErrorAction, isPageLoading],
+    [clearPageError, isPageLoading, pageError, pageErrorAction, setPageError, setPageLoading],
   )
 
   return <UiContext.Provider value={contextValue}>{children}</UiContext.Provider>

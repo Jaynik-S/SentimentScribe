@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { formatLocalDateTime } from '../api/localDateTime'
 import type { LocalDateTime } from '../api/types'
@@ -40,19 +40,19 @@ export const EntryDraftProvider = ({ children }: EntryDraftProviderProps) => {
   const [draft, setDraftState] = useState<EntryDraft>(defaultDraft)
   const [keywordsVisible, setKeywordsVisibleState] = useState(false)
 
-  const setDraft = (nextDraft: EntryDraft) => {
+  const setDraft = useCallback((nextDraft: EntryDraft) => {
     setDraftState(nextDraft)
-  }
+  }, [])
 
-  const updateDraft = (partial: Partial<EntryDraft>) => {
+  const updateDraft = useCallback((partial: Partial<EntryDraft>) => {
     setDraftState((current) => ({ ...current, ...partial }))
-  }
+  }, [])
 
-  const setKeywordsVisible = (value: boolean) => {
+  const setKeywordsVisible = useCallback((value: boolean) => {
     setKeywordsVisibleState(value)
-  }
+  }, [])
 
-  const startNewEntry = () => {
+  const startNewEntry = useCallback(() => {
     setDraftState({
       title: '',
       text: '',
@@ -61,7 +61,7 @@ export const EntryDraftProvider = ({ children }: EntryDraftProviderProps) => {
       createdAt: formatLocalDateTime(new Date()),
     })
     setKeywordsVisibleState(false)
-  }
+  }, [])
 
   const contextValue = useMemo(
     () => ({
@@ -72,7 +72,14 @@ export const EntryDraftProvider = ({ children }: EntryDraftProviderProps) => {
       setKeywordsVisible,
       startNewEntry,
     }),
-    [draft, keywordsVisible],
+    [
+      draft,
+      keywordsVisible,
+      setDraft,
+      setKeywordsVisible,
+      startNewEntry,
+      updateDraft,
+    ],
   )
 
   return (

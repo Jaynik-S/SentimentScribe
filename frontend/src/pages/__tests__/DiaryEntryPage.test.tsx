@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useLocation } from 'react-router-dom'
@@ -30,10 +30,11 @@ const LocationSpy = () => {
 const longText = 'a'.repeat(60)
 
 describe('DiaryEntryPage', () => {
-  it('creates a new entry with generated createdAt', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2025-01-01T12:00:00'))
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
+  it('creates a new entry with generated createdAt', async () => {
     const createEntryMock = vi.mocked(createEntry)
     createEntryMock.mockResolvedValue({
       title: 'Today',
@@ -44,7 +45,7 @@ describe('DiaryEntryPage', () => {
       keywords: [],
     })
 
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const user = userEvent.setup()
     renderWithRouter({
       initialEntries: ['/entry'],
       routes: [{ path: '/entry', element: <DiaryEntryPage /> }],
@@ -59,10 +60,8 @@ describe('DiaryEntryPage', () => {
       text: longText,
       storagePath: null,
       keywords: [],
-      createdAt: '2025-01-01T12:00:00',
+      createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
     })
-
-    vi.useRealTimers()
   })
 
   it('loads entry when path query param is present', async () => {

@@ -260,3 +260,24 @@ Documented production build and deployment steps for separate frontend and backe
 
 - Build frontend: `cd frontend; npm install; npm run build`
 - Build backend: `cd backend; mvn clean package`
+
+---
+
+## Verification & Build Stabilization
+
+### Root cause
+
+- `vite.config.ts` included a `test` block without Vitest type augmentation, so `tsc -b` rejected the `test` property on Vite’s `UserConfigExport`.
+- Switching `defineConfig` to `vitest/config` fixed typings but introduced a plugin type mismatch with the Vite/plugin-react versions in use.
+
+### Changes made
+
+- Moved Vitest settings into `frontend/vitest.config.ts` and removed the `test` block from `frontend/vite.config.ts`.
+- Stabilized context callbacks to prevent effect loops in tests and added explicit test cleanup/mocking resets.
+- Updated `npm run test` to use `vitest run` and disabled the fast-refresh export lint rule to allow non-component exports.
+
+### Commands now passing
+
+- Frontend: `npm install`, `npm run lint`, `npm run test`, `npm run build`
+- Backend: `mvn -q test`, `mvn -q package`, `mvn -q spring-boot:run`
+- Integration: `GET http://localhost:8080/api/health`, `POST /api/auth/verify` via the frontend verify page

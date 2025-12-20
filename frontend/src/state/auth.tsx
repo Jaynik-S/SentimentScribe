@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
 const STORAGE_KEY = 'moodverse.isUnlocked'
@@ -17,17 +17,11 @@ type AuthProviderProps = {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [isUnlocked, setIsUnlocked] = useState(false)
+  const [isUnlocked, setIsUnlocked] = useState(
+    () => sessionStorage.getItem(STORAGE_KEY) === 'true',
+  )
   const [status, setStatus] = useState<string | null>(null)
-
-  useEffect(() => {
-    const stored = sessionStorage.getItem(STORAGE_KEY)
-    if (stored === 'true') {
-      setIsUnlocked(true)
-    }
-  }, [])
-
-  const setUnlocked = (value: boolean, nextStatus: string | null = null) => {
+  const setUnlocked = useCallback((value: boolean, nextStatus: string | null = null) => {
     setIsUnlocked(value)
     setStatus(nextStatus)
 
@@ -36,11 +30,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } else {
       sessionStorage.removeItem(STORAGE_KEY)
     }
-  }
+  }, [])
 
-  const clear = () => {
+  const clear = useCallback(() => {
     setUnlocked(false, null)
-  }
+  }, [setUnlocked])
 
   const contextValue = useMemo(
     () => ({
@@ -49,7 +43,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUnlocked,
       clear,
     }),
-    [isUnlocked, status],
+    [clear, isUnlocked, setUnlocked, status],
   )
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>

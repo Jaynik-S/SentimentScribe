@@ -83,18 +83,6 @@ class GetRecommendationsInteractorTest {
         assertFalse(presenter.switchedToMenu);
     }
 
-    // Verifies the explicit switchToRecommendationMenu delegating method.
-    @Test
-    void switchToRecommendationMenu_delegatesToPresenter() {
-        RecordingRecommendationsPresenter presenter = new RecordingRecommendationsPresenter();
-        StubRecommendationsDataAccess dataAccess = new StubRecommendationsDataAccess();
-        GetRecommendationsInteractor interactor = new GetRecommendationsInteractor(dataAccess, presenter);
-
-        interactor.switchToRecommendationMenu();
-
-        assertTrue(presenter.switchedToMenu);
-    }
-
     private static final class RecordingRecommendationsPresenter implements GetRecommendationsOutputBoundary {
         private GetRecommendationsOutputData successData;
         private String errorMessage;

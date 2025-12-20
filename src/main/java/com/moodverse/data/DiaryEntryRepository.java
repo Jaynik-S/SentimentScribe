@@ -1,16 +1,12 @@
 package com.moodverse.data;
 
-import com.moodverse.domain.DiaryEntry;
+import com.moodverse.usecase.delete_entry.DeleteEntryUserDataAccessInterface;
+import com.moodverse.usecase.load_entry.LoadEntryUserDataAccessInterface;
+import com.moodverse.usecase.save_entry.SaveEntryUserDataAccessInterface;
+import com.moodverse.usecase.verify_password.RenderEntriesUserDataInterface;
 
-import java.util.List;
-import java.util.Map;
-
-public interface DiaryEntryRepository {
-    boolean save(DiaryEntry entry) throws Exception;
-
-    DiaryEntry getByPath(String entryPath) throws Exception;
-
-    boolean deleteByPath(String entryPath) throws Exception;
-
-    List<Map<String, Object>> getAll() throws Exception;
+public interface DiaryEntryRepository extends SaveEntryUserDataAccessInterface,
+        LoadEntryUserDataAccessInterface,
+        DeleteEntryUserDataAccessInterface,
+        RenderEntriesUserDataInterface {
 }

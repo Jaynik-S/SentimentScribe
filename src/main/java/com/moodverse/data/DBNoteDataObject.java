@@ -2,10 +2,6 @@ package com.moodverse.data;
 
 import com.moodverse.domain.DiaryEntry;
 import org.json.JSONArray;
-import com.moodverse.usecase.delete_entry.DeleteEntryUserDataAccessInterface;
-import com.moodverse.usecase.load_entry.LoadEntryUserDataAccessInterface;
-import com.moodverse.usecase.save_entry.SaveEntryUserDataAccessInterface;
-import com.moodverse.usecase.verify_password.RenderEntriesUserDataInterface;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -19,8 +15,7 @@ import org.json.JSONObject;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-public class DBNoteDataObject implements DiaryEntryRepository, DeleteEntryUserDataAccessInterface,
-        LoadEntryUserDataAccessInterface, SaveEntryUserDataAccessInterface, RenderEntriesUserDataInterface {
+public class DBNoteDataObject implements DiaryEntryRepository {
 
     public static final Path DEFAULT_BASE_DIR = Paths.get("src/main/java/com/moodverse/data/diary_entry_database");
 

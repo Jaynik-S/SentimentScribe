@@ -58,27 +58,25 @@ Frontend approach: separate SPA consuming the backend API.
 
 ### Prerequisites
 
-- Java 11 or higher
+- Java 21
 - Maven
 - Access tokens / API keys for:
   - Spotify Web API
   - TMDb API
-- `.env` file configured for API keys (via `dotenv-java`).
 
-### `.env` Configuration
+### Environment Configuration
 
-Create a `.env` file in the project root with the following structure:
+Set the following environment variables before running the app:
 
-```dotenv
+```
 SPOTIFY_CLIENT_ID={your-spotify-client-id}
 SPOTIFY_CLIENT_SECRET={your-spotify-client-secret}
 TMDB_API_KEY={your-tmdb-api-key}
-PASSWORD=
+MOODVERSE_PASSWORD=
 ```
 
 - All API credentials can be obtained for free by following the official documentation links for Spotify and TMDb listed below.
-- Leave `PASSWORD` blank when first creating a new password. The application will then set and store the password the first time you configure it.
-- To change the password later, you can update this field.
+- Leave `MOODVERSE_PASSWORD` blank when first creating a new password. The application will then set it on first use for the runtime.
 
 ## Technologies & APIs
 

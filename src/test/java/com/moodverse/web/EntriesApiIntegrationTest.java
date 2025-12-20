@@ -8,11 +8,10 @@ import com.moodverse.web.dto.EntrySummaryResponse;
 import com.moodverse.web.dto.ErrorResponse;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
@@ -29,14 +28,15 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestRestTemplate
 @Import(EntriesApiIntegrationTest.TestConfig.class)
 class EntriesApiIntegrationTest {
 
     private static final Path BASE_DIR = createTempDir();
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @LocalServerPort
+    private int port;
+
+    private final TestRestTemplate restTemplate = new TestRestTemplate();
 
     @TestConfiguration
     static class TestConfig {
@@ -73,14 +73,15 @@ class EntriesApiIntegrationTest {
         );
 
         ResponseEntity<EntryResponse> createResponse =
-                restTemplate.postForEntity("/api/entries", request, EntryResponse.class);
+                restTemplate.postForEntity(baseUrl() + "/api/entries", request, EntryResponse.class);
 
         assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
         EntryResponse created = createResponse.getBody();
         assertNotNull(created);
         assertNotNull(created.storagePath());
 
-        String loadUrl = UriComponentsBuilder.fromPath("/api/entries/by-path")
+        String loadUrl = UriComponentsBuilder.fromUriString(baseUrl())
+                .path("/api/entries/by-path")
                 .queryParam("path", created.storagePath())
                 .build()
                 .toUriString();
@@ -92,7 +93,7 @@ class EntriesApiIntegrationTest {
         assertEquals("First Entry", loadResponse.getBody().title());
 
         ResponseEntity<EntrySummaryResponse[]> listResponse =
-                restTemplate.getForEntity("/api/entries", EntrySummaryResponse[].class);
+                restTemplate.getForEntity(baseUrl() + "/api/entries", EntrySummaryResponse[].class);
         assertEquals(HttpStatus.OK, listResponse.getStatusCode());
         EntrySummaryResponse[] summaries = listResponse.getBody();
         assertNotNull(summaries);
@@ -102,7 +103,8 @@ class EntriesApiIntegrationTest {
     @Test
     void loadMissingEntryReturnsError() {
         String missingPath = BASE_DIR.resolve("missing-entry.json").toString();
-        String url = UriComponentsBuilder.fromPath("/api/entries/by-path")
+        String url = UriComponentsBuilder.fromUriString(baseUrl())
+                .path("/api/entries/by-path")
                 .queryParam("path", missingPath)
                 .build()
                 .toUriString();
@@ -121,5 +123,9 @@ class EntriesApiIntegrationTest {
         } catch (IOException error) {
             throw new IllegalStateException("Failed to create temp directory", error);
         }
+    }
+
+    private String baseUrl() {
+        return "http://localhost:" + port;
     }
 }

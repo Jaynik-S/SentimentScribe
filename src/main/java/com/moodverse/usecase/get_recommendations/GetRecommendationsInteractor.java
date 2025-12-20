@@ -41,10 +41,4 @@ public class GetRecommendationsInteractor implements GetRecommendationsInputBoun
             }
         }
     }
-
-    @Override
-    public void switchToRecommendationMenu() {
-        recommendationPresenter.switchToRecommendationMenu();
-    }
-
 }

@@ -10,7 +10,7 @@ moodverse:
   tmdb:
     api-key: ${TMDB_API_KEY:e112ddda993eb2247a0602076d5ba0b7}
   auth:
-    password: ${MOODVERSE_PASSWORD:}
+    password: ${MOODVERSE_PASSWORD:test}
   cors:
     allowed-origins:
       - ${MOODVERSE_CORS_ORIGIN:http://localhost:3000}

@@ -137,7 +137,6 @@ public class EntriesController {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     private static List<String> asStringList(Object value) {
         if (value instanceof List<?> list) {
             return list.stream().map(Object::toString).toList();

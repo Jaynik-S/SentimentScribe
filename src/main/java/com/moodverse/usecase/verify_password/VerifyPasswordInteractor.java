@@ -34,10 +34,5 @@ public class VerifyPasswordInteractor implements VerifyPasswordInputBoundary {
             userPresenter.prepareFailView("Failed to verify password: " + error.getMessage());
         }
     }
-//
-//    @Override
-//    public void switchToHomeMenu() {
-//    }
-
 }
 

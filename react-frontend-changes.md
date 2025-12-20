@@ -32,43 +32,84 @@ Moved the Spring Boot backend into `backend/` and scaffolded a Vite React + Type
 
 ---
 
-## Step 1 — API Client + Types
+## Step 1 - API Client + Types
 
 ### Summary of changes
 
-_TODO_
+Added TypeScript DTOs, a fetch wrapper with consistent error handling, and per-endpoint API helpers. Included a LocalDateTime formatter and a temporary debug console hook for manual smoke calls.
 
 ### Files modified/created
 
-_TODO_
+- Added: `frontend/src/api/types.ts`
+- Added: `frontend/src/api/http.ts`
+- Added: `frontend/src/api/localDateTime.ts`
+- Added: `frontend/src/api/auth.ts`
+- Added: `frontend/src/api/entries.ts`
+- Added: `frontend/src/api/analysis.ts`
+- Added: `frontend/src/api/recommendations.ts`
+- Added: `frontend/src/api/debug.ts`
+- Updated: `frontend/src/main.tsx`
 
 ### Per-file notes (what changed + why + backend/API connection)
 
-_TODO_
+- `frontend/src/api/types.ts`: mirrors backend DTOs to keep request/response shapes aligned with `/api/**`.
+- `frontend/src/api/http.ts`: central fetch helper that enforces JSON parsing and throws an `ApiError` with `{ error: string }` for non-2xx responses.
+- `frontend/src/api/localDateTime.ts`: formats JS `Date` into `LocalDateTime` strings without timezone suffixes.
+- `frontend/src/api/auth.ts`: `POST /api/auth/verify`.
+- `frontend/src/api/entries.ts`: `GET /api/entries`, `GET /api/entries/by-path`, `POST /api/entries`, `PUT /api/entries`, `DELETE /api/entries?path=...` with URL-encoded `path`.
+- `frontend/src/api/analysis.ts`: `POST /api/analysis`.
+- `frontend/src/api/recommendations.ts`: `POST /api/recommendations`.
+- `frontend/src/api/debug.ts`: exposes `window.moodverseApi` helpers for manual smoke calls during Step 1.
+- `frontend/src/main.tsx`: registers the dev-only debug helpers on startup.
 
 ### How to verify (commands + manual checks)
 
-_TODO_
+- Run the frontend and call `window.moodverseApi.smoke()` in devtools to hit `GET /api/entries`.
+- Optional: `window.moodverseApi.verifyPassword('<password>')` to hit `POST /api/auth/verify`.
 
 ---
 
-## Step 2 — Routing + Auth Gate + Verify Page
+## Step 2 - Routing + Auth Gate + Verify Page
 
 ### Summary of changes
 
-_TODO_
+Added React Router routing with a global layout, auth guard, and a Verify Password page wired to `POST /api/auth/verify`. Introduced auth/UI state providers plus shared error/loading components, and refreshed base styles to support the new layout.
 
 ### Files modified/created
 
-_TODO_
+- Added: `frontend/src/routes.tsx`
+- Added: `frontend/src/state/auth.tsx`
+- Added: `frontend/src/state/ui.tsx`
+- Added: `frontend/src/components/PageErrorBanner.tsx`
+- Added: `frontend/src/components/GlobalLoadingOverlay.tsx`
+- Added: `frontend/src/pages/VerifyPasswordPage.tsx`
+- Added: `frontend/src/pages/HomeMenuPage.tsx`
+- Added: `frontend/src/pages/DiaryEntryPage.tsx`
+- Added: `frontend/src/pages/RecommendationPage.tsx`
+- Updated: `frontend/src/App.tsx`
+- Updated: `frontend/src/App.css`
+- Updated: `frontend/src/index.css`
+- Updated: `frontend/package.json`
 
 ### Per-file notes (what changed + why + backend/API connection)
 
-_TODO_
+- `frontend/src/routes.tsx`: defines routes for `/`, `/home`, `/entry`, `/recommendations`, with an auth guard redirecting locked users back to `/`.
+- `frontend/src/state/auth.tsx`: stores `isUnlocked` and auth status, backed by `sessionStorage["moodverse.isUnlocked"]`.
+- `frontend/src/state/ui.tsx`: global page error and loading state for the error banner and loading overlay.
+- `frontend/src/components/PageErrorBanner.tsx`: dismissible banner for `{ error }` responses.
+- `frontend/src/components/GlobalLoadingOverlay.tsx`: blocking overlay for page-load requests.
+- `frontend/src/pages/VerifyPasswordPage.tsx`: implements View A, calling `POST /api/auth/verify` and navigating to `/home` on success.
+- `frontend/src/pages/HomeMenuPage.tsx`: placeholder for View B.
+- `frontend/src/pages/DiaryEntryPage.tsx`: placeholder for View C.
+- `frontend/src/pages/RecommendationPage.tsx`: placeholder for View D.
+- `frontend/src/App.tsx`: wraps the app with auth/UI providers and router.
+- `frontend/src/App.css` / `frontend/src/index.css`: base styles for layout, banner, and verify page.
+- `frontend/package.json`: adds `react-router-dom`.
 
 ### How to verify (commands + manual checks)
 
-_TODO_
+- `cd frontend; npm install; npm run dev`
+- Visit `/` and submit a password to see `POST /api/auth/verify` and auth redirect to `/home`.
 
 ---
 

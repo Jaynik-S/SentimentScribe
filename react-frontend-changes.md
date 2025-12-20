@@ -242,20 +242,21 @@ Added a Vitest-based test setup with API client and page-level component tests c
 
 ---
 
-## Step 7 — Production Build / Deployment
+## Step 7 - Production Build / Deployment
 
 ### Summary of changes
 
-_TODO_
+Documented production build and deployment steps for separate frontend and backend releases, including CORS and environment configuration.
 
 ### Files modified/created
 
-_TODO_
+- Updated: `README.md`
 
 ### Per-file notes (what changed + why + backend/API connection)
 
-_TODO_
+- `README.md`: added production build commands, frontend `VITE_API_BASE_URL` guidance, and backend CORS configuration notes.
 
 ### How to verify (commands + manual checks)
 
-_TODO_
+- Build frontend: `cd frontend; npm install; npm run build`
+- Build backend: `cd backend; mvn clean package`

@@ -204,23 +204,41 @@ Implemented the Recommendation page to render stored song/movie results, handle 
 
 ---
 
-## Step 6 — Testing + UX Polish
+## Step 6 - Testing + UX Polish
 
 ### Summary of changes
 
-_TODO_
+Added a Vitest-based test setup with API client and page-level component tests covering the four views, plus helper utilities for router/provider rendering.
 
 ### Files modified/created
 
-_TODO_
+- Added: `frontend/src/test/setup.ts`
+- Added: `frontend/src/test/renderWithRouter.tsx`
+- Added: `frontend/src/test/mockFetch.ts`
+- Added: `frontend/src/api/__tests__/http.test.ts`
+- Added: `frontend/src/api/__tests__/auth.test.ts`
+- Added: `frontend/src/api/__tests__/analysis.test.ts`
+- Added: `frontend/src/api/__tests__/entries.test.ts`
+- Added: `frontend/src/api/__tests__/recommendations.test.ts`
+- Added: `frontend/src/pages/__tests__/VerifyPasswordPage.test.tsx`
+- Added: `frontend/src/pages/__tests__/HomeMenuPage.test.tsx`
+- Added: `frontend/src/pages/__tests__/DiaryEntryPage.test.tsx`
+- Added: `frontend/src/pages/__tests__/RecommendationPage.test.tsx`
+- Updated: `frontend/package.json`
+- Updated: `frontend/vite.config.ts`
 
 ### Per-file notes (what changed + why + backend/API connection)
 
-_TODO_
+- `frontend/src/test/*`: test setup, router/provider rendering helper, and fetch mocks for API tests.
+- `frontend/src/api/__tests__/*`: validates API client URLs, methods, payloads, and error parsing.
+- `frontend/src/pages/__tests__/*`: verifies primary actions for each page (verify, list/delete, save/analyze/recommend, and recommendations rendering).
+- `frontend/package.json`: adds test script and dev dependencies for Vitest and Testing Library.
+- `frontend/vite.config.ts`: configures Vitest to run with jsdom and setup file.
 
 ### How to verify (commands + manual checks)
 
-_TODO_
+- `cd frontend; npm install; npm run test`
+- Optional: `npm run test:run` for CI-style runs.
 
 ---
 

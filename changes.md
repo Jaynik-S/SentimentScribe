@@ -5,33 +5,29 @@ Technical Changes:
 - (2) React Front End **(DONE)**
   - Keep API integration points centralized (e.g., one client/service layer) as auth + new endpoints land.
 
-- (3) Backend foundation (API contract + configuration)
-  - Confirm the API contract: endpoints, request/response DTOs, error shape, and versioning strategy.
-  - Add environment-based configuration (dev/prod), CORS rules, and health endpoints for deployment readiness.
-  - Decide the local dev story now (recommended: `docker-compose` for Postgres + app env vars) to avoid rework.
 
-- (4) Replace file-based storage with PostgreSQL
-  - Define the initial schema (users, diary entries, share links/visibility, metadata such as recommendations).
-  - Add migrations (Flyway/Liquibase) so schema changes are repeatable across dev/staging/prod.
+- (3) Replace file-based storage with PostgreSQL
+  - Define the initial schema (users, diary entries metadata).
+  - Add migrations (Flyway) so schema changes are repeatable across dev/staging/prod.
   - Implement the persistence layer (JPA repositories/services) and a migration plan for any existing file data (if needed).
 
-- (5) Auth + authorization (Spring Security, JWT, BCrypt)
+- (4) Auth + authorization (Spring Security, JWT, BCrypt)
   - Store users in Postgres; hash passwords with BCrypt; never store plaintext passwords.
   - Implement JWT access tokens (and refresh tokens if you want longer sessions) + protected routes on the backend.
   - Add authorization rules for diary entries and shareable links (private vs public vs “unlisted”).
   - Update the React client to attach tokens, handle expiry/logout, and guard routes.
 
-- (6) Containerization + local prod-parity (Docker)
+- (5) Containerization + local prod-parity (Docker)
   - Add Dockerfiles for backend and frontend; add `docker-compose` for local (frontend + backend + Postgres).
   - Centralize config via env vars (DB URL, JWT secret, CORS origins) and keep secrets out of git.
   - Ensure migrations run on startup (or as a separate migration step) in containerized environments.
 
-- (7) Deployment (AWS S3 + backend hosting + managed database)
+- (6) Deployment (AWS S3 + backend hosting + managed database)
   - Host the React build on S3 (typically behind CloudFront) and wire environment-specific API base URLs.
   - Deploy the backend container (ECS/Fargate, Elastic Beanstalk, or EC2) and use a managed Postgres (RDS) for production.
   - Plan TLS, domain/DNS, and secret management (SSM/Secrets Manager) before going live.
 
-- (8) Post-deploy hardening (recommended follow-up)
+- (7) Post-deploy hardening (recommended follow-up)
   - Add basic observability (structured logs, request tracing/correlation IDs, metrics/health checks).
   - Add security controls: rate limiting for auth endpoints, secure headers, and safer JWT key rotation strategy.
   - Add backups/retention for Postgres and an approach for DB migrations during deployments.
@@ -59,8 +55,5 @@ Feats:
     - Demonstrates applied security, key management, and privacy-aware architecture beyond standard CRUD.
     - Fits the roadmap after auth + Postgres by keeping the backend simple (stores blobs) while making the client more capable.
 
-
-
 Other:
-- Rebranding
 - UI Change

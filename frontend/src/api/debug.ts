@@ -26,7 +26,7 @@ type ApiDebug = {
 
 declare global {
   interface Window {
-    moodverseApi?: ApiDebug
+    sentimentScribeApi?: ApiDebug
   }
 }
 
@@ -47,10 +47,10 @@ export const registerApiDebug = (): void => {
     formatLocalDateTime,
     smoke: async () => {
       const entries = await listEntries()
-      console.info('moodverseApi.smoke entries', entries)
+      console.info('sentimentScribeApi.smoke entries', entries)
     },
   }
 
-  window.moodverseApi = api
-  console.info('moodverseApi debug helpers ready', api)
+  window.sentimentScribeApi = api
+  console.info('sentimentScribeApi debug helpers ready', api)
 }

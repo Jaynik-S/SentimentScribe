@@ -3,18 +3,18 @@ server:
   servlet:
     context-path: /
 
-moodverse:
+sentimentscribe:
   spotify:
     client-id: ${SPOTIFY_CLIENT_ID:3302f8d729f747aea634c70bdc8cc670}
     client-secret: ${SPOTIFY_CLIENT_SECRET:dcfadc850ebc4081a58fc839c2434825}
   tmdb:
     api-key: ${TMDB_API_KEY:e112ddda993eb2247a0602076d5ba0b7}
   auth:
-    password: ${MOODVERSE_PASSWORD:123}
+    password: ${SENTIMENTSCRIBE_PASSWORD:123}
   cors:
     allowed-origins:
-      - ${MOODVERSE_CORS_ORIGIN:http://localhost:3000}
+      - ${SENTIMENTSCRIBE_CORS_ORIGIN:http://localhost:3000}
 
 logging:
   level:
-    com.moodverse.data: INFO
+    com.sentimentscribe.data: INFO

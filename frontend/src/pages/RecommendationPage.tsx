@@ -25,7 +25,7 @@ export const RecommendationPage = () => {
     <section className="page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">MoodVerse</p>
+          <p className="eyebrow">SentimentScribe</p>
           <h1>Recommendations</h1>
           <p className="subtle">Based on the themes of your entry.</p>
         </div>

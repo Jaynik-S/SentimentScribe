@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 
-const STORAGE_KEY = 'moodverse.isUnlocked'
+const STORAGE_KEY = 'sentimentscribe.isUnlocked'
 
 type AuthContextValue = {
   isUnlocked: boolean

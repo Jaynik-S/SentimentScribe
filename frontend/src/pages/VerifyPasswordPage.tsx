@@ -64,7 +64,7 @@ export const VerifyPasswordPage = () => {
     <section className="page">
       <div className="verify-card">
         <header className="verify-card__header">
-          <p className="eyebrow">MoodVerse</p>
+          <p className="eyebrow">SentimentScribe</p>
           <h1>Unlock your diary</h1>
           <p className="subtle">
             Enter your password to view or create entries.

@@ -274,7 +274,7 @@ export const DiaryEntryPage = () => {
     <section className="page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">MoodVerse</p>
+          <p className="eyebrow">SentimentScribe</p>
           <h1>Diary Entry</h1>
           <p className="subtle">Draft, analyze, and save your entry.</p>
         </div>

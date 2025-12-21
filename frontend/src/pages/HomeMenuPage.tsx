@@ -117,7 +117,7 @@ export const HomeMenuPage = () => {
     <section className="page">
       <header className="page-header">
         <div>
-          <p className="eyebrow">MoodVerse</p>
+          <p className="eyebrow">SentimentScribe</p>
           <h1>Home Menu</h1>
           <p className="subtle">Open an entry or start a new one.</p>
         </div>

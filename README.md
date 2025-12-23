@@ -53,6 +53,19 @@ cd backend
 mvn spring-boot:run
 ```
 
+Optional local Postgres (profile is still file-based by default):
+
+```
+docker compose up -d postgres
+```
+
+```
+cd backend
+SPRING_PROFILES_ACTIVE=postgres mvn spring-boot:run
+```
+
+Defaults (override with env vars): `POSTGRES_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`.
+
 Frontend:
 
 ```

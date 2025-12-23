@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: diary-discovery-postgres
+    environment:
+      POSTGRES_DB: diary_discovery
+      POSTGRES_USER: diary
+      POSTGRES_PASSWORD: diary
+    ports:
+      - "5432:5432"
+    volumes:
+      - diary_discovery_pgdata:/var/lib/postgresql/data
+
+volumes:
+  diary_discovery_pgdata:

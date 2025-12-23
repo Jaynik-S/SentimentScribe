@@ -6,38 +6,46 @@
 ## Step 0 - Freeze Baseline + Scope Decisions
 
 ### Summary
-- (fill in)
+- Documented Step 0 decisions and recorded completion status. No code changes.
 
 ### Exact changes made
-- (fill in)
+- Added a Step 0 completion checklist to the plan to lock the baseline decisions.
+- Recorded Step 0 execution details in this change log.
 
 ### Files touched (actual)
-- (fill in)
+- `postgres-migration-plan.md`
+- `postgres-migration-changes.md`
 
 ### Verification notes
 - Commands run:
-  - (fill in)
+  - Not run (doc-only).
 - Manual checks:
-  - (fill in)
+  - Not run (doc-only).
 
 ---
 
 ## Step 1 - Add PostgreSQL + Flyway + Local Docker
 
 ### Summary
-- (fill in)
+- Added Postgres dependencies, profile config, and a local Docker Compose service.
 
 ### Exact changes made
-- (fill in)
+- Added JPA, Postgres driver, Flyway, and Testcontainers dependencies in `backend/pom.xml`.
+- Added `backend/src/main/resources/application-postgres.yml` for DB profile settings.
+- Added root `docker-compose.yml` with a local Postgres service and volume.
+- Documented local Postgres run notes in the root README.
 
 ### Files touched (actual)
-- (fill in)
+- `backend/pom.xml`
+- `backend/src/main/resources/application-postgres.yml`
+- `docker-compose.yml`
+- `README.md`
 
 ### Verification notes
 - Commands run:
-  - (fill in)
+  - Not run (not requested).
 - Manual checks:
-  - (fill in)
+  - Not run (not requested).
 
 ---
 

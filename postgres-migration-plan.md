@@ -193,6 +193,12 @@ The goal is “frontend still works” with unchanged paths/methods and compatib
 ### Goal
 Lock down what must stay stable during the migration (API + semantics), and document the clarified scope constraints for a clean Postgres start.
 
+### Completion status
+- [x] External identifier and auth status strings confirmed (`storagePath`, `"Correct Password"`, `"Incorrect Password"`, `"Created new password."`).
+- [x] Clean-start scope confirmed (no backfill; DB stores only users + diary entries).
+- [x] Profile strategy and Postgres storagePath format confirmed (`file` default, `postgres` new; `"db:" + <uuid>`).
+- [x] Clean-start behavior documented (legacy file `storagePath` values will not resolve after cutover).
+
 ### Exact changes
 - Document and confirm:
   - `storagePath` remains the external identifier for entries.

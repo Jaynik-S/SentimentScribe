@@ -52,19 +52,20 @@
 ## Step 2 - Create Flyway Migrations (Schema)
 
 ### Summary
-- (fill in)
+- Added initial Flyway schema for users and diary entries.
 
 ### Exact changes made
-- (fill in)
+- Created `V1__init.sql` with `users` and `diary_entries` tables.
+- Included UNIQUE constraint on `diary_entries.storage_path` and FK to `users`.
 
 ### Files touched (actual)
-- (fill in)
+- `backend/src/main/resources/db/migration/V1__init.sql`
 
 ### Verification notes
 - Commands run:
-  - (fill in)
+  - Not run (not requested).
 - SQL checks:
-  - (fill in)
+  - Not run (not requested).
 
 ---
 

@@ -214,67 +214,7 @@ Repository/port structure:
 
 ---
 
-## 7) Configuration (application.yml/properties, profiles, env vars)
-
-Main config file:
-
-- `src/main/resources/application.yml`
-
-Highlights (as implemented):
-
-- Server:
-  - server.port: 8080
-- Profiles:
-  - spring.profiles.default: postgres
-- Integration credentials (bound via @ConfigurationProperties):
-  - sentimentscribe.spotify.client-id  SpotifyProperties.clientId()
-  - sentimentscribe.spotify.client-secret  SpotifyProperties.clientSecret()
-  - sentimentscribe.tmdb.api-key  TmdbProperties.apiKey()
-  - sentimentscribe.cors.allowed-origins  CorsProperties.allowedOrigins() (used by WebConfig to allow /api/**)
-- Postgres settings:
-  - src/main/resources/application-postgres.yml (datasource + Flyway)
-- Env var placeholders:
-  - SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, TMDB_API_KEY, SENTIMENTSCRIBE_CORS_ORIGIN
-  - POSTGRES_URL, POSTGRES_USER, POSTGRES_PASSWORD
-
-Wiring locations:
-
-- Properties records:
-  - `src/main/java/com/sentimentscribe/config/AuthProperties.java` (legacy; not used in Postgres mode)
-  - `src/main/java/com/sentimentscribe/config/SpotifyProperties.java`
-  - `src/main/java/com/sentimentscribe/config/TmdbProperties.java`
-  - `src/main/java/com/sentimentscribe/config/CorsProperties.java`
-- CORS setup:
-  - `src/main/java/com/sentimentscribe/config/WebConfig.java#addCorsMappings`
-
----
-
-## 8) Tests (what exists, how to run, what they prove)
-
-Run all backend tests:
-
-- `mvn test`
-
-Key Spring Boot tests:
-
-- `src/test/java/com/sentimentscribe/SentimentScribeApplicationContextTest.java`
-  - `@SpringBootTest` verifies the Spring context can start with current bean wiring (uses Testcontainers Postgres).
-- `src/test/java/com/sentimentscribe/web/HealthControllerTest.java`
-  - `@WebMvcTest(HealthController.class)` verifies routing + JSON response for `/api/health`.
-- `src/test/java/com/sentimentscribe/web/EntriesApiIntegrationTest.java`
-  - `@SpringBootTest(webEnvironment = RANDOM_PORT)` calls real HTTP endpoints using `TestRestTemplate` (uses Testcontainers Postgres).
-
-Core unit tests (no Spring):
-
-- Domain: `src/test/java/com/sentimentscribe/domain/*Test.java`
-- Use cases: `src/test/java/com/sentimentscribe/usecase/*/*Test.java`
-  - These tests stub ports/presenters to validate interactor behavior.
-- Data adapters: `src/test/java/com/sentimentscribe/data/*Test.java`
-  - Includes NLP and optional "real API" tests that only run when env vars exist (Spotify/TMDb).
-
----
-
-## 9) How to Trace a Feature (practical debugging guide)
+## 7) How to Trace a Feature (practical debugging guide)
 
 Start from the endpoint and follow the chain used in this repo:
 
@@ -297,7 +237,7 @@ Concrete example: “create entry”
 
 ---
 
-## 10) How to Run (dev commands)
+## 8) How to Run (dev commands)
 
 Backend (from repo root):
 

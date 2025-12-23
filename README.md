@@ -21,7 +21,7 @@ SentimentScribe is moving to a Spring Boot web backend. The initial REST API sur
 - Analysis: analyze keywords/sentiment
 - Recommendations: songs + movies for an entry
 
-Persistence choice for the first web iteration: file-based storage.  
+Persistence choice for the current backend: PostgreSQL (clean start; no legacy JSON import).  
 Frontend approach: separate SPA consuming the backend API.
 
 ## Features
@@ -49,9 +49,16 @@ Frontend approach: separate SPA consuming the backend API.
 Backend:
 
 ```
+docker compose up -d postgres
+```
+
+```
 cd backend
 mvn spring-boot:run
 ```
+
+Defaults (override with env vars): `POSTGRES_URL`, `POSTGRES_USER`, `POSTGRES_PASSWORD`.
+Note: Postgres is the sole persistence layer and starts empty (no legacy JSON backfill).
 
 Frontend:
 

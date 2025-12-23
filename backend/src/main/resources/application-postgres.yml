@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/sentiment_scribe}
+    username: ${POSTGRES_USER:diary}
+    password: ${POSTGRES_PASSWORD:diary}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+

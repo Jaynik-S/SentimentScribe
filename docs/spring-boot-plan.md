@@ -1,4 +1,4 @@
-# Spring Boot Migration Plan (Option A: Web Backend) — SentimentScribe / DiaryDiscovery
+# Spring Boot Migration Plan (Option A: Web Backend) — SentimentScribe
 
 > Change documentation rule: record step-by-step implementation notes **only** in `spring-boot-changes.md`.  
 > Do **not** create per-step change files (no `Step-XX-Changes.md`).

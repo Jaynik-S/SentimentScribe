@@ -9,7 +9,7 @@ Audience: you know Java, but are new to Spring Boot. This document explains how 
 This backend is a Spring Boot REST API for a diary app. It provides endpoints to:
 
 - Verify a simple “password gate” and return a list of entries.
-- Create / update / load / delete diary entries stored as JSON files on disk.
+- Create / update / load / delete diary entries stored in PostgreSQL.
 - Analyze diary text into keywords using Stanford CoreNLP.
 - Fetch music and movie recommendations by calling Spotify and TMDb, using extracted keywords.
 
@@ -31,7 +31,8 @@ Top-level backend locations in this repo:
 - `src/main/java/com/sentimentscribe/web/dto/*`: request/response DTOs (JSON shapes).
 - `src/main/java/com/sentimentscribe/service/*`: Spring `@Service` layer that orchestrates use cases per request.
 - `src/main/java/com/sentimentscribe/usecase/*`: interactors + boundaries + port interfaces (framework-agnostic core).
-- `src/main/java/com/sentimentscribe/data/*`: persistence + NLP + external API adapters.
+- `src/main/java/com/sentimentscribe/data/*`: NLP + external API adapters.
+- `src/main/java/com/sentimentscribe/persistence/postgres/*`: Postgres entities, repositories, and persistence adapters.
 - `src/main/java/com/sentimentscribe/domain/*`: domain entities/value objects.
 - `src/main/resources/application.yml`: runtime configuration (ports, CORS, API keys).
 
@@ -54,7 +55,7 @@ The runtime wiring is “Spring outside, Clean Architecture inside”:
 6. **Service** constructs:
    - A use-case interactor (`...Interactor`)
    - A small presenter (an inner class implementing the use-case output boundary)
-7. **Interactor** validates input and calls a **port interface** (use-case data access interface), which is implemented by a **data adapter** in `com.sentimentscribe.data`.
+7. **Interactor** validates input and calls a **port interface** (use-case data access interface), which is implemented by a **Postgres adapter** in `com.sentimentscribe.persistence.postgres`.
 8. **Presenter** captures success or failure data.
 9. **Service** converts presenter state into `ServiceResult<T>`.
 10. **Controller** maps `ServiceResult<T>` to `ResponseEntity`:
@@ -118,8 +119,8 @@ All endpoints are under `/api/**` and implemented by `src/main/java/com/sentimen
     - `AuthController#verifyPassword`
       → `AuthService#verifyPassword`
       → `VerifyPasswordInteractor#execute(VerifyPasswordInputData)`
-      → `VerifyPasswordDataAccessObject#verifyPassword`
-      → (if allowed) `DBNoteDataObject#getAll`
+      → `PostgresVerifyPasswordDataAccessObject#verifyPassword`
+      → (if allowed) `PostgresDiaryEntryRepositoryAdapter#getAll`
       → controller maps `VerifyPasswordOutputData.getAllEntries()` to `EntrySummaryResponse`.
 
 ### Entries
@@ -138,14 +139,14 @@ Endpoints:
   - Controller: `EntriesController#listEntries`
   - Success: `EntrySummaryResponse[]`
   - Failure: `ErrorResponse` with `500`
-  - Call chain: `EntriesController#listEntries` → `EntryService#list` → `DBNoteDataObject#getAll`
+  - Call chain: `EntriesController#listEntries` → `EntryService#list` → `PostgresDiaryEntryRepositoryAdapter#getAll`
 
 - `GET /api/entries/by-path?path=...`
   - Controller: `EntriesController#getEntryByPath(@RequestParam("path") String path)`
   - Success: `EntryResponse`
   - Failure: `ErrorResponse` with `400`
   - Call chain: `EntriesController#getEntryByPath` → `EntryService#load`
-    → `LoadEntryInteractor#execute` → `DBNoteDataObject#getByPath`
+    → `LoadEntryInteractor#execute` → `PostgresDiaryEntryRepositoryAdapter#getByPath`
 
 - `POST /api/entries`
   - Controller: `EntriesController#createEntry(@RequestBody EntryRequest request)`
@@ -153,7 +154,7 @@ Endpoints:
   - Failure: `ErrorResponse` with `400`
   - Call chain: `EntriesController#createEntry` → `EntryService#save`
     → `SaveEntryInteractor#execute` → (optional keywords) `NLPKeywordExtractor#extractKeywords`
-    → `DBNoteDataObject#save`
+    → `PostgresDiaryEntryRepositoryAdapter#save`
 
 - `PUT /api/entries`
   - Controller: `EntriesController#updateEntry(@RequestBody EntryRequest request)`
@@ -166,7 +167,7 @@ Endpoints:
   - Success: `DeleteResponse` (`{ "deleted": true, "storagePath": "..." }`)
   - Failure: `ErrorResponse` with `400`
   - Call chain: `EntriesController#deleteEntry` → `EntryService#delete`
-    → `DeleteEntryInteractor#execute` → `DBNoteDataObject#deleteByPath`
+    → `DeleteEntryInteractor#execute` → `PostgresDiaryEntryRepositoryAdapter#deleteByPath`
 
 ### Analysis
 
@@ -195,25 +196,21 @@ Endpoints:
 
 ## 6) Data/Persistence (what storage is used, key tables/files, schemas if applicable)
 
-Storage is **file-based JSON**, implemented by:
-
-- `src/main/java/com/sentimentscribe/data/DBNoteDataObject.java`
+Storage is **PostgreSQL**, managed via Flyway migrations.
 
 Key behavior:
 
-- Default base directory:
-  - `DBNoteDataObject.DEFAULT_BASE_DIR = "src/main/java/com/sentimentscribe/data/diary_entry_database"`
-- On save, entries are written as `*.json` files with keys:
-  - `title`, `text`, `keywords` (array), `created_date`, `updated_date`, `storage_path`
-- New file names are generated like:
-  - `N) <sanitized title>.json` (incrementing prefix via `nextIndexPrefix()`).
-- Listing (`getAll`) returns a `List<Map<String,Object>>` where date values are parsed into `LocalDateTime` and then controllers map them into DTO fields `createdAt`/`updatedAt`.
+- Schema lives in `src/main/resources/db/migration/V1__init.sql` and creates `users` + `diary_entries`.
+- `diary_entries.storage_path` is a UNIQUE external identifier (used by the API `path` parameter).
+- Keywords/analysis/recommendations are not stored; they are computed on demand.
+- The database starts empty; legacy JSON files are not imported.
 
 Repository/port structure:
 
 - Use-case data access interfaces live under `src/main/java/com/sentimentscribe/usecase/**`.
 - `src/main/java/com/sentimentscribe/data/DiaryEntryRepository.java` is a convenience interface that *extends multiple use-case ports* so Spring can inject one type into `EntryService`.
-- `DBNoteDataObject` implements that interface (and also lists the individual interfaces explicitly).
+- `PostgresDiaryEntryRepositoryAdapter` implements that interface (`src/main/java/com/sentimentscribe/persistence/postgres/PostgresDiaryEntryRepositoryAdapter.java`).
+- `PostgresVerifyPasswordDataAccessObject` handles password verification and default user creation (`src/main/java/com/sentimentscribe/persistence/postgres/PostgresVerifyPasswordDataAccessObject.java`).
 
 ---
 
@@ -226,20 +223,24 @@ Main config file:
 Highlights (as implemented):
 
 - Server:
-  - `server.port: 8080`
-- Integration credentials (bound via `@ConfigurationProperties`):
-  - `sentimentscribe.spotify.client-id` → `SpotifyProperties.clientId()`
-  - `sentimentscribe.spotify.client-secret` → `SpotifyProperties.clientSecret()`
-  - `sentimentscribe.tmdb.api-key` → `TmdbProperties.apiKey()`
-  - `sentimentscribe.auth.password` → `AuthProperties.password()` (used by `VerifyPasswordDataAccessObject`)
-  - `sentimentscribe.cors.allowed-origins` → `CorsProperties.allowedOrigins()` (used by `WebConfig` to allow `/api/**`)
+  - server.port: 8080
+- Profiles:
+  - spring.profiles.default: postgres
+- Integration credentials (bound via @ConfigurationProperties):
+  - sentimentscribe.spotify.client-id  SpotifyProperties.clientId()
+  - sentimentscribe.spotify.client-secret  SpotifyProperties.clientSecret()
+  - sentimentscribe.tmdb.api-key  TmdbProperties.apiKey()
+  - sentimentscribe.cors.allowed-origins  CorsProperties.allowedOrigins() (used by WebConfig to allow /api/**)
+- Postgres settings:
+  - src/main/resources/application-postgres.yml (datasource + Flyway)
 - Env var placeholders:
-  - `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `TMDB_API_KEY`, `SENTIMENTSCRIBE_PASSWORD`, `SENTIMENTSCRIBE_CORS_ORIGIN`
+  - SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, TMDB_API_KEY, SENTIMENTSCRIBE_CORS_ORIGIN
+  - POSTGRES_URL, POSTGRES_USER, POSTGRES_PASSWORD
 
 Wiring locations:
 
 - Properties records:
-  - `src/main/java/com/sentimentscribe/config/AuthProperties.java`
+  - `src/main/java/com/sentimentscribe/config/AuthProperties.java` (legacy; not used in Postgres mode)
   - `src/main/java/com/sentimentscribe/config/SpotifyProperties.java`
   - `src/main/java/com/sentimentscribe/config/TmdbProperties.java`
   - `src/main/java/com/sentimentscribe/config/CorsProperties.java`
@@ -257,12 +258,11 @@ Run all backend tests:
 Key Spring Boot tests:
 
 - `src/test/java/com/sentimentscribe/SentimentScribeApplicationContextTest.java`
-  - `@SpringBootTest` verifies the Spring context can start with current bean wiring.
+  - `@SpringBootTest` verifies the Spring context can start with current bean wiring (uses Testcontainers Postgres).
 - `src/test/java/com/sentimentscribe/web/HealthControllerTest.java`
   - `@WebMvcTest(HealthController.class)` verifies routing + JSON response for `/api/health`.
 - `src/test/java/com/sentimentscribe/web/EntriesApiIntegrationTest.java`
-  - `@SpringBootTest(webEnvironment = RANDOM_PORT)` calls real HTTP endpoints using `TestRestTemplate`.
-  - Overrides `DiaryEntryRepository` with a temp-dir `DBNoteDataObject` via `@TestConfiguration @Primary`.
+  - `@SpringBootTest(webEnvironment = RANDOM_PORT)` calls real HTTP endpoints using `TestRestTemplate` (uses Testcontainers Postgres).
 
 Core unit tests (no Spring):
 
@@ -270,7 +270,7 @@ Core unit tests (no Spring):
 - Use cases: `src/test/java/com/sentimentscribe/usecase/*/*Test.java`
   - These tests stub ports/presenters to validate interactor behavior.
 - Data adapters: `src/test/java/com/sentimentscribe/data/*Test.java`
-  - Includes JSON mapping tests and optional “real API” tests that only run when env vars exist (Spotify/TMDb).
+  - Includes NLP and optional "real API" tests that only run when env vars exist (Spotify/TMDb).
 
 ---
 
@@ -282,7 +282,7 @@ Start from the endpoint and follow the chain used in this repo:
 2. **Service** in `src/main/java/com/sentimentscribe/service/*Service.java`
 3. **Interactor** in `src/main/java/com/sentimentscribe/usecase/**/**Interactor.java`
 4. **Port interface** in `src/main/java/com/sentimentscribe/usecase/**/*UserDataAccessInterface.java`
-5. **Adapter implementation** in `src/main/java/com/sentimentscribe/data/*`
+5. **Adapter implementation** in `src/main/java/com/sentimentscribe/persistence/postgres/*`
 6. Back out through the presenter → `ServiceResult<T>` → controller DTO mapping
 
 Concrete example: “create entry”
@@ -292,7 +292,7 @@ Concrete example: “create entry”
 - `SaveEntryInteractor#execute`:
   - validates `DiaryEntry.MAX_TITLE_LENGTH`, `MIN_TEXT_LENGTH`, `MAX_TEXT_LENGTH`
   - optionally calls `NLPKeywordExtractor#extractKeywords`
-  - calls persistence port `save(...)` implemented by `DBNoteDataObject#save`
+  - calls persistence port `save(...)` implemented by `PostgresDiaryEntryRepositoryAdapter#save`
 - controller returns `EntryResponse` with `201`
 
 ---
@@ -301,6 +301,7 @@ Concrete example: “create entry”
 
 Backend (from repo root):
 
+- Start Postgres: `docker compose up -d postgres`
 - Run API server: `mvn spring-boot:run`
 - Run tests: `mvn test`
 
@@ -312,4 +313,6 @@ Default URLs:
 To connect to the included React frontend, ensure the backend allows the frontend origin:
 
 - `sentimentscribe.cors.allowed-origins` in `src/main/resources/application.yml` defaults to `http://localhost:3000`
+
+
 

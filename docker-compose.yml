@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: sentiment-scribe-postgres
+    environment:
+      POSTGRES_DB: sentiment_scribe
+      POSTGRES_USER: diary
+      POSTGRES_PASSWORD: diary
+    ports:
+      - "5432:5432"
+    volumes:
+      - sentiment-scribe_pgdata:/var/lib/postgresql/data
+
+volumes:
+  sentiment-scribe_pgdata:
+

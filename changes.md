@@ -57,3 +57,4 @@ Feats:
 
 Other:
 - UI Change
+https://github.com/ZeroLu/awesome-gemini-ai?tab=readme-ov-file#24-gemini-30-design-prompt

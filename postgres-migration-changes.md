@@ -93,21 +93,30 @@
 ## Step 4 - Implement Postgres Adapters Behind Existing Interfaces
 
 ### Summary
-- (fill in)
+- Added Postgres adapters for diary entries and password verification, wired behind profiles.
 
 ### Exact changes made
-- (fill in)
+- Implemented `PostgresDiaryEntryRepositoryAdapter` with storagePath generation and on-demand keyword extraction.
+- Implemented `PostgresVerifyPasswordDataAccessObject` with default user creation and password semantics.
+- Added `StoragePathGenerator` helper for `db:` identifiers.
+- Wired file vs. postgres adapters via Spring profiles in `AppConfig`.
+- Added lookup methods to JPA repositories for `storagePath` and `username`.
 
 ### Files touched (actual)
-- (fill in)
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/PostgresDiaryEntryRepositoryAdapter.java`
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/PostgresVerifyPasswordDataAccessObject.java`
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/StoragePathGenerator.java`
+- `backend/src/main/java/com/sentimentscribe/config/AppConfig.java`
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/repo/DiaryEntryJpaRepository.java`
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/repo/UserJpaRepository.java`
 
 ### Verification notes
 - Commands run:
-  - (fill in)
+  - Not run (not requested).
 - Manual API checks (record outcomes):
-  - (fill in)
+  - Not run (not requested).
 - DB checks (record queries + results):
-  - (fill in)
+  - Not run (not requested).
 
 ---
 

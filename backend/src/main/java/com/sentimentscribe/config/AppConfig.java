@@ -5,9 +5,16 @@ import com.sentimentscribe.data.NLPAnalysisDataAccessObject;
 import com.sentimentscribe.data.NLPKeywordExtractor;
 import com.sentimentscribe.data.RecommendationAPIAccessObject;
 import com.sentimentscribe.data.VerifyPasswordDataAccessObject;
+import com.sentimentscribe.persistence.postgres.PostgresDiaryEntryRepositoryAdapter;
+import com.sentimentscribe.persistence.postgres.PostgresVerifyPasswordDataAccessObject;
+import com.sentimentscribe.persistence.postgres.StoragePathGenerator;
+import com.sentimentscribe.persistence.postgres.repo.DiaryEntryJpaRepository;
+import com.sentimentscribe.persistence.postgres.repo.UserJpaRepository;
+import com.sentimentscribe.usecase.save_entry.SaveEntryKeywordExtractor;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.util.Properties;
 
@@ -32,13 +39,43 @@ public class AppConfig {
     }
 
     @Bean
+    @Profile({"default", "file"})
     public DBNoteDataObject dbNoteDataObject() {
         return new DBNoteDataObject();
     }
 
     @Bean
+    @Profile({"default", "file"})
     public VerifyPasswordDataAccessObject verifyPasswordDataAccessObject(AuthProperties authProperties) {
         return new VerifyPasswordDataAccessObject(authProperties);
+    }
+
+    @Bean
+    @Profile("postgres")
+    public StoragePathGenerator storagePathGenerator() {
+        return new StoragePathGenerator();
+    }
+
+    @Bean
+    @Profile("postgres")
+    public PostgresDiaryEntryRepositoryAdapter postgresDiaryEntryRepositoryAdapter(
+            DiaryEntryJpaRepository diaryEntryRepository,
+            UserJpaRepository userJpaRepository,
+            SaveEntryKeywordExtractor keywordExtractor,
+            StoragePathGenerator storagePathGenerator) {
+        return new PostgresDiaryEntryRepositoryAdapter(
+                diaryEntryRepository,
+                userJpaRepository,
+                keywordExtractor,
+                storagePathGenerator
+        );
+    }
+
+    @Bean
+    @Profile("postgres")
+    public PostgresVerifyPasswordDataAccessObject postgresVerifyPasswordDataAccessObject(
+            UserJpaRepository userJpaRepository) {
+        return new PostgresVerifyPasswordDataAccessObject(userJpaRepository);
     }
 
     @Bean

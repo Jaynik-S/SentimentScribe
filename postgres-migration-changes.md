@@ -72,17 +72,21 @@
 ## Step 3 - Add JPA Entities + Spring Data Repositories
 
 ### Summary
-- (fill in)
+- Added Postgres JPA entities and repositories for users and diary entries.
 
 ### Exact changes made
-- (fill in)
+- Created `UserEntity` and `DiaryEntryEntity` with UUID IDs, timestamps, and the user relation.
+- Added `UserJpaRepository` and `DiaryEntryJpaRepository` interfaces.
 
 ### Files touched (actual)
-- (fill in)
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/entity/UserEntity.java`
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/entity/DiaryEntryEntity.java`
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/repo/UserJpaRepository.java`
+- `backend/src/main/java/com/sentimentscribe/persistence/postgres/repo/DiaryEntryJpaRepository.java`
 
 ### Verification notes
 - Commands run:
-  - (fill in)
+  - Not run (not requested).
 
 ---
 

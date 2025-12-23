@@ -1,68 +1,58 @@
 package com.sentimentscribe.web;
 
-import com.sentimentscribe.data.DBNoteDataObject;
-import com.sentimentscribe.data.DiaryEntryRepository;
+import com.sentimentscribe.web.dto.AuthRequest;
+import com.sentimentscribe.web.dto.AuthResponse;
 import com.sentimentscribe.web.dto.EntryRequest;
 import com.sentimentscribe.web.dto.EntryResponse;
 import com.sentimentscribe.web.dto.EntrySummaryResponse;
 import com.sentimentscribe.web.dto.ErrorResponse;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Testcontainers
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(EntriesApiIntegrationTest.TestConfig.class)
+@ActiveProfiles("postgres")
 class EntriesApiIntegrationTest {
 
-    private static final Path BASE_DIR = createTempDir();
+    @Container
+    private static final PostgreSQLContainer<?> POSTGRES =
+            new PostgreSQLContainer<>("postgres:15");
 
     @LocalServerPort
     private int port;
 
     private final TestRestTemplate restTemplate = new TestRestTemplate();
 
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        @Primary
-        DiaryEntryRepository diaryEntryRepository() {
-            return new DBNoteDataObject(BASE_DIR);
-        }
-    }
-
-    @AfterAll
-    static void cleanup() throws IOException {
-        if (Files.exists(BASE_DIR)) {
-            Files.walk(BASE_DIR)
-                    .sorted((left, right) -> right.compareTo(left))
-                    .forEach(path -> {
-                        try {
-                            Files.deleteIfExists(path);
-                        } catch (IOException ignored) {
-                        }
-                    });
-        }
+    @DynamicPropertySource
+    static void registerDataSource(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
     }
 
     @Test
     void createLoadAndListEntries() {
+        AuthRequest authRequest = new AuthRequest("test-pass");
+        ResponseEntity<AuthResponse> authResponse =
+                restTemplate.postForEntity(baseUrl() + "/api/auth/verify", authRequest, AuthResponse.class);
+        assertEquals(HttpStatus.OK, authResponse.getStatusCode());
+
         String text = "a".repeat(60);
         EntryRequest request = new EntryRequest(
                 "First Entry",
@@ -102,7 +92,7 @@ class EntriesApiIntegrationTest {
 
     @Test
     void loadMissingEntryReturnsError() {
-        String missingPath = BASE_DIR.resolve("missing-entry.json").toString();
+        String missingPath = "db:missing-entry";
         String url = UriComponentsBuilder.fromUriString(baseUrl())
                 .path("/api/entries/by-path")
                 .queryParam("path", missingPath)
@@ -117,15 +107,8 @@ class EntriesApiIntegrationTest {
         assertNotNull(response.getBody().error());
     }
 
-    private static Path createTempDir() {
-        try {
-            return Files.createTempDirectory("sentimentscribe-entry-test-");
-        } catch (IOException error) {
-            throw new IllegalStateException("Failed to create temp directory", error);
-        }
-    }
-
     private String baseUrl() {
         return "http://localhost:" + port;
     }
 }
+

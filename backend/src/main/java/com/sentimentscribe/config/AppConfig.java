@@ -1,10 +1,8 @@
 package com.sentimentscribe.config;
 
-import com.sentimentscribe.data.DBNoteDataObject;
 import com.sentimentscribe.data.NLPAnalysisDataAccessObject;
 import com.sentimentscribe.data.NLPKeywordExtractor;
 import com.sentimentscribe.data.RecommendationAPIAccessObject;
-import com.sentimentscribe.data.VerifyPasswordDataAccessObject;
 import com.sentimentscribe.persistence.postgres.PostgresDiaryEntryRepositoryAdapter;
 import com.sentimentscribe.persistence.postgres.PostgresVerifyPasswordDataAccessObject;
 import com.sentimentscribe.persistence.postgres.StoragePathGenerator;
@@ -36,18 +34,6 @@ public class AppConfig {
     @Bean
     public NLPKeywordExtractor nlpKeywordExtractor(NLPAnalysisDataAccessObject analysisDao) {
         return new NLPKeywordExtractor(analysisDao);
-    }
-
-    @Bean
-    @Profile({"default", "file"})
-    public DBNoteDataObject dbNoteDataObject() {
-        return new DBNoteDataObject();
-    }
-
-    @Bean
-    @Profile({"default", "file"})
-    public VerifyPasswordDataAccessObject verifyPasswordDataAccessObject(AuthProperties authProperties) {
-        return new VerifyPasswordDataAccessObject(authProperties);
     }
 
     @Bean

@@ -1,4 +1,4 @@
-# PostgreSQL Migration Plan - Replace File-Based Storage (DiaryDiscovery)
+# PostgreSQL Migration Plan - Replace File-Based Storage (SentimentScribe)
 
 ## Table of Contents
 

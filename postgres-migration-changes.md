@@ -123,19 +123,33 @@
 ## Step 5 - Cutover + Cleanup (Remove File Storage)
 
 ### Summary
-- (fill in)
+- Cut over to Postgres as default and removed file-based persistence code, data, and tests.
 
 ### Exact changes made
-- (fill in)
+- Removed file-based persistence classes and wiring.
+- Set the default Spring profile to `postgres`.
+- Updated backend docs for Postgres-first behavior and clean-start persistence.
+- Updated Spring Boot tests to use Postgres via Testcontainers.
+- Deleted legacy JSON fixture files.
 
 ### Files touched (actual)
-- (fill in)
+- `backend/src/main/java/com/sentimentscribe/config/AppConfig.java`
+- `backend/src/main/resources/application.yml`
+- `backend/src/test/java/com/sentimentscribe/SentimentScribeApplicationContextTest.java`
+- `backend/src/test/java/com/sentimentscribe/web/EntriesApiIntegrationTest.java`
+- `README.md`
+- `README-backend.md`
+- `postgres-migration-changes.md`
 
 ### Deleted (confirm removed files/directories)
-- (fill in)
+- `backend/src/main/java/com/sentimentscribe/data/DBNoteDataObject.java`
+- `backend/src/main/java/com/sentimentscribe/data/VerifyPasswordDataAccessObject.java`
+- `backend/src/test/java/com/sentimentscribe/data/DBNoteDataObjectTest.java`
+- `backend/src/test/java/com/sentimentscribe/data/VerifyPasswordDataAccessObjectTest.java`
+- `backend/src/main/java/com/sentimentscribe/data/diary_entry_database/`
 
 ### Verification notes
 - Commands run:
-  - (fill in)
+  - Not run (not requested).
 - Manual smoke checks:
-  - (fill in)
+  - Not run (not requested).

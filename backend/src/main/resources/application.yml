@@ -3,6 +3,10 @@ server:
   servlet:
     context-path: /
 
+spring:
+  profiles:
+    default: postgres
+
 sentimentscribe:
   spotify:
     client-id: ${SPOTIFY_CLIENT_ID:3302f8d729f747aea634c70bdc8cc670}

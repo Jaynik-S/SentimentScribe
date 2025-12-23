@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/diary_discovery}
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/sentiment_scribe}
     username: ${POSTGRES_USER:diary}
     password: ${POSTGRES_PASSWORD:diary}
   jpa:
@@ -8,3 +8,4 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+

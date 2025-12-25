@@ -15,6 +15,10 @@ sentimentscribe:
     api-key: ${TMDB_API_KEY:e112ddda993eb2247a0602076d5ba0b7}
   auth:
     password: ${SENTIMENTSCRIBE_PASSWORD:123}
+  jwt:
+    secret: ${SENTIMENTSCRIBE_JWT_SECRET:change-me}
+    issuer: ${SENTIMENTSCRIBE_JWT_ISSUER:sentimentscribe}
+    ttl-seconds: ${SENTIMENTSCRIBE_JWT_TTL_SECONDS:3600}
   cors:
     allowed-origins:
       - ${SENTIMENTSCRIBE_CORS_ORIGIN:http://localhost:3000}

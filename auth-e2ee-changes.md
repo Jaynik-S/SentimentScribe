@@ -48,14 +48,14 @@
 
 ---
 
-## Step 4 — Enable stateless JWT auth (protect endpoints + JSON 401/403)
+## Step 4 - Enable stateless JWT auth (protect endpoints + JSON 401/403)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: backend/src/main/java/com/sentimentscribe/config/SecurityConfig.java; backend/src/main/resources/application.yml; backend/src/test/java/com/sentimentscribe/web/EntriesApiIntegrationTest.java; auth-e2ee-changes.md
+- Summary: Enabled stateless JWT auth for `/api/**` with JSON 401/403 handling, configured JWT env placeholders, and updated entries integration tests to use register/login + bearer tokens.
+- Backend notes: Security config now permits `/api/auth/**` + `/api/health`, requires JWT for other `/api/**`, and returns `{ "error": "Unauthorized" }` or `{ "error": "Forbidden" }`. Added JwtDecoder for HMAC secrets and enabled CORS + stateless sessions.
+- Frontend notes: None.
+- DB notes: None.
+- Verification: `cd backend; mvn test`
 
 ---
 

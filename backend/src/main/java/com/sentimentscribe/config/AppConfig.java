@@ -13,6 +13,7 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Properties;
 
@@ -60,8 +61,9 @@ public class AppConfig {
     @Bean
     @Profile("postgres")
     public PostgresVerifyPasswordDataAccessObject postgresVerifyPasswordDataAccessObject(
-            UserJpaRepository userJpaRepository) {
-        return new PostgresVerifyPasswordDataAccessObject(userJpaRepository);
+            UserJpaRepository userJpaRepository,
+            PasswordEncoder passwordEncoder) {
+        return new PostgresVerifyPasswordDataAccessObject(userJpaRepository, passwordEncoder);
     }
 
     @Bean

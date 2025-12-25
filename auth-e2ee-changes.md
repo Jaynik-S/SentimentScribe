@@ -26,14 +26,14 @@
 
 ---
 
-## Step 2 — Flyway V2 + entity updates: BCrypt hashes + E2EE KDF params
+## Step 2 - Flyway V2 + entity updates: BCrypt hashes + E2EE KDF params
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: backend/src/main/resources/db/migration/V2__auth_users.sql; backend/src/main/java/com/sentimentscribe/persistence/postgres/entity/UserEntity.java; backend/src/main/java/com/sentimentscribe/persistence/postgres/PostgresVerifyPasswordDataAccessObject.java; backend/src/main/java/com/sentimentscribe/config/AppConfig.java; auth-e2ee-changes.md
+- Summary: Added Flyway V2 for auth fields, updated UserEntity for password hash + E2EE params, and seeded defaults in legacy password flow.
+- Backend notes: `UserEntity` now maps `password_hash` and E2EE fields. Legacy verify-password DAO now hashes with BCrypt and populates E2EE defaults (PBKDF2-SHA256, 310000, random 16-byte salt).
+- Frontend notes: None.
+- DB notes: Added V2 migration renaming `password` to `password_hash` and adding `e2ee_kdf`, `e2ee_salt`, `e2ee_iterations` (all NOT NULL).
+- Verification: `cd backend; mvn test`. Manual Flyway run not performed beyond tests.
 
 ---
 

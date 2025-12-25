@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,11 +19,13 @@ class SaveEntryInteractorTest {
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
 
         String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData("Gratitude", LocalDateTime.now(), validText, null, List.of());
+        UUID userId = UUID.randomUUID();
+        SaveEntryInputData inputData = new SaveEntryInputData(userId, "Gratitude", LocalDateTime.now(), validText, null, List.of());
 
         interactor.execute(inputData);
 
         assertTrue(dataAccess.saveCalled);
+        assertEquals(userId, dataAccess.savedUserId);
         assertNotNull(dataAccess.savedEntry);
         assertNotNull(presenter.successData);
         assertNull(presenter.errorMessage);
@@ -37,7 +40,7 @@ class SaveEntryInteractorTest {
         InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
 
-        SaveEntryInputData inputData = new SaveEntryInputData("Too Short", LocalDateTime.now(), "short text", null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Too Short", LocalDateTime.now(), "short text", null, List.of());
 
         interactor.execute(inputData);
 
@@ -55,7 +58,7 @@ class SaveEntryInteractorTest {
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
 
         String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData("", LocalDateTime.now(), validText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "", LocalDateTime.now(), validText, null, List.of());
 
         interactor.execute(inputData);
 
@@ -73,7 +76,7 @@ class SaveEntryInteractorTest {
 
         String longTitle = "a".repeat(DiaryEntry.MAX_TITLE_LENGTH + 1);
         String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData(longTitle, LocalDateTime.now(), validText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), longTitle, LocalDateTime.now(), validText, null, List.of());
 
         interactor.execute(inputData);
 
@@ -89,7 +92,7 @@ class SaveEntryInteractorTest {
         InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
 
-        SaveEntryInputData inputData = new SaveEntryInputData("Title", LocalDateTime.now(), "", null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Title", LocalDateTime.now(), "", null, List.of());
 
         interactor.execute(inputData);
 
@@ -106,7 +109,7 @@ class SaveEntryInteractorTest {
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
 
         String tooLongText = "a".repeat(DiaryEntry.MAX_TEXT_LENGTH + 1);
-        SaveEntryInputData inputData = new SaveEntryInputData("Title", LocalDateTime.now(), tooLongText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Title", LocalDateTime.now(), tooLongText, null, List.of());
 
         interactor.execute(inputData);
 
@@ -129,7 +132,7 @@ class SaveEntryInteractorTest {
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
 
         String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData(null, LocalDateTime.now(), validText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), null, LocalDateTime.now(), validText, null, List.of());
 
         interactor.execute(inputData);
 
@@ -144,7 +147,7 @@ class SaveEntryInteractorTest {
         InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
 
-        SaveEntryInputData inputData = new SaveEntryInputData("Title", LocalDateTime.now(), null, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Title", LocalDateTime.now(), null, null, List.of());
 
         interactor.execute(inputData);
 
@@ -156,11 +159,11 @@ class SaveEntryInteractorTest {
     @Test
     void execute_whenSaveThrowsException_reportsFailureWithMessage() {
         RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
-        SaveEntryUserDataAccessInterface dataAccess = entry -> { throw new RuntimeException("disk full"); };
+        SaveEntryUserDataAccessInterface dataAccess = (userId, entry) -> { throw new RuntimeException("disk full"); };
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
 
         String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData("Title", LocalDateTime.now(), validText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Title", LocalDateTime.now(), validText, null, List.of());
 
         interactor.execute(inputData);
 
@@ -188,11 +191,13 @@ class SaveEntryInteractorTest {
     private static final class InMemorySaveEntryDataAccess implements SaveEntryUserDataAccessInterface {
         private boolean saveCalled;
         private DiaryEntry savedEntry;
+        private UUID savedUserId;
 
         @Override
-        public boolean save(DiaryEntry entry) {
+        public boolean save(UUID userId, DiaryEntry entry) {
             this.saveCalled = true;
             this.savedEntry = entry;
+            this.savedUserId = userId;
             return true;
         }
     }

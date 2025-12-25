@@ -2,8 +2,11 @@ package com.sentimentscribe.usecase.verify_password;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class VerifyPasswordInteractor implements VerifyPasswordInputBoundary {
+    private static final String DEFAULT_USERNAME = "default";
+
     private final VerifyPasswordUserDataAccessInterface userDataAccess;
     private final RenderEntriesUserDataInterface renderEntriesDataAccess;
     private final VerifyPasswordOutputBoundary userPresenter;
@@ -25,7 +28,12 @@ public class VerifyPasswordInteractor implements VerifyPasswordInputBoundary {
                 userPresenter.prepareFailView("Incorrect Password");
             }
             else {
-                List<Map<String, Object>> allEntries = renderEntriesDataAccess.getAll();
+                UUID userId = userDataAccess.getUserIdByUsername(DEFAULT_USERNAME);
+                if (userId == null) {
+                    userPresenter.prepareFailView("Failed to verify password: user not found.");
+                    return;
+                }
+                List<Map<String, Object>> allEntries = renderEntriesDataAccess.getAll(userId);
                 VerifyPasswordOutputData outputData = new VerifyPasswordOutputData(passwordStatus, allEntries);
                 userPresenter.prepareSuccessView(outputData);
             }

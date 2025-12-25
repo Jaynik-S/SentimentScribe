@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,12 +18,15 @@ class VerifyPasswordInteractorTest {
         StubRenderEntriesDataAccess renderAccess = new StubRenderEntriesDataAccess();
         renderAccess.entriesToReturn = List.of(Map.of("title", "Entry"));
         verifyAccess.passwordStatusToReturn = "Unlocked";
+        UUID userId = UUID.randomUUID();
+        verifyAccess.userIdToReturn = userId;
         VerifyPasswordInteractor interactor = new VerifyPasswordInteractor(verifyAccess, presenter, renderAccess);
 
         interactor.execute(new VerifyPasswordInputData("secret"));
 
         assertEquals("secret", verifyAccess.lastPassword);
         assertTrue(renderAccess.called);
+        assertEquals(userId, renderAccess.requestedUserId);
         assertNotNull(presenter.successData);
         assertNull(presenter.errorMessage);
         assertEquals("Unlocked", presenter.successData.passwordStatus());
@@ -78,11 +82,17 @@ class VerifyPasswordInteractorTest {
     private static class StubVerifyPasswordDataAccess implements VerifyPasswordUserDataAccessInterface {
         private String passwordStatusToReturn = "Unlocked";
         private String lastPassword;
+        private UUID userIdToReturn;
 
         @Override
         public String verifyPassword(String password) {
             this.lastPassword = password;
             return passwordStatusToReturn;
+        }
+
+        @Override
+        public UUID getUserIdByUsername(String username) {
+            return userIdToReturn;
         }
     }
 
@@ -91,15 +101,22 @@ class VerifyPasswordInteractorTest {
         public String verifyPassword(String password) {
             throw new RuntimeException("service down");
         }
+
+        @Override
+        public UUID getUserIdByUsername(String username) {
+            throw new RuntimeException("service down");
+        }
     }
 
     private static class StubRenderEntriesDataAccess implements RenderEntriesUserDataInterface {
         private List<Map<String, Object>> entriesToReturn = List.of();
         private boolean called;
+        private UUID requestedUserId;
 
         @Override
-        public List<Map<String, Object>> getAll() {
+        public List<Map<String, Object>> getAll(UUID userId) {
             this.called = true;
+            this.requestedUserId = userId;
             return entriesToReturn;
         }
     }

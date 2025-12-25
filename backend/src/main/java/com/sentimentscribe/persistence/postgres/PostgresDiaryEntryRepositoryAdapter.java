@@ -12,10 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository {
-    private static final String DEFAULT_USERNAME = "default";
-
     private final DiaryEntryJpaRepository entryRepository;
     private final UserJpaRepository userRepository;
     private final SaveEntryKeywordExtractor keywordExtractor;
@@ -32,11 +31,14 @@ public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository
     }
 
     @Override
-    public DiaryEntry getByPath(String entryPath) throws Exception {
+    public DiaryEntry getByPath(UUID userId, String entryPath) throws Exception {
         if (entryPath == null || entryPath.isBlank()) {
             return null;
         }
-        Optional<DiaryEntryEntity> existing = entryRepository.findByStoragePath(entryPath);
+        if (userId == null) {
+            throw new Exception("User is required.");
+        }
+        Optional<DiaryEntryEntity> existing = entryRepository.findByUser_IdAndStoragePath(userId, entryPath);
         if (existing.isEmpty()) {
             return null;
         }
@@ -53,11 +55,14 @@ public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository
     }
 
     @Override
-    public boolean deleteByPath(String entryPath) {
+    public boolean deleteByPath(UUID userId, String entryPath) {
         if (entryPath == null || entryPath.isBlank()) {
             return false;
         }
-        Optional<DiaryEntryEntity> existing = entryRepository.findByStoragePath(entryPath);
+        if (userId == null) {
+            return false;
+        }
+        Optional<DiaryEntryEntity> existing = entryRepository.findByUser_IdAndStoragePath(userId, entryPath);
         if (existing.isEmpty()) {
             return false;
         }
@@ -66,12 +71,15 @@ public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository
     }
 
     @Override
-    public boolean save(DiaryEntry entry) throws Exception {
+    public boolean save(UUID userId, DiaryEntry entry) throws Exception {
         if (entry == null) {
             throw new Exception("Entry cannot be null.");
         }
-        UserEntity user = userRepository.findByUsername(DEFAULT_USERNAME)
-                .orElseThrow(() -> new Exception("Default user not initialized."));
+        if (userId == null) {
+            throw new Exception("User is required.");
+        }
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new Exception("User not found."));
 
         LocalDateTime createdAt = entry.getCreatedAt() != null ? entry.getCreatedAt() : LocalDateTime.now();
         LocalDateTime updatedAt = entry.getUpdatedAt() != null ? entry.getUpdatedAt() : LocalDateTime.now();
@@ -79,7 +87,8 @@ public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository
         String storagePath = entry.getStoragePath();
         DiaryEntryEntity entity;
         if (storagePath != null && !storagePath.isBlank()) {
-            entity = entryRepository.findByStoragePath(storagePath).orElseGet(DiaryEntryEntity::new);
+            entity = entryRepository.findByUser_IdAndStoragePath(userId, storagePath)
+                    .orElseGet(DiaryEntryEntity::new);
         }
         else {
             storagePath = storagePathGenerator.generate();
@@ -98,8 +107,11 @@ public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository
     }
 
     @Override
-    public List<Map<String, Object>> getAll() throws Exception {
-        return entryRepository.findAll().stream()
+    public List<Map<String, Object>> getAll(UUID userId) throws Exception {
+        if (userId == null) {
+            throw new Exception("User is required.");
+        }
+        return entryRepository.findAllByUser_Id(userId).stream()
                 .map(this::toSummaryMap)
                 .toList();
     }

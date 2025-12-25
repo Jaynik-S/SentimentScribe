@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class EntryService {
@@ -30,10 +31,11 @@ public class EntryService {
         this.keywordExtractor = keywordExtractor;
     }
 
-    public ServiceResult<SaveEntryOutputData> save(EntryCommand command) {
+    public ServiceResult<SaveEntryOutputData> save(UUID userId, EntryCommand command) {
         SaveEntryPresenter presenter = new SaveEntryPresenter();
         SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, repository, keywordExtractor);
         SaveEntryInputData inputData = new SaveEntryInputData(
+                userId,
                 command.title(),
                 command.createdAt(),
                 command.text(),
@@ -47,29 +49,29 @@ public class EntryService {
         return ServiceResult.success(presenter.outputData);
     }
 
-    public ServiceResult<LoadEntryOutputData> load(String entryPath) {
+    public ServiceResult<LoadEntryOutputData> load(UUID userId, String entryPath) {
         LoadEntryPresenter presenter = new LoadEntryPresenter();
         LoadEntryInteractor interactor = new LoadEntryInteractor(presenter, repository);
-        interactor.execute(new LoadEntryInputData(entryPath));
+        interactor.execute(new LoadEntryInputData(userId, entryPath));
         if (presenter.errorMessage != null) {
             return ServiceResult.failure(presenter.errorMessage);
         }
         return ServiceResult.success(presenter.outputData);
     }
 
-    public ServiceResult<DeleteEntryOutputData> delete(String entryPath) {
+    public ServiceResult<DeleteEntryOutputData> delete(UUID userId, String entryPath) {
         DeleteEntryPresenter presenter = new DeleteEntryPresenter();
         DeleteEntryInteractor interactor = new DeleteEntryInteractor(presenter, repository);
-        interactor.execute(new DeleteEntryInputData(entryPath));
+        interactor.execute(new DeleteEntryInputData(userId, entryPath));
         if (presenter.errorMessage != null) {
             return ServiceResult.failure(presenter.errorMessage);
         }
         return ServiceResult.success(presenter.outputData);
     }
 
-    public ServiceResult<List<Map<String, Object>>> list() {
+    public ServiceResult<List<Map<String, Object>>> list(UUID userId) {
         try {
-            return ServiceResult.success(repository.getAll());
+            return ServiceResult.success(repository.getAll(userId));
         }
         catch (Exception error) {
             return ServiceResult.failure("Failed to load entries: " + error.getMessage());

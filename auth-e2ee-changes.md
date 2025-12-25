@@ -59,14 +59,14 @@
 
 ---
 
-## Step 5 — Enforce per-user authorization on diary endpoints (no cross-user access)
+## Step 5 - Enforce per-user authorization on diary endpoints (no cross-user access)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: backend/src/main/resources/db/migration/V4__entries_user_scope.sql; backend/src/main/java/com/sentimentscribe/persistence/postgres/repo/DiaryEntryJpaRepository.java; backend/src/main/java/com/sentimentscribe/persistence/postgres/PostgresDiaryEntryRepositoryAdapter.java; backend/src/main/java/com/sentimentscribe/service/EntryService.java; backend/src/main/java/com/sentimentscribe/web/EntriesController.java; backend/src/main/java/com/sentimentscribe/usecase/save_entry/SaveEntryUserDataAccessInterface.java; backend/src/main/java/com/sentimentscribe/usecase/load_entry/LoadEntryUserDataAccessInterface.java; backend/src/main/java/com/sentimentscribe/usecase/delete_entry/DeleteEntryUserDataAccessInterface.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/RenderEntriesUserDataInterface.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordUserDataAccessInterface.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordInteractor.java; backend/src/main/java/com/sentimentscribe/usecase/save_entry/SaveEntryInputData.java; backend/src/main/java/com/sentimentscribe/usecase/load_entry/LoadEntryInputData.java; backend/src/main/java/com/sentimentscribe/usecase/delete_entry/DeleteEntryInputData.java; backend/src/main/java/com/sentimentscribe/usecase/save_entry/SaveEntryInteractor.java; backend/src/main/java/com/sentimentscribe/usecase/load_entry/LoadEntryInteractor.java; backend/src/main/java/com/sentimentscribe/usecase/delete_entry/DeleteEntryInteractor.java; backend/src/main/java/com/sentimentscribe/persistence/postgres/PostgresVerifyPasswordDataAccessObject.java; backend/src/test/java/com/sentimentscribe/usecase/save_entry/SaveEntryInteractorTest.java; backend/src/test/java/com/sentimentscribe/usecase/load_entry/LoadEntryInteractorTest.java; backend/src/test/java/com/sentimentscribe/usecase/delete_entry/DeleteEntryInteractorTest.java; backend/src/test/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordInteractorTest.java; auth-e2ee-changes.md
+- Summary: Added per-user DB constraints/indexing and enforced user scoping across entry CRUD/list flows (controller → service → usecase → repository).
+- Backend notes: Entry endpoints now read JWT `uid` and pass it through usecase input data to repository calls. Added user-scoped repository methods and safety checks. Legacy verify-password flow now resolves the default user ID to scope entry listing.
+- Frontend notes: None.
+- DB notes: Added V4 migration to replace global storage_path uniqueness with `(user_id, storage_path)` and added `(user_id, updated_at DESC)` index.
+- Verification: `cd backend; mvn test`
 
 ---
 

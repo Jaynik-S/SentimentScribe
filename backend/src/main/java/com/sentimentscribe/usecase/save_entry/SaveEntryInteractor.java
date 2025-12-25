@@ -20,6 +20,10 @@ public class SaveEntryInteractor implements SaveEntryInputBoundary {
 
     @Override
     public void execute(SaveEntryInputData inputData) {
+        if (inputData.getUserId() == null) {
+            presenter.prepareFailView("User is required.");
+            return;
+        }
 
         DiaryEntry entry = new DiaryEntry(inputData.getTitle(), inputData.getTextBody(), inputData.getDate());
         entry.setStoragePath(inputData.getStoragePath());
@@ -64,7 +68,7 @@ public class SaveEntryInteractor implements SaveEntryInputBoundary {
 
         entry.updatedTime();
         try {
-            dataAccess.save(entry);
+            dataAccess.save(inputData.getUserId(), entry);
         }
         catch (Exception error) {
             String message = "Could not save entry." + error.getMessage();

@@ -2,6 +2,8 @@ package com.sentimentscribe.usecase.delete_entry;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class DeleteEntryInteractorTest {
@@ -13,12 +15,14 @@ class DeleteEntryInteractorTest {
         InMemoryDeleteEntryDataAccess dataAccess = new InMemoryDeleteEntryDataAccess();
         DeleteEntryInteractor interactor = new DeleteEntryInteractor(presenter, dataAccess);
 
-        interactor.execute(new DeleteEntryInputData("entries/1.json"));
+        UUID userId = UUID.randomUUID();
+        interactor.execute(new DeleteEntryInputData(userId, "entries/1.json"));
 
         assertTrue(presenter.successData.isSuccess());
         assertEquals("entries/1.json", presenter.successData.getEntryPath());
         assertNull(presenter.errorMessage);
         assertEquals("entries/1.json", dataAccess.lastDeletedPath);
+        assertEquals(userId, dataAccess.lastUserId);
         assertTrue(dataAccess.deleteCalled);
     }
 
@@ -29,7 +33,7 @@ class DeleteEntryInteractorTest {
         InMemoryDeleteEntryDataAccess dataAccess = new InMemoryDeleteEntryDataAccess();
         DeleteEntryInteractor interactor = new DeleteEntryInteractor(presenter, dataAccess);
 
-        interactor.execute(new DeleteEntryInputData(""));
+        interactor.execute(new DeleteEntryInputData(UUID.randomUUID(), ""));
 
         assertEquals("Entry path cannot be empty.", presenter.errorMessage);
         assertNull(presenter.successData);
@@ -43,7 +47,7 @@ class DeleteEntryInteractorTest {
         FailingDeleteEntryDataAccess dataAccess = new FailingDeleteEntryDataAccess();
         DeleteEntryInteractor interactor = new DeleteEntryInteractor(presenter, dataAccess);
 
-        interactor.execute(new DeleteEntryInputData("entries/2.json"));
+        interactor.execute(new DeleteEntryInputData(UUID.randomUUID(), "entries/2.json"));
 
         assertEquals("Failed to delete entry: boom", presenter.errorMessage);
         assertNull(presenter.successData);
@@ -67,10 +71,12 @@ class DeleteEntryInteractorTest {
     private static final class InMemoryDeleteEntryDataAccess implements DeleteEntryUserDataAccessInterface {
         private String lastDeletedPath;
         private boolean deleteCalled;
+        private UUID lastUserId;
 
         @Override
-        public boolean deleteByPath(String entryPath) {
+        public boolean deleteByPath(UUID userId, String entryPath) {
             this.deleteCalled = true;
+            this.lastUserId = userId;
             this.lastDeletedPath = entryPath;
             return true;
         }
@@ -79,7 +85,7 @@ class DeleteEntryInteractorTest {
     private static final class FailingDeleteEntryDataAccess implements DeleteEntryUserDataAccessInterface {
 
         @Override
-        public boolean deleteByPath(String entryPath) {
+        public boolean deleteByPath(UUID userId, String entryPath) {
             throw new RuntimeException("boom");
         }
     }

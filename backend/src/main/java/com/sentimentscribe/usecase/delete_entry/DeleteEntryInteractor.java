@@ -12,6 +12,10 @@ public class DeleteEntryInteractor implements DeleteEntryInputBoundary {
 
     @Override
     public void execute(DeleteEntryInputData inputData) {
+        if (inputData.getUserId() == null) {
+            presenter.prepareFailView("User is required.");
+            return;
+        }
         String entryPath = inputData.getEntryPath();
 
         if (entryPath == null || entryPath.length() == 0) {
@@ -19,7 +23,7 @@ public class DeleteEntryInteractor implements DeleteEntryInputBoundary {
             return;
         }
         try {
-            boolean deleted = dataAccess.deleteByPath(entryPath);
+            boolean deleted = dataAccess.deleteByPath(inputData.getUserId(), entryPath);
             if (!deleted) {
                 presenter.prepareFailView("Failed to delete entry: file not found.");
                 return;

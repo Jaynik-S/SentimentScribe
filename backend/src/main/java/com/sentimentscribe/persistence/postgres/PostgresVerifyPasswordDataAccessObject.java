@@ -55,6 +55,16 @@ public class PostgresVerifyPasswordDataAccessObject implements VerifyPasswordUse
         return "Incorrect Password";
     }
 
+    @Override
+    public java.util.UUID getUserIdByUsername(String username) throws Exception {
+        if (username == null || username.isBlank()) {
+            return null;
+        }
+        return userRepository.findByUsername(username)
+                .map(UserEntity::getId)
+                .orElse(null);
+    }
+
     private void applyE2eeDefaults(UserEntity user) {
         if (user.getE2eeKdf() == null || user.getE2eeKdf().isBlank()) {
             user.setE2eeKdf(DEFAULT_E2EE_KDF);

@@ -37,14 +37,14 @@
 
 ---
 
-## Step 3 — Add `POST /api/auth/register` and `POST /api/auth/login` (JWT + BCrypt)
+## Step 3 - Add `POST /api/auth/register` and `POST /api/auth/login` (JWT + BCrypt)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: backend/src/main/java/com/sentimentscribe/service/AuthService.java; backend/src/main/java/com/sentimentscribe/service/JwtService.java; backend/src/main/java/com/sentimentscribe/web/AuthController.java; backend/src/main/java/com/sentimentscribe/web/dto/RegisterRequest.java; backend/src/main/java/com/sentimentscribe/web/dto/LoginRequest.java; backend/src/main/java/com/sentimentscribe/web/dto/AuthTokenResponse.java; backend/src/main/java/com/sentimentscribe/web/dto/UserResponse.java; backend/src/main/java/com/sentimentscribe/web/dto/E2eeParamsResponse.java; backend/src/test/java/com/sentimentscribe/web/AuthApiIntegrationTest.java; auth-e2ee-changes.md
+- Summary: Added register/login endpoints with BCrypt-backed user creation and JWT issuance, plus integration tests for auth flows.
+- Backend notes: AuthService now creates users with E2EE params, validates login via BCrypt, and issues JWTs (sub/uid/exp/iss). New DTOs match the planned response contract. `/api/auth/verify` remains unchanged.
+- Frontend notes: None.
+- DB notes: None.
+- Verification: `cd backend; mvn test`
 
 ---
 

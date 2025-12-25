@@ -4,25 +4,25 @@
 
 ---
 
-## Step 0 — Baseline + guardrails
+## Step 0 - Baseline + guardrails
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: auth-e2ee-changes.md
+- Summary: Ran baseline backend/frontend tests; backend passed, frontend has one failing test.
+- Backend notes: `mvn test` passed (Testcontainers spun up Postgres; no code changes).
+- Frontend notes: `npm run test` failed at `src/pages/__tests__/DiaryEntryPage.test.tsx` (missing `[data-testid="location"]` in "requests recommendations and navigates").
+- DB notes: None.
+- Verification: `cd backend; mvn test` (pass). `cd frontend; npm run test` (fail; see test above). Manual flow not run.
 
 ---
 
-## Step 1 — Add dependencies for Spring Security + JWT (keep build green)
+## Step 1 - Add dependencies for Spring Security + JWT (keep build green)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: backend/pom.xml; backend/src/main/java/com/sentimentscribe/config/JwtProperties.java; backend/src/main/java/com/sentimentscribe/config/SecurityConfig.java; auth-e2ee-changes.md
+- Summary: Added Spring Security/JWT dependencies plus placeholder security config and JWT properties while permitting all requests.
+- Backend notes: `SecurityConfig` disables CSRF and permits all requests with a BCrypt encoder; implements `WebMvcConfigurer` so MVC slice tests pick up the config. Added `JwtProperties` for upcoming JWT config.
+- Frontend notes: None.
+- DB notes: None.
+- Verification: `cd backend; mvn test`
 
 ---
 
@@ -144,4 +144,3 @@
 - Frontend notes:
 - DB notes:
 - Verification:
-

@@ -103,25 +103,25 @@
 
 ---
 
-## Step 9 — Keep analysis/recommendations working (plaintext on demand; no persistence)
+## Step 9 - Keep analysis/recommendations working (plaintext on demand; no persistence)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: backend/src/test/java/com/sentimentscribe/web/AnalysisRecommendationsApiIntegrationTest.java; auth-e2ee-changes.md
+- Summary: Added JWT coverage tests for `/api/analysis` and `/api/recommendations` to confirm 401 without tokens and 200 with tokens.
+- Backend notes: Integration test uses mocked AnalysisService/RecommendationService responses to avoid external API calls while still exercising the security filter.
+- Frontend notes: None.
+- DB notes: None.
+- Verification: `cd backend; mvn test` (pass; shows Spring warning about deprecated `@MockBean`).
 
 ---
 
-## Step 10 — Add Web Crypto utilities (PBKDF2 + AES-GCM)
+## Step 10 - Add Web Crypto utilities (PBKDF2 + AES-GCM)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: frontend/src/crypto/base64.ts; frontend/src/crypto/kdf.ts; frontend/src/crypto/aesGcm.ts; frontend/src/crypto/envelope.ts; frontend/src/crypto/__tests__/crypto.test.ts; frontend/src/test/setup.ts; auth-e2ee-changes.md
+- Summary: Added Web Crypto helpers for base64, PBKDF2 key derivation, AES-GCM encryption, and encrypted envelopes, plus round-trip tests.
+- Backend notes: None.
+- Frontend notes: New crypto utilities live under `frontend/src/crypto` with a test harness that uses Web Crypto in Vitest.
+- DB notes: None.
+- Verification: `cd frontend; npm run test` (fails at `src/pages/__tests__/DiaryEntryPage.test.tsx` "requests recommendations and navigates": missing `[data-testid="location"]`, same failure as earlier).
 
 ---
 

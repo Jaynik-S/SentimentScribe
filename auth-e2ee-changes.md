@@ -81,14 +81,14 @@
 
 ---
 
-## Step 7 — Replace VerifyPasswordPage with Login/Register + token attachment
+## Step 7 - Replace VerifyPasswordPage with Login/Register + token attachment
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: frontend/src/api/auth.ts; frontend/src/api/types.ts; frontend/src/api/http.ts; frontend/src/api/debug.ts; frontend/src/state/auth.tsx; frontend/src/routes.tsx; frontend/src/pages/LoginPage.tsx; frontend/src/pages/RegisterPage.tsx; frontend/src/pages/VerifyPasswordPage.tsx (deleted); frontend/src/pages/__tests__/LoginPage.test.tsx; frontend/src/pages/__tests__/RegisterPage.test.tsx; frontend/src/pages/__tests__/VerifyPasswordPage.test.tsx (deleted); frontend/src/api/__tests__/auth.test.ts; frontend/src/api/__tests__/http.test.ts; frontend/src/routes.test.tsx; frontend/src/test/setup.ts; auth-e2ee-changes.md
+- Summary: Replaced the password gate with login/register screens, added JWT session storage in `sessionStorage`, and attached bearer tokens to API calls with a 401 redirect.
+- Backend notes: None.
+- Frontend notes: Added Login/Register pages and `/register` route, swapped `RequireUnlocked` for `RequireAuth`, and revamped auth state to store `{ accessToken, user, e2eeParams }` in `sessionStorage["sentimentscribe.auth"]`. HTTP client now injects `Authorization: Bearer <token>` and clears auth on 401. Updated auth/API/route guard tests and debug helpers.
+- DB notes: None.
+- Verification: `cd frontend; npm run test` (fails at `src/pages/__tests__/DiaryEntryPage.test.tsx` "requests recommendations and navigates": missing `[data-testid="location"]`, same failure as Step 0).
 
 ---
 

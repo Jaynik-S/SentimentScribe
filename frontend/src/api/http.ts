@@ -1,4 +1,5 @@
 import type { ErrorResponse } from './types'
+import { clearStoredAuth, getAccessToken } from '../state/auth'
 
 const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:8080'
 const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '')
@@ -16,6 +17,12 @@ export class ApiError extends Error {
 }
 
 export const isApiError = (error: unknown): error is ApiError => error instanceof ApiError
+
+export const redirectToLogin = (): void => {
+  if (typeof window !== 'undefined') {
+    window.location.assign('/')
+  }
+}
 
 const isJsonResponse = (response: Response): boolean => {
   const contentType = response.headers.get('content-type') ?? ''
@@ -96,11 +103,29 @@ const buildUrl = (path: string): string => {
   return `${API_BASE_URL}/${path}`
 }
 
+const withAuthHeaders = (options: RequestInit): RequestInit => {
+  const token = getAccessToken()
+  if (!token) {
+    return options
+  }
+
+  const headers = new Headers(options.headers)
+  if (!headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${token}`)
+  }
+
+  return { ...options, headers }
+}
+
 export const request = async <T>(path: string, options: RequestInit = {}): Promise<T> => {
-  const response = await fetch(buildUrl(path), withJsonHeaders(options))
+  const response = await fetch(buildUrl(path), withAuthHeaders(withJsonHeaders(options)))
 
   if (!response.ok) {
     const message = await readErrorMessage(response)
+    if (response.status === 401) {
+      clearStoredAuth()
+      redirectToLogin()
+    }
     throw new ApiError(response.status, message)
   }
 

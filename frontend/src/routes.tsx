@@ -6,7 +6,8 @@ import { useAuth } from './state/auth'
 import { DiaryEntryPage } from './pages/DiaryEntryPage'
 import { HomeMenuPage } from './pages/HomeMenuPage'
 import { RecommendationPage } from './pages/RecommendationPage'
-import { VerifyPasswordPage } from './pages/VerifyPasswordPage'
+import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
 
 const RootLayout = () => {
   return (
@@ -20,10 +21,10 @@ const RootLayout = () => {
   )
 }
 
-const RequireUnlocked = ({ children }: { children: ReactNode }) => {
-  const { isUnlocked } = useAuth()
+export const RequireAuth = ({ children }: { children: ReactNode }) => {
+  const { isAuthenticated } = useAuth()
 
-  if (!isUnlocked) {
+  if (!isAuthenticated) {
     return <Navigate to="/" replace />
   }
 
@@ -35,29 +36,30 @@ export const router = createBrowserRouter([
     path: '/',
     element: <RootLayout />,
     children: [
-      { index: true, element: <VerifyPasswordPage /> },
+      { index: true, element: <LoginPage /> },
+      { path: 'register', element: <RegisterPage /> },
       {
         path: 'home',
         element: (
-          <RequireUnlocked>
+          <RequireAuth>
             <HomeMenuPage />
-          </RequireUnlocked>
+          </RequireAuth>
         ),
       },
       {
         path: 'entry',
         element: (
-          <RequireUnlocked>
+          <RequireAuth>
             <DiaryEntryPage />
-          </RequireUnlocked>
+          </RequireAuth>
         ),
       },
       {
         path: 'recommendations',
         element: (
-          <RequireUnlocked>
+          <RequireAuth>
             <RecommendationPage />
-          </RequireUnlocked>
+          </RequireAuth>
         ),
       },
     ],

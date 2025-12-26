@@ -4,13 +4,33 @@ export type ErrorResponse = {
   error: string
 }
 
-export type AuthRequest = {
+export type AuthUser = {
+  id: string
+  username: string
+}
+
+export type E2eeParams = {
+  kdf: string
+  salt: string
+  iterations: number
+}
+
+export type AuthTokenResponse = {
+  accessToken: string
+  tokenType: string
+  expiresIn: number
+  user: AuthUser
+  e2ee: E2eeParams
+}
+
+export type LoginRequest = {
+  username: string
   password: string
 }
 
-export type AuthResponse = {
-  status: string
-  entries: EntrySummaryResponse[]
+export type RegisterRequest = {
+  username: string
+  password: string
 }
 
 export type EntrySummaryResponse = {

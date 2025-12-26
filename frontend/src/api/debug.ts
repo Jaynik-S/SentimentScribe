@@ -1,5 +1,5 @@
 import { analyzeText } from './analysis'
-import { verifyPassword } from './auth'
+import { login, register } from './auth'
 import {
   createEntry,
   deleteEntry,
@@ -9,7 +9,7 @@ import {
 } from './entries'
 import { formatLocalDateTime } from './localDateTime'
 import { getRecommendations } from './recommendations'
-import type { AuthResponse, EntryRequest } from './types'
+import type { AuthTokenResponse, EntryRequest } from './types'
 
 type ApiDebug = {
   listEntries: typeof listEntries
@@ -19,7 +19,8 @@ type ApiDebug = {
   deleteEntry: typeof deleteEntry
   analyzeText: typeof analyzeText
   getRecommendations: typeof getRecommendations
-  verifyPassword: (password: string) => Promise<AuthResponse>
+  login: (username: string, password: string) => Promise<AuthTokenResponse>
+  register: (username: string, password: string) => Promise<AuthTokenResponse>
   formatLocalDateTime: typeof formatLocalDateTime
   smoke: () => Promise<void>
 }
@@ -43,7 +44,8 @@ export const registerApiDebug = (): void => {
     deleteEntry,
     analyzeText,
     getRecommendations,
-    verifyPassword: (password: string) => verifyPassword({ password }),
+    login: (username: string, password: string) => login({ username, password }),
+    register: (username: string, password: string) => register({ username, password }),
     formatLocalDateTime,
     smoke: async () => {
       const entries = await listEntries()

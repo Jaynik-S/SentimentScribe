@@ -1,18 +1,20 @@
 import { useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { verifyPassword } from '../api/auth'
+import { Link, useNavigate } from 'react-router-dom'
+import { register } from '../api/auth'
 import { isApiError } from '../api/http'
 import { useAuth } from '../state/auth'
 import { useUi } from '../state/ui'
 
-export const VerifyPasswordPage = () => {
+export const RegisterPage = () => {
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [inlineError, setInlineError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const usernameRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
-  const { setUnlocked } = useAuth()
+  const { setAuth } = useAuth()
   const { setPageError, clearPageError } = useUi()
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -22,11 +24,19 @@ export const VerifyPasswordPage = () => {
       return
     }
 
+    if (!username.trim()) {
+      const message = 'Username is required.'
+      setInlineError(message)
+      setPageError(message)
+      usernameRef.current?.focus()
+      return
+    }
+
     if (!password.trim()) {
       const message = 'Password is required.'
       setInlineError(message)
       setPageError(message)
-      inputRef.current?.focus()
+      passwordRef.current?.focus()
       return
     }
 
@@ -35,21 +45,33 @@ export const VerifyPasswordPage = () => {
     clearPageError()
 
     try {
-      const response = await verifyPassword({ password })
-      setUnlocked(true, response.status)
+      const response = await register({ username: username.trim(), password })
+      setAuth({
+        accessToken: response.accessToken,
+        user: response.user,
+        e2eeParams: response.e2ee,
+      })
       setPassword('')
       navigate('/home')
     } catch (error) {
       const message = isApiError(error)
         ? error.data.error
-        : 'Unable to verify password.'
+        : 'Unable to register.'
       setInlineError(message)
       setPageError(message)
       setPassword('')
-      inputRef.current?.focus()
+      passwordRef.current?.focus()
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const handleUsernameChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setUsername(event.target.value)
+    if (inlineError) {
+      setInlineError(null)
+    }
+    clearPageError()
   }
 
   const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -65,22 +87,32 @@ export const VerifyPasswordPage = () => {
       <div className="verify-card">
         <header className="verify-card__header">
           <p className="eyebrow">SentimentScribe</p>
-          <h1>Unlock your diary</h1>
-          <p className="subtle">
-            Enter your password to view or create entries.
-          </p>
+          <h1>Create your account</h1>
+          <p className="subtle">Start a private, encrypted diary.</p>
         </header>
 
         <form className="verify-form" onSubmit={handleSubmit}>
           <label className="field">
+            <span className="field__label">Username</span>
+            <input
+              ref={usernameRef}
+              type="text"
+              value={username}
+              onChange={handleUsernameChange}
+              disabled={isSubmitting}
+              autoComplete="username"
+            />
+          </label>
+
+          <label className="field">
             <span className="field__label">Password</span>
             <input
-              ref={inputRef}
+              ref={passwordRef}
               type="password"
               value={password}
               onChange={handlePasswordChange}
               disabled={isSubmitting}
-              autoComplete="current-password"
+              autoComplete="new-password"
             />
           </label>
 
@@ -90,13 +122,17 @@ export const VerifyPasswordPage = () => {
             {isSubmitting ? (
               <span className="button-content">
                 <span className="spinner" aria-hidden="true" />
-                Verifying...
+                Creating account...
               </span>
             ) : (
-              'Submit / Enter'
+              'Create account'
             )}
           </button>
         </form>
+
+        <p className="subtle">
+          Already have an account? <Link to="/">Sign in.</Link>
+        </p>
       </div>
     </section>
   )

@@ -7,7 +7,6 @@ import com.sentimentscribe.persistence.postgres.PostgresDiaryEntryRepositoryAdap
 import com.sentimentscribe.persistence.postgres.StoragePathGenerator;
 import com.sentimentscribe.persistence.postgres.repo.DiaryEntryJpaRepository;
 import com.sentimentscribe.persistence.postgres.repo.UserJpaRepository;
-import com.sentimentscribe.usecase.save_entry.SaveEntryKeywordExtractor;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -46,12 +45,10 @@ public class AppConfig {
     public PostgresDiaryEntryRepositoryAdapter postgresDiaryEntryRepositoryAdapter(
             DiaryEntryJpaRepository diaryEntryRepository,
             UserJpaRepository userJpaRepository,
-            SaveEntryKeywordExtractor keywordExtractor,
             StoragePathGenerator storagePathGenerator) {
         return new PostgresDiaryEntryRepositoryAdapter(
                 diaryEntryRepository,
                 userJpaRepository,
-                keywordExtractor,
                 storagePathGenerator
         );
     }

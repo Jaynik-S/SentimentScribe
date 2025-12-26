@@ -1,13 +1,14 @@
 package com.sentimentscribe.web.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
-
 public record EntryRequest(
-        String title,
-        String text,
         String storagePath,
-        List<String> keywords,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        String titleCiphertext,
+        String titleIv,
+        String bodyCiphertext,
+        String bodyIv,
+        String algo,
+        int version
 ) {
 }

@@ -1,48 +1,75 @@
 package com.sentimentscribe.usecase.load_entry;
 
-import java.util.List;
 import java.time.LocalDateTime;
 
 public class LoadEntryOutputData {
-    private final String title;
-    private final String text;
-    private final LocalDateTime date;
+    private final String titleCiphertext;
+    private final String titleIv;
+    private final String bodyCiphertext;
+    private final String bodyIv;
+    private final String algo;
+    private final int version;
     private final String storagePath;
-    private final List<String> keywords;
+    private final LocalDateTime createdAt;
+    private final LocalDateTime updatedAt;
     private final boolean success;
 
-    public LoadEntryOutputData(String title,
-                               String text,
-                               LocalDateTime date,
+    public LoadEntryOutputData(String titleCiphertext,
+                               String titleIv,
+                               String bodyCiphertext,
+                               String bodyIv,
+                               String algo,
+                               int version,
                                String storagePath,
-                               List<String> keywords,
+                               LocalDateTime createdAt,
+                               LocalDateTime updatedAt,
                                boolean success) {
-        this.title = title;
-        this.text = text;
-        this.date = date;
+        this.titleCiphertext = titleCiphertext;
+        this.titleIv = titleIv;
+        this.bodyCiphertext = bodyCiphertext;
+        this.bodyIv = bodyIv;
+        this.algo = algo;
+        this.version = version;
         this.storagePath = storagePath;
-        this.keywords = keywords;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.success = success;
     }
 
-    public String getTitle() {
-        return title;
+    public String getTitleCiphertext() {
+        return titleCiphertext;
     }
 
-    public String getText() {
-        return text;
+    public String getTitleIv() {
+        return titleIv;
     }
 
-    public LocalDateTime getDate() {
-        return date;
+    public String getBodyCiphertext() {
+        return bodyCiphertext;
+    }
+
+    public String getBodyIv() {
+        return bodyIv;
+    }
+
+    public String getAlgo() {
+        return algo;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public String getStoragePath() {
         return storagePath;
     }
 
-    public List<String> getKeywords() {
-        return keywords;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
     public boolean isSuccess() {

@@ -13,6 +13,9 @@ import { useRecommendations } from '../state/recommendations'
 import { useUi } from '../state/ui'
 
 const TOAST_DURATION_MS = 3000
+const DEFAULT_ALGO = 'AES-GCM'
+const DEFAULT_VERSION = 1
+const DEFAULT_IV = 'AAAAAAAAAAAAAAAAAAAAAA=='
 
 const formatDisplayDate = (value: string | null): string => {
   if (!value) {
@@ -66,6 +69,12 @@ export const DiaryEntryPage = () => {
   const [isRecommending, setIsRecommending] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const createdAtRef = useRef(draft.createdAt)
+  const cryptoRef = useRef({
+    titleIv: DEFAULT_IV,
+    bodyIv: DEFAULT_IV,
+    algo: DEFAULT_ALGO,
+    version: DEFAULT_VERSION,
+  })
 
   const entryPath = searchParams.get('path')
 
@@ -84,12 +93,18 @@ export const DiaryEntryPage = () => {
 
       try {
         const response = await getEntryByPath(entryPath)
+        cryptoRef.current = {
+          titleIv: response.titleIv,
+          bodyIv: response.bodyIv,
+          algo: response.algo,
+          version: response.version,
+        }
         setDraft({
-          title: response.title,
-          text: response.text,
+          title: response.titleCiphertext,
+          text: response.bodyCiphertext,
           storagePath: response.storagePath,
           createdAt: response.createdAt ?? createdAtRef.current,
-          keywords: response.keywords,
+          keywords: [],
         })
         setKeywordsVisible(false)
       } catch (error) {
@@ -198,12 +213,16 @@ export const DiaryEntryPage = () => {
       updateDraft({ createdAt })
     }
 
+    const { titleIv, bodyIv, algo, version } = cryptoRef.current
     const payload: EntryRequest = {
-      title: draft.title,
-      text: draft.text,
       storagePath: draft.storagePath,
-      keywords: draft.keywords,
       createdAt,
+      titleCiphertext: draft.title,
+      titleIv,
+      bodyCiphertext: draft.text,
+      bodyIv,
+      algo,
+      version,
     }
 
     try {
@@ -211,12 +230,18 @@ export const DiaryEntryPage = () => {
         ? await updateEntry(payload)
         : await createEntry(payload)
 
+      cryptoRef.current = {
+        titleIv: response.titleIv,
+        bodyIv: response.bodyIv,
+        algo: response.algo,
+        version: response.version,
+      }
       setDraft({
-        title: response.title,
-        text: response.text,
+        title: response.titleCiphertext,
+        text: response.bodyCiphertext,
         storagePath: response.storagePath,
         createdAt: response.createdAt ?? createdAt,
-        keywords: response.keywords,
+        keywords: draft.keywords,
       })
       setToastMessage('Saved')
     } catch (error) {
@@ -227,7 +252,7 @@ export const DiaryEntryPage = () => {
       if (lowered.startsWith('title')) {
         setTitleError(message)
       }
-      if (lowered.startsWith('text')) {
+      if (lowered.startsWith('text') || lowered.startsWith('body')) {
         setTextError(message)
       }
       setPageError(message)

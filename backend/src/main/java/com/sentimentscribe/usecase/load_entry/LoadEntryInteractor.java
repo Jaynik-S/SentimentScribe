@@ -39,12 +39,17 @@ public class LoadEntryInteractor implements LoadEntryInputBoundary {
         }
 
         LoadEntryOutputData outputData = new LoadEntryOutputData(
-                entry.getTitle(),
-                entry.getText(),
-                entry.getCreatedAt(),
+                entry.getTitleCiphertext(),
+                entry.getTitleIv(),
+                entry.getBodyCiphertext(),
+                entry.getBodyIv(),
+                entry.getAlgo(),
+                entry.getVersion(),
                 entry.getStoragePath() == null || entry.getStoragePath().isBlank() ? entryPath : entry.getStoragePath(),
-                entry.getKeywords(),
-                true);
+                entry.getCreatedAt(),
+                entry.getUpdatedAt(),
+                true
+        );
 
         presenter.prepareSuccessView(outputData);
     }

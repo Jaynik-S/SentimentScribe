@@ -19,11 +19,13 @@ const LocationSpy = () => {
 }
 
 const entryFixture: EntrySummaryResponse = {
-  title: 'Morning Thoughts',
   storagePath: 'entries/morning.txt',
   createdAt: '2025-01-01T10:00:00',
   updatedAt: null,
-  keywords: ['calm'],
+  titleCiphertext: 'Morning Thoughts',
+  titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+  algo: 'AES-GCM',
+  version: 1,
 }
 
 describe('HomeMenuPage', () => {

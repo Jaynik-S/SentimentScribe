@@ -1,5 +1,7 @@
 package com.sentimentscribe.web;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sentimentscribe.web.dto.AuthTokenResponse;
 import com.sentimentscribe.web.dto.EntryRequest;
 import com.sentimentscribe.web.dto.EntryResponse;
@@ -25,7 +27,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,13 +60,18 @@ class EntriesApiIntegrationTest {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(authResponse.accessToken());
 
-        String text = "a".repeat(60);
+        String titleCiphertext = "Rmlyc3QgRW50cnk=";
+        String bodyCiphertext = "Qm9keSBjaXBoZXI=";
+        String iv = "AAAAAAAAAAAAAAAAAAAAAA==";
         EntryRequest request = new EntryRequest(
-                "First Entry",
-                text,
                 null,
-                List.of("focus"),
-                LocalDateTime.of(2024, 1, 1, 10, 0)
+                LocalDateTime.of(2024, 1, 1, 10, 0),
+                titleCiphertext,
+                iv,
+                bodyCiphertext,
+                iv,
+                "AES-GCM",
+                1
         );
 
         ResponseEntity<EntryResponse> createResponse =
@@ -94,7 +100,8 @@ class EntriesApiIntegrationTest {
 
         assertEquals(HttpStatus.OK, loadResponse.getStatusCode());
         assertNotNull(loadResponse.getBody());
-        assertEquals("First Entry", loadResponse.getBody().title());
+        assertEquals(titleCiphertext, loadResponse.getBody().titleCiphertext());
+        assertEquals(bodyCiphertext, loadResponse.getBody().bodyCiphertext());
 
         ResponseEntity<EntrySummaryResponse[]> listResponse =
                 restTemplate.exchange(
@@ -106,6 +113,14 @@ class EntriesApiIntegrationTest {
         EntrySummaryResponse[] summaries = listResponse.getBody();
         assertNotNull(summaries);
         assertTrue(summaries.length >= 1);
+        boolean found = false;
+        for (EntrySummaryResponse summary : summaries) {
+            if (titleCiphertext.equals(summary.titleCiphertext())) {
+                found = true;
+                break;
+            }
+        }
+        assertTrue(found);
     }
 
     @Test
@@ -140,6 +155,53 @@ class EntriesApiIntegrationTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
         assertNotNull(response.getBody());
         assertNotNull(response.getBody().error());
+    }
+
+    @Test
+    void listEntriesOmitsPlaintextFields() throws Exception {
+        AuthTokenResponse authResponse = authForDefaultUser();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(authResponse.accessToken());
+
+        EntryRequest request = new EntryRequest(
+                null,
+                LocalDateTime.of(2024, 1, 2, 9, 0),
+                "VGVzdCBUaXRsZQ==",
+                "AAAAAAAAAAAAAAAAAAAAAA==",
+                "VGVzdCBCb2R5",
+                "AAAAAAAAAAAAAAAAAAAAAA==",
+                "AES-GCM",
+                1
+        );
+
+        ResponseEntity<EntryResponse> createResponse =
+                restTemplate.exchange(
+                        baseUrl() + "/api/entries",
+                        HttpMethod.POST,
+                        new HttpEntity<>(request, headers),
+                        EntryResponse.class);
+
+        assertEquals(HttpStatus.CREATED, createResponse.getStatusCode());
+
+        ResponseEntity<String> listResponse =
+                restTemplate.exchange(
+                        baseUrl() + "/api/entries",
+                        HttpMethod.GET,
+                        new HttpEntity<>(headers),
+                        String.class);
+
+        assertEquals(HttpStatus.OK, listResponse.getStatusCode());
+        assertNotNull(listResponse.getBody());
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(listResponse.getBody());
+        assertTrue(root.isArray());
+        assertTrue(root.size() > 0);
+
+        JsonNode first = root.get(0);
+        assertFalse(first.has("title"));
+        assertFalse(first.has("text"));
+        assertFalse(first.has("keywords"));
     }
 
     private AuthTokenResponse authForDefaultUser() {

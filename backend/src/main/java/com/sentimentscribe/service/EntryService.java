@@ -11,7 +11,6 @@ import com.sentimentscribe.usecase.load_entry.LoadEntryOutputBoundary;
 import com.sentimentscribe.usecase.load_entry.LoadEntryOutputData;
 import com.sentimentscribe.usecase.save_entry.SaveEntryInputData;
 import com.sentimentscribe.usecase.save_entry.SaveEntryInteractor;
-import com.sentimentscribe.usecase.save_entry.SaveEntryKeywordExtractor;
 import com.sentimentscribe.usecase.save_entry.SaveEntryOutputBoundary;
 import com.sentimentscribe.usecase.save_entry.SaveEntryOutputData;
 import org.springframework.stereotype.Service;
@@ -24,23 +23,23 @@ import java.util.UUID;
 public class EntryService {
 
     private final DiaryEntryRepository repository;
-    private final SaveEntryKeywordExtractor keywordExtractor;
-
-    public EntryService(DiaryEntryRepository repository, SaveEntryKeywordExtractor keywordExtractor) {
+    public EntryService(DiaryEntryRepository repository) {
         this.repository = repository;
-        this.keywordExtractor = keywordExtractor;
     }
 
     public ServiceResult<SaveEntryOutputData> save(UUID userId, EntryCommand command) {
         SaveEntryPresenter presenter = new SaveEntryPresenter();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, repository, keywordExtractor);
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, repository);
         SaveEntryInputData inputData = new SaveEntryInputData(
                 userId,
-                command.title(),
-                command.createdAt(),
-                command.text(),
+                command.titleCiphertext(),
+                command.titleIv(),
+                command.bodyCiphertext(),
+                command.bodyIv(),
+                command.algo(),
+                command.version(),
                 command.storagePath(),
-                command.keywords()
+                command.createdAt()
         );
         interactor.execute(inputData);
         if (presenter.errorMessage != null) {

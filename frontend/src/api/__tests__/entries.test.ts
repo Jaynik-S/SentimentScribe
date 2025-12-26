@@ -25,12 +25,15 @@ describe('api/entries', () => {
     const fetchMock = mockFetch()
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
-        title: 'Entry',
-        text: 'Text',
         storagePath: 'folder/entry.txt',
         createdAt: null,
         updatedAt: null,
-        keywords: [],
+        titleCiphertext: 'VGVzdA==',
+        titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+        bodyCiphertext: 'VGV4dA==',
+        bodyIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+        algo: 'AES-GCM',
+        version: 1,
       }),
     )
 
@@ -46,21 +49,27 @@ describe('api/entries', () => {
     const fetchMock = mockFetch()
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
-        title: 'Entry',
-        text: 'Text',
         storagePath: 'entry.txt',
         createdAt: null,
         updatedAt: null,
-        keywords: [],
+        titleCiphertext: 'VGVzdA==',
+        titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+        bodyCiphertext: 'VGV4dA==',
+        bodyIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+        algo: 'AES-GCM',
+        version: 1,
       }, { status: 201 }),
     )
 
     const payload: EntryRequest = {
-      title: 'Entry',
-      text: 'Text',
       storagePath: null,
-      keywords: [],
       createdAt: null,
+      titleCiphertext: 'VGVzdA==',
+      titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      bodyCiphertext: 'VGV4dA==',
+      bodyIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      algo: 'AES-GCM',
+      version: 1,
     }
 
     await createEntry(payload)
@@ -78,21 +87,27 @@ describe('api/entries', () => {
     const fetchMock = mockFetch()
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
-        title: 'Entry',
-        text: 'Text',
         storagePath: 'entry.txt',
         createdAt: null,
         updatedAt: null,
-        keywords: [],
+        titleCiphertext: 'VGVzdA==',
+        titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+        bodyCiphertext: 'VGV4dA==',
+        bodyIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+        algo: 'AES-GCM',
+        version: 1,
       }),
     )
 
     const payload: EntryRequest = {
-      title: 'Entry',
-      text: 'Text',
       storagePath: 'entry.txt',
-      keywords: [],
       createdAt: null,
+      titleCiphertext: 'VGVzdA==',
+      titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      bodyCiphertext: 'VGV4dA==',
+      bodyIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      algo: 'AES-GCM',
+      version: 1,
     }
 
     await updateEntry(payload)

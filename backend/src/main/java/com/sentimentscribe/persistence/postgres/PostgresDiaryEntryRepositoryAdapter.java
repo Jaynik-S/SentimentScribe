@@ -6,7 +6,6 @@ import com.sentimentscribe.persistence.postgres.entity.DiaryEntryEntity;
 import com.sentimentscribe.persistence.postgres.entity.UserEntity;
 import com.sentimentscribe.persistence.postgres.repo.DiaryEntryJpaRepository;
 import com.sentimentscribe.persistence.postgres.repo.UserJpaRepository;
-import com.sentimentscribe.usecase.save_entry.SaveEntryKeywordExtractor;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -17,16 +16,13 @@ import java.util.UUID;
 public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository {
     private final DiaryEntryJpaRepository entryRepository;
     private final UserJpaRepository userRepository;
-    private final SaveEntryKeywordExtractor keywordExtractor;
     private final StoragePathGenerator storagePathGenerator;
 
     public PostgresDiaryEntryRepositoryAdapter(DiaryEntryJpaRepository entryRepository,
                                                UserJpaRepository userRepository,
-                                               SaveEntryKeywordExtractor keywordExtractor,
                                                StoragePathGenerator storagePathGenerator) {
         this.entryRepository = entryRepository;
         this.userRepository = userRepository;
-        this.keywordExtractor = keywordExtractor;
         this.storagePathGenerator = storagePathGenerator;
     }
 
@@ -43,11 +39,13 @@ public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository
             return null;
         }
         DiaryEntryEntity entity = existing.get();
-        List<String> keywords = extractKeywords(entity.getTitle(), entity.getText());
         return new DiaryEntry(
-                entity.getTitle(),
-                entity.getText(),
-                keywords,
+                entity.getTitleCiphertext(),
+                entity.getTitleIv(),
+                entity.getBodyCiphertext(),
+                entity.getBodyIv(),
+                entity.getAlgo(),
+                entity.getVersion(),
                 entity.getStoragePath(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt()
@@ -98,8 +96,12 @@ public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository
 
         entity.setUser(user);
         entity.setStoragePath(storagePath);
-        entity.setTitle(entry.getTitle());
-        entity.setText(entry.getText());
+        entity.setTitleCiphertext(entry.getTitleCiphertext());
+        entity.setTitleIv(entry.getTitleIv());
+        entity.setBodyCiphertext(entry.getBodyCiphertext());
+        entity.setBodyIv(entry.getBodyIv());
+        entity.setAlgo(entry.getAlgo());
+        entity.setVersion(entry.getVersion());
         entity.setCreatedAt(createdAt);
         entity.setUpdatedAt(updatedAt);
         entryRepository.save(entity);
@@ -118,37 +120,13 @@ public class PostgresDiaryEntryRepositoryAdapter implements DiaryEntryRepository
 
     private Map<String, Object> toSummaryMap(DiaryEntryEntity entity) {
         Map<String, Object> result = new HashMap<>();
-        result.put("title", entity.getTitle());
-        result.put("text", entity.getText());
-        result.put("keywords", extractKeywords(entity.getTitle(), entity.getText()));
+        result.put("titleCiphertext", entity.getTitleCiphertext());
+        result.put("titleIv", entity.getTitleIv());
+        result.put("algo", entity.getAlgo());
+        result.put("version", entity.getVersion());
         result.put("createdDate", entity.getCreatedAt());
         result.put("updatedDate", entity.getUpdatedAt());
         result.put("storagePath", entity.getStoragePath());
         return result;
-    }
-
-    private List<String> extractKeywords(String title, String text) {
-        if (keywordExtractor == null) {
-            return List.of();
-        }
-        StringBuilder builder = new StringBuilder();
-        if (title != null && !title.isBlank()) {
-            builder.append(title);
-        }
-        if (text != null && !text.isBlank()) {
-            if (builder.length() > 0) {
-                builder.append("\n\n");
-            }
-            builder.append(text);
-        }
-        if (builder.length() == 0) {
-            return List.of();
-        }
-        try {
-            return keywordExtractor.extractKeywords(builder.toString());
-        }
-        catch (Exception ignored) {
-            return List.of();
-        }
     }
 }

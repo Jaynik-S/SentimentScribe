@@ -1,21 +1,17 @@
 package com.sentimentscribe.usecase.save_entry;
 
 import com.sentimentscribe.domain.DiaryEntry;
-
-import java.util.List;
+import java.time.LocalDateTime;
 
 public class SaveEntryInteractor implements SaveEntryInputBoundary {
 
     private final SaveEntryOutputBoundary presenter;
     private final SaveEntryUserDataAccessInterface dataAccess;
-    private final SaveEntryKeywordExtractor keywordExtractor;
 
     public SaveEntryInteractor(SaveEntryOutputBoundary presenter,
-                              SaveEntryUserDataAccessInterface dataAccess,
-                              SaveEntryKeywordExtractor keywordExtractor) {
+                              SaveEntryUserDataAccessInterface dataAccess) {
         this.presenter = presenter;
         this.dataAccess = dataAccess;
-        this.keywordExtractor = keywordExtractor;
     }
 
     @Override
@@ -25,48 +21,47 @@ public class SaveEntryInteractor implements SaveEntryInputBoundary {
             return;
         }
 
-        DiaryEntry entry = new DiaryEntry(inputData.getTitle(), inputData.getTextBody(), inputData.getDate());
-        entry.setStoragePath(inputData.getStoragePath());
-
-        String title = entry.getTitle();
-        if (title == null || title.length() == 0) {
-            presenter.prepareFailView("Title cannot be empty.");
+        if (isBlank(inputData.getTitleCiphertext())) {
+            presenter.prepareFailView("Title ciphertext is required.");
             return;
         }
-        if (title.length() > DiaryEntry.MAX_TITLE_LENGTH) {
-            String message = "Title must be at most " + DiaryEntry.MAX_TITLE_LENGTH + " characters.";
-            presenter.prepareFailView(message);
+        if (isBlank(inputData.getTitleIv())) {
+            presenter.prepareFailView("Title IV is required.");
             return;
         }
-        String text = entry.getText();
-        if (text == null || text.length() == 0) {
-            presenter.prepareFailView("Text cannot be empty.");
+        if (isBlank(inputData.getBodyCiphertext())) {
+            presenter.prepareFailView("Body ciphertext is required.");
             return;
         }
-        int length = text.length();
-        if (length < DiaryEntry.MIN_TEXT_LENGTH) {
-            String message = "Text must be at least " + DiaryEntry.MIN_TEXT_LENGTH + " characters.";
-            presenter.prepareFailView(message);
+        if (isBlank(inputData.getBodyIv())) {
+            presenter.prepareFailView("Body IV is required.");
             return;
         }
-        if (length > DiaryEntry.MAX_TEXT_LENGTH) {
-            String message = "Text must be at most " + DiaryEntry.MAX_TEXT_LENGTH + " characters.";
-            presenter.prepareFailView(message);
+        if (isBlank(inputData.getAlgo())) {
+            presenter.prepareFailView("Algorithm is required.");
+            return;
+        }
+        if (inputData.getVersion() <= 0) {
+            presenter.prepareFailView("Version must be positive.");
             return;
         }
 
-        List<String> keywords = inputData.getKeywords();
-        if ((keywords == null || keywords.isEmpty()) && keywordExtractor != null) {
-            try {
-                keywords = keywordExtractor.extractKeywords(text);
-            }
-            catch (Exception ignored) {
-                keywords = List.of();
-            }
-        }
-        entry.setKeywords(keywords);
+        LocalDateTime createdAt = inputData.getCreatedAt() != null
+                ? inputData.getCreatedAt()
+                : LocalDateTime.now();
+        LocalDateTime updatedAt = LocalDateTime.now();
+        DiaryEntry entry = new DiaryEntry(
+                inputData.getTitleCiphertext(),
+                inputData.getTitleIv(),
+                inputData.getBodyCiphertext(),
+                inputData.getBodyIv(),
+                inputData.getAlgo(),
+                inputData.getVersion(),
+                inputData.getStoragePath(),
+                createdAt,
+                updatedAt
+        );
 
-        entry.updatedTime();
         try {
             dataAccess.save(inputData.getUserId(), entry);
         }
@@ -77,14 +72,23 @@ public class SaveEntryInteractor implements SaveEntryInputBoundary {
         }
 
         SaveEntryOutputData outputData = new SaveEntryOutputData(
-                entry.getTitle(),
-                entry.getText(),
-                entry.getCreatedAt(),
+                entry.getTitleCiphertext(),
+                entry.getTitleIv(),
+                entry.getBodyCiphertext(),
+                entry.getBodyIv(),
+                entry.getAlgo(),
+                entry.getVersion(),
                 entry.getStoragePath(),
-                entry.getKeywords(),
-                true);
+                entry.getCreatedAt(),
+                entry.getUpdatedAt(),
+                true
+        );
 
         presenter.prepareSuccessView(outputData);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }
 

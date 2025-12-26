@@ -29,7 +29,8 @@ export const DeleteEntryModal = ({
         </header>
         <div className="modal__body">
           <p>
-            This will permanently delete <strong>{entry.title}</strong>.
+            This will permanently delete{' '}
+            <strong>{entry.titleCiphertext || 'this entry'}</strong>.
           </p>
           <p className="entry-path">{entry.storagePath}</p>
           {error ? <p className="modal__error">{error}</p> : null}

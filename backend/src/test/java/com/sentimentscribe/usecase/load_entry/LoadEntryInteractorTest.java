@@ -4,7 +4,6 @@ import com.sentimentscribe.domain.DiaryEntry;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,8 +16,12 @@ class LoadEntryInteractorTest {
         RecordingLoadEntryPresenter presenter = new RecordingLoadEntryPresenter();
         StubLoadEntryDataAccess dataAccess = new StubLoadEntryDataAccess();
         DiaryEntry entry = new DiaryEntry();
-        entry.setTitle("My Day");
-        entry.setText("a".repeat(60));
+        entry.setTitleCiphertext("VGVzdCBUaXRsZQ==");
+        entry.setTitleIv("AAAAAAAAAAAAAAAAAAAAAA==");
+        entry.setBodyCiphertext("VGVzdCBCb2R5");
+        entry.setBodyIv("AAAAAAAAAAAAAAAAAAAAAA==");
+        entry.setAlgo("AES-GCM");
+        entry.setVersion(1);
         dataAccess.setEntryToReturn(entry);
         LoadEntryInteractor interactor = new LoadEntryInteractor(presenter, dataAccess);
 
@@ -29,8 +32,8 @@ class LoadEntryInteractorTest {
         assertEquals("entries/1.json", dataAccess.requestedPath);
         assertTrue(dataAccess.getCalled);
         assertNotNull(presenter.successData);
-        assertEquals("My Day", presenter.successData.getTitle());
-        assertEquals(entry.getText(), presenter.successData.getText());
+        assertEquals(entry.getTitleCiphertext(), presenter.successData.getTitleCiphertext());
+        assertEquals(entry.getBodyCiphertext(), presenter.successData.getBodyCiphertext());
         assertNull(presenter.errorMessage);
     }
 
@@ -78,8 +81,20 @@ class LoadEntryInteractorTest {
     @Test
     void loadEntryOutputData_exposesDate() {
         LocalDateTime now = LocalDateTime.now();
-        LoadEntryOutputData data = new LoadEntryOutputData("title", "text", now, "entries/1.json", List.of(), true);
-        assertEquals(now, data.getDate());
+        LoadEntryOutputData data = new LoadEntryOutputData(
+                "title",
+                "iv",
+                "body",
+                "body-iv",
+                "AES-GCM",
+                1,
+                "entries/1.json",
+                now,
+                now,
+                true
+        );
+        assertEquals(now, data.getCreatedAt());
+        assertEquals(now, data.getUpdatedAt());
     }
 
     private static final class RecordingLoadEntryPresenter implements LoadEntryOutputBoundary {

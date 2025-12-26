@@ -4,23 +4,34 @@ import com.sentimentscribe.domain.DiaryEntry;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SaveEntryInteractorTest {
 
-    // Happy path: a valid entry should be persisted and surfaced on the success view.
+    private static final String TITLE_CIPHERTEXT = "VGVzdCBUaXRsZQ==";
+    private static final String BODY_CIPHERTEXT = "VGVzdCBCb2R5";
+    private static final String IV = "AAAAAAAAAAAAAAAAAAAAAA==";
+
     @Test
     void execute_withValidInput_savesEntryAndReturnsSuccess() {
         RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
         InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess);
 
-        String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
         UUID userId = UUID.randomUUID();
-        SaveEntryInputData inputData = new SaveEntryInputData(userId, "Gratitude", LocalDateTime.now(), validText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(
+                userId,
+                TITLE_CIPHERTEXT,
+                IV,
+                BODY_CIPHERTEXT,
+                IV,
+                "AES-GCM",
+                1,
+                null,
+                LocalDateTime.now()
+        );
 
         interactor.execute(inputData);
 
@@ -29,141 +40,184 @@ class SaveEntryInteractorTest {
         assertNotNull(dataAccess.savedEntry);
         assertNotNull(presenter.successData);
         assertNull(presenter.errorMessage);
-        assertEquals("Gratitude", presenter.successData.getTitle());
-        assertEquals(validText, presenter.successData.getText());
+        assertEquals(TITLE_CIPHERTEXT, presenter.successData.getTitleCiphertext());
+        assertEquals(BODY_CIPHERTEXT, presenter.successData.getBodyCiphertext());
     }
 
-    // Guards against saving entries that fail min length validation.
     @Test
-    void execute_withShortText_reportsFailure() {
+    void execute_withMissingTitleCiphertext_reportsFailure() {
         RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
-        InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, new InMemorySaveEntryDataAccess());
 
-        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Too Short", LocalDateTime.now(), "short text", null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(
+                UUID.randomUUID(),
+                "",
+                IV,
+                BODY_CIPHERTEXT,
+                IV,
+                "AES-GCM",
+                1,
+                null,
+                LocalDateTime.now()
+        );
 
         interactor.execute(inputData);
 
-        assertEquals("Text must be at least " + DiaryEntry.MIN_TEXT_LENGTH + " characters.", presenter.errorMessage);
+        assertEquals("Title ciphertext is required.", presenter.errorMessage);
         assertNull(presenter.successData);
-        assertFalse(dataAccess.saveCalled);
-        assertNull(dataAccess.savedEntry);
     }
 
-    // Title must not be null or empty.
     @Test
-    void execute_withEmptyTitle_reportsFailure() {
+    void execute_withMissingTitleIv_reportsFailure() {
         RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
-        InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, new InMemorySaveEntryDataAccess());
 
-        String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "", LocalDateTime.now(), validText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(
+                UUID.randomUUID(),
+                TITLE_CIPHERTEXT,
+                " ",
+                BODY_CIPHERTEXT,
+                IV,
+                "AES-GCM",
+                1,
+                null,
+                LocalDateTime.now()
+        );
 
         interactor.execute(inputData);
 
-        assertEquals("Title cannot be empty.", presenter.errorMessage);
+        assertEquals("Title IV is required.", presenter.errorMessage);
         assertNull(presenter.successData);
-        assertFalse(dataAccess.saveCalled);
     }
 
-    // Title must respect the MAX_TITLE_LENGTH constraint.
     @Test
-    void execute_withTooLongTitle_reportsFailure() {
+    void execute_withMissingBodyCiphertext_reportsFailure() {
         RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
-        InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, new InMemorySaveEntryDataAccess());
 
-        String longTitle = "a".repeat(DiaryEntry.MAX_TITLE_LENGTH + 1);
-        String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), longTitle, LocalDateTime.now(), validText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(
+                UUID.randomUUID(),
+                TITLE_CIPHERTEXT,
+                IV,
+                null,
+                IV,
+                "AES-GCM",
+                1,
+                null,
+                LocalDateTime.now()
+        );
 
         interactor.execute(inputData);
 
-        assertEquals("Title must be at most " + DiaryEntry.MAX_TITLE_LENGTH + " characters.", presenter.errorMessage);
+        assertEquals("Body ciphertext is required.", presenter.errorMessage);
         assertNull(presenter.successData);
-        assertFalse(dataAccess.saveCalled);
     }
 
-    // Text must not be empty.
     @Test
-    void execute_withEmptyText_reportsFailure() {
+    void execute_withMissingBodyIv_reportsFailure() {
         RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
-        InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, new InMemorySaveEntryDataAccess());
 
-        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Title", LocalDateTime.now(), "", null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(
+                UUID.randomUUID(),
+                TITLE_CIPHERTEXT,
+                IV,
+                BODY_CIPHERTEXT,
+                "",
+                "AES-GCM",
+                1,
+                null,
+                LocalDateTime.now()
+        );
 
         interactor.execute(inputData);
 
-        assertEquals("Text cannot be empty.", presenter.errorMessage);
+        assertEquals("Body IV is required.", presenter.errorMessage);
         assertNull(presenter.successData);
-        assertFalse(dataAccess.saveCalled);
     }
 
-    // Text must not exceed MAX_TEXT_LENGTH.
     @Test
-    void execute_withTooLongText_reportsFailure() {
+    void execute_withMissingAlgorithm_reportsFailure() {
         RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
-        InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, new InMemorySaveEntryDataAccess());
 
-        String tooLongText = "a".repeat(DiaryEntry.MAX_TEXT_LENGTH + 1);
-        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Title", LocalDateTime.now(), tooLongText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(
+                UUID.randomUUID(),
+                TITLE_CIPHERTEXT,
+                IV,
+                BODY_CIPHERTEXT,
+                IV,
+                "",
+                1,
+                null,
+                LocalDateTime.now()
+        );
 
         interactor.execute(inputData);
 
-        assertEquals("Text must be at most " + DiaryEntry.MAX_TEXT_LENGTH + " characters.", presenter.errorMessage);
+        assertEquals("Algorithm is required.", presenter.errorMessage);
         assertNull(presenter.successData);
-        assertFalse(dataAccess.saveCalled);
     }
 
     @Test
-    void saveEntryOutputData_exposesDate() {
+    void execute_withInvalidVersion_reportsFailure() {
+        RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, new InMemorySaveEntryDataAccess());
+
+        SaveEntryInputData inputData = new SaveEntryInputData(
+                UUID.randomUUID(),
+                TITLE_CIPHERTEXT,
+                IV,
+                BODY_CIPHERTEXT,
+                IV,
+                "AES-GCM",
+                0,
+                null,
+                LocalDateTime.now()
+        );
+
+        interactor.execute(inputData);
+
+        assertEquals("Version must be positive.", presenter.errorMessage);
+        assertNull(presenter.successData);
+    }
+
+    @Test
+    void saveEntryOutputData_exposesCreatedAt() {
         LocalDateTime now = LocalDateTime.now();
-        SaveEntryOutputData data = new SaveEntryOutputData("title", "text", now, null, List.of(), true);
-        assertEquals(now, data.getDate());
-    }
-
-    @Test
-    void execute_withNullTitle_reportsFailure() {
-        RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
-        InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
-
-        String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), null, LocalDateTime.now(), validText, null, List.of());
-
-        interactor.execute(inputData);
-
-        assertEquals("Title cannot be empty.", presenter.errorMessage);
-        assertNull(presenter.successData);
-        assertFalse(dataAccess.saveCalled);
-    }
-
-    @Test
-    void execute_withNullText_reportsFailure() {
-        RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
-        InMemorySaveEntryDataAccess dataAccess = new InMemorySaveEntryDataAccess();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
-
-        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Title", LocalDateTime.now(), null, null, List.of());
-
-        interactor.execute(inputData);
-
-        assertEquals("Text cannot be empty.", presenter.errorMessage);
-        assertNull(presenter.successData);
-        assertFalse(dataAccess.saveCalled);
+        SaveEntryOutputData data = new SaveEntryOutputData(
+                TITLE_CIPHERTEXT,
+                IV,
+                BODY_CIPHERTEXT,
+                IV,
+                "AES-GCM",
+                1,
+                null,
+                now,
+                now,
+                true
+        );
+        assertEquals(now, data.getCreatedAt());
+        assertEquals(now, data.getUpdatedAt());
     }
 
     @Test
     void execute_whenSaveThrowsException_reportsFailureWithMessage() {
         RecordingSaveEntryPresenter presenter = new RecordingSaveEntryPresenter();
         SaveEntryUserDataAccessInterface dataAccess = (userId, entry) -> { throw new RuntimeException("disk full"); };
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess, text -> List.of());
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, dataAccess);
 
-        String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        SaveEntryInputData inputData = new SaveEntryInputData(UUID.randomUUID(), "Title", LocalDateTime.now(), validText, null, List.of());
+        SaveEntryInputData inputData = new SaveEntryInputData(
+                UUID.randomUUID(),
+                TITLE_CIPHERTEXT,
+                IV,
+                BODY_CIPHERTEXT,
+                IV,
+                "AES-GCM",
+                1,
+                null,
+                LocalDateTime.now()
+        );
 
         interactor.execute(inputData);
 
@@ -202,4 +256,3 @@ class SaveEntryInteractorTest {
         }
     }
 }
-

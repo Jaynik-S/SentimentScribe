@@ -37,12 +37,15 @@ describe('DiaryEntryPage', () => {
   it('creates a new entry with generated createdAt', async () => {
     const createEntryMock = vi.mocked(createEntry)
     createEntryMock.mockResolvedValue({
-      title: 'Today',
-      text: longText,
       storagePath: 'entry.txt',
       createdAt: '2025-01-01T12:00:00',
       updatedAt: null,
-      keywords: [],
+      titleCiphertext: 'Today',
+      titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      bodyCiphertext: longText,
+      bodyIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      algo: 'AES-GCM',
+      version: 1,
     })
 
     const user = userEvent.setup()
@@ -56,23 +59,29 @@ describe('DiaryEntryPage', () => {
     await user.click(screen.getByRole('button', { name: /save entry/i }))
 
     expect(createEntryMock).toHaveBeenCalledWith({
-      title: 'Today',
-      text: longText,
       storagePath: null,
-      keywords: [],
       createdAt: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      titleCiphertext: 'Today',
+      titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      bodyCiphertext: longText,
+      bodyIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      algo: 'AES-GCM',
+      version: 1,
     })
   })
 
   it('loads entry when path query param is present', async () => {
     const getEntryByPathMock = vi.mocked(getEntryByPath)
     getEntryByPathMock.mockResolvedValue({
-      title: 'Loaded',
-      text: longText,
       storagePath: 'entry.txt',
       createdAt: '2025-01-01T10:00:00',
       updatedAt: null,
-      keywords: ['calm'],
+      titleCiphertext: 'Loaded',
+      titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      bodyCiphertext: longText,
+      bodyIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
+      algo: 'AES-GCM',
+      version: 1,
     })
 
     renderWithRouter({

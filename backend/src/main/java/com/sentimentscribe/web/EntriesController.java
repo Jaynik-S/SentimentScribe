@@ -113,43 +113,54 @@ public class EntriesController {
 
     private static EntryCommand toCommand(EntryRequest request) {
         return new EntryCommand(
-                request.title(),
-                request.text(),
+                request.titleCiphertext(),
+                request.titleIv(),
+                request.bodyCiphertext(),
+                request.bodyIv(),
+                request.algo(),
+                request.version(),
                 request.storagePath(),
-                request.keywords(),
                 request.createdAt()
         );
     }
 
     private static EntryResponse toEntryResponse(SaveEntryOutputData data) {
         return new EntryResponse(
-                data.getTitle(),
-                data.getText(),
                 data.getStoragePath(),
-                data.getDate(),
-                null,
-                data.getKeywords()
+                data.getCreatedAt(),
+                data.getUpdatedAt(),
+                data.getTitleCiphertext(),
+                data.getTitleIv(),
+                data.getBodyCiphertext(),
+                data.getBodyIv(),
+                data.getAlgo(),
+                data.getVersion()
         );
     }
 
     private static EntryResponse toEntryResponse(LoadEntryOutputData data) {
         return new EntryResponse(
-                data.getTitle(),
-                data.getText(),
                 data.getStoragePath(),
-                data.getDate(),
-                null,
-                data.getKeywords()
+                data.getCreatedAt(),
+                data.getUpdatedAt(),
+                data.getTitleCiphertext(),
+                data.getTitleIv(),
+                data.getBodyCiphertext(),
+                data.getBodyIv(),
+                data.getAlgo(),
+                data.getVersion()
         );
     }
 
     private static EntrySummaryResponse toSummaryResponse(Map<String, Object> entry) {
         return new EntrySummaryResponse(
-                stringValue(entry.get("title")),
                 stringValue(entry.get("storagePath")),
                 asLocalDateTime(entry.get("createdDate")),
                 asLocalDateTime(entry.get("updatedDate")),
-                asStringList(entry.get("keywords"))
+                stringValue(entry.get("titleCiphertext")),
+                stringValue(entry.get("titleIv")),
+                stringValue(entry.get("algo")),
+                asInt(entry.get("version"))
         );
     }
 
@@ -164,11 +175,21 @@ public class EntriesController {
         return null;
     }
 
-    private static List<String> asStringList(Object value) {
-        if (value instanceof List<?> list) {
-            return list.stream().map(Object::toString).toList();
+    private static int asInt(Object value) {
+        if (value instanceof Integer integer) {
+            return integer;
         }
-        return List.of();
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        if (value instanceof String text) {
+            try {
+                return Integer.parseInt(text);
+            } catch (NumberFormatException ignored) {
+                return 0;
+            }
+        }
+        return 0;
     }
 
     private static UUID requireUserId(Jwt jwt) {

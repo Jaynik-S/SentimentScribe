@@ -22,7 +22,7 @@
 - Backend notes: `SecurityConfig` disables CSRF and permits all requests with a BCrypt encoder; implements `WebMvcConfigurer` so MVC slice tests pick up the config. Added `JwtProperties` for upcoming JWT config.
 - Frontend notes: None.
 - DB notes: None.
-- Verification: `cd backend; mvn test`
+- Verification: `cd backend; mvn test` (pass). Frontend tests not run.
 
 ---
 
@@ -92,14 +92,14 @@
 
 ---
 
-## Step 8 — Flyway V3 + DTO/entity updates: ciphertext-only diary entries
+## Step 8 - Flyway V3 + DTO/entity updates: ciphertext-only diary entries
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: backend/src/main/resources/db/migration/V3__e2ee_entries.sql; backend/src/main/java/com/sentimentscribe/domain/DiaryEntry.java; backend/src/main/java/com/sentimentscribe/persistence/postgres/entity/DiaryEntryEntity.java; backend/src/main/java/com/sentimentscribe/persistence/postgres/PostgresDiaryEntryRepositoryAdapter.java; backend/src/main/java/com/sentimentscribe/service/EntryCommand.java; backend/src/main/java/com/sentimentscribe/service/EntryService.java; backend/src/main/java/com/sentimentscribe/usecase/save_entry/SaveEntryInputData.java; backend/src/main/java/com/sentimentscribe/usecase/save_entry/SaveEntryOutputData.java; backend/src/main/java/com/sentimentscribe/usecase/save_entry/SaveEntryInteractor.java; backend/src/main/java/com/sentimentscribe/usecase/load_entry/LoadEntryOutputData.java; backend/src/main/java/com/sentimentscribe/usecase/load_entry/LoadEntryInteractor.java; backend/src/main/java/com/sentimentscribe/web/EntriesController.java; backend/src/main/java/com/sentimentscribe/web/dto/EntryRequest.java; backend/src/main/java/com/sentimentscribe/web/dto/EntryResponse.java; backend/src/main/java/com/sentimentscribe/web/dto/EntrySummaryResponse.java; backend/src/main/java/com/sentimentscribe/config/AppConfig.java; backend/src/test/java/com/sentimentscribe/web/EntriesApiIntegrationTest.java; backend/src/test/java/com/sentimentscribe/usecase/save_entry/SaveEntryInteractorTest.java; backend/src/test/java/com/sentimentscribe/usecase/load_entry/LoadEntryInteractorTest.java; backend/src/test/java/com/sentimentscribe/domain/DiaryEntryTest.java; frontend/src/api/types.ts; frontend/src/api/__tests__/entries.test.ts; frontend/src/pages/DiaryEntryPage.tsx; frontend/src/components/EntriesTable.tsx; frontend/src/components/DeleteEntryModal.tsx; frontend/src/pages/__tests__/DiaryEntryPage.test.tsx; frontend/src/pages/__tests__/HomeMenuPage.test.tsx; auth-e2ee-changes.md
+- Summary: Migrated diary entries to ciphertext-only storage and updated backend/front-end DTOs and tests to use ciphertext fields, removing server-side keyword extraction for stored entries.
+- Backend notes: Added V3 migration for ciphertext columns and refactored entry domain/entity/usecase/controller mappings to use `{title/body}Ciphertext`, IVs, algo, and version. Save/load validators now enforce ciphertext fields, and list responses include ciphertext summaries only. Added an integration test asserting plaintext fields are omitted.
+- Frontend notes: Entry API types now use ciphertext fields; diary UI continues using plaintext as ciphertext placeholders with default IV/algo/version, and entries table/delete modal display the ciphertext title.
+- DB notes: V3 migration adds ciphertext/IV/algo/version columns and drops plaintext title/text columns.
+- Verification: `cd backend; mvn test`
 
 ---
 

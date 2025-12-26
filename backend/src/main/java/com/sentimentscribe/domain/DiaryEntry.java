@@ -8,9 +8,12 @@ public class DiaryEntry {
     public static final int MIN_TEXT_LENGTH = 50;
     public static final int MAX_TEXT_LENGTH = 1000;
 
-    private String title;
-    private String text;
-    private List<String> keywords;
+    private String titleCiphertext;
+    private String titleIv;
+    private String bodyCiphertext;
+    private String bodyIv;
+    private String algo;
+    private int version;
     /**
      * Storage identifier owned by the persistence layer (e.g., a file path).
      * This is kept on the entity so use cases can preserve identity across edits.
@@ -22,43 +25,58 @@ public class DiaryEntry {
     private List<MovieRecommendation> movieRecommendations;
 
     public DiaryEntry() {
-        this.title = "Untitled Document";
-        this.text = "Enter your text here...";
+        this.titleCiphertext = "";
+        this.titleIv = "";
+        this.bodyCiphertext = "";
+        this.bodyIv = "";
+        this.algo = "AES-GCM";
+        this.version = 1;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = createdAt;
     }
 
-    public DiaryEntry(String title, String textBody, LocalDateTime date) {
-        this.title = title;
-        this.text = textBody;
-        this.createdAt = date;
-        this.updatedAt = date;
-    }
-
-    public DiaryEntry(String title,
-                      String textBody,
-                      List<String> keywords,
+    public DiaryEntry(String titleCiphertext,
+                      String titleIv,
+                      String bodyCiphertext,
+                      String bodyIv,
+                      String algo,
+                      int version,
                       String storagePath,
                       LocalDateTime createdAt,
                       LocalDateTime updatedAt) {
-        this.title = title;
-        this.text = textBody;
-        this.keywords = keywords;
+        this.titleCiphertext = titleCiphertext;
+        this.titleIv = titleIv;
+        this.bodyCiphertext = bodyCiphertext;
+        this.bodyIv = bodyIv;
+        this.algo = algo;
+        this.version = version;
         this.storagePath = storagePath;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
 
-    public String getTitle() {
-        return title;
+    public String getTitleCiphertext() {
+        return titleCiphertext;
     }
 
-    public String getText() {
-        return text;
+    public String getTitleIv() {
+        return titleIv;
     }
 
-    public List<String> getKeywords() {
-        return keywords;
+    public String getBodyCiphertext() {
+        return bodyCiphertext;
+    }
+
+    public String getBodyIv() {
+        return bodyIv;
+    }
+
+    public String getAlgo() {
+        return algo;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public String getStoragePath() {
@@ -81,16 +99,28 @@ public class DiaryEntry {
         return movieRecommendations;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setTitleCiphertext(String titleCiphertext) {
+        this.titleCiphertext = titleCiphertext;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setTitleIv(String titleIv) {
+        this.titleIv = titleIv;
     }
 
-    public void setKeywords(List<String> keyword) {
-        this.keywords = keyword;
+    public void setBodyCiphertext(String bodyCiphertext) {
+        this.bodyCiphertext = bodyCiphertext;
+    }
+
+    public void setBodyIv(String bodyIv) {
+        this.bodyIv = bodyIv;
+    }
+
+    public void setAlgo(String algo) {
+        this.algo = algo;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 
     public void setStoragePath(String storagePath) {

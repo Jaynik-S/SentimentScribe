@@ -34,28 +34,36 @@ export type RegisterRequest = {
 }
 
 export type EntrySummaryResponse = {
-  title: string
   storagePath: string
   createdAt: LocalDateTime | null
   updatedAt: LocalDateTime | null
-  keywords: string[]
+  titleCiphertext: string
+  titleIv: string
+  algo: string
+  version: number
 }
 
 export type EntryRequest = {
-  title: string
-  text: string
   storagePath: string | null
-  keywords: string[]
   createdAt: LocalDateTime | null
+  titleCiphertext: string
+  titleIv: string
+  bodyCiphertext: string
+  bodyIv: string
+  algo: string
+  version: number
 }
 
 export type EntryResponse = {
-  title: string
-  text: string
   storagePath: string
   createdAt: LocalDateTime | null
   updatedAt: LocalDateTime | null
-  keywords: string[]
+  titleCiphertext: string
+  titleIv: string
+  bodyCiphertext: string
+  bodyIv: string
+  algo: string
+  version: number
 }
 
 export type DeleteResponse = {

@@ -1,9 +1,9 @@
-import type { EntrySummaryResponse } from '../api/types'
+import type { EntrySummaryView } from '../types/entries'
 
 type EntriesTableProps = {
-  entries: EntrySummaryResponse[]
-  onRowClick: (entry: EntrySummaryResponse) => void
-  onDeleteClick: (entry: EntrySummaryResponse) => void
+  entries: EntrySummaryView[]
+  onRowClick: (entry: EntrySummaryView) => void
+  onDeleteClick: (entry: EntrySummaryView) => void
 }
 
 const formatDate = (value: string | null): string => {
@@ -58,7 +58,11 @@ export const EntriesTable = ({
               >
                 <td>
                   <div className="entry-title">
-                    <span>{entry.titleCiphertext || 'Encrypted entry'}</span>
+                    <span>
+                      {entry.titlePlaintext ||
+                        entry.titleCiphertext ||
+                        'Encrypted entry'}
+                    </span>
                     <span className="entry-path">{entry.storagePath}</span>
                   </div>
                 </td>

@@ -7,6 +7,8 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 import { deleteEntry, listEntries } from '../../api/entries'
 import type { EntrySummaryResponse } from '../../api/types'
 import { ApiError } from '../../api/http'
+import { encryptAesGcm } from '../../crypto/aesGcm'
+import { deriveAesKey } from '../../crypto/kdf'
 
 vi.mock('../../api/entries', () => ({
   listEntries: vi.fn(),
@@ -18,19 +20,40 @@ const LocationSpy = () => {
   return <div data-testid="location">{location.pathname + location.search}</div>
 }
 
-const entryFixture: EntrySummaryResponse = {
-  storagePath: 'entries/morning.txt',
-  createdAt: '2025-01-01T10:00:00',
-  updatedAt: null,
-  titleCiphertext: 'Morning Thoughts',
-  titleIv: 'AAAAAAAAAAAAAAAAAAAAAA==',
-  algo: 'AES-GCM',
-  version: 1,
-}
+const passphrase = 'correct horse'
+const params = { kdf: 'PBKDF2-SHA256', salt: 'c2FsdA==', iterations: 1 }
+
+let mockKey: CryptoKey | null = null
+
+vi.mock('../../state/e2ee', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../state/e2ee')>()
+  return {
+    ...actual,
+    useE2ee: () => ({
+      key: mockKey,
+      isUnlocked: Boolean(mockKey),
+      unlock: vi.fn(),
+      clear: vi.fn(),
+    }),
+  }
+})
+
+let entryFixture: EntrySummaryResponse
 
 describe('HomeMenuPage', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks()
+    mockKey = await deriveAesKey(passphrase, params.salt, params.iterations)
+    const encryptedTitle = await encryptAesGcm('Morning Thoughts', mockKey!)
+    entryFixture = {
+      storagePath: 'entries/morning.txt',
+      createdAt: '2025-01-01T10:00:00',
+      updatedAt: null,
+      titleCiphertext: encryptedTitle.ciphertext,
+      titleIv: encryptedTitle.iv,
+      algo: 'AES-GCM',
+      version: 1,
+    }
   })
 
   it('loads entries and navigates on row click', async () => {

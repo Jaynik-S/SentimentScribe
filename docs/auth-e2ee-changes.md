@@ -136,11 +136,11 @@
 
 ---
 
-## Step 12 — Wire E2EE into diary CRUD (encrypt before save, decrypt after load)
+## Step 12 - Wire E2EE into diary CRUD (encrypt before save, decrypt after load)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: frontend/src/pages/HomeMenuPage.tsx; frontend/src/components/EntriesTable.tsx; frontend/src/components/DeleteEntryModal.tsx; frontend/src/types/entries.ts; frontend/src/pages/DiaryEntryPage.tsx; frontend/src/pages/__tests__/HomeMenuPage.test.tsx; frontend/src/pages/__tests__/DiaryEntryPage.test.tsx; auth-e2ee-changes.md
+- Summary: Wired AES-GCM encryption/decryption into diary flows so list titles and entries are decrypted client-side while save/load uses ciphertext envelopes.
+- Backend notes: None.
+- Frontend notes: Home list now decrypts `titleCiphertext` per row and surfaces a fallback when decryption fails. Entry page decrypts on load, encrypts before save, and preserves plaintext in the draft after save. Added view-model type for decrypted titles and updated tests to cover decrypting list/entry payloads using a mocked E2EE key.
+- DB notes: None.
+- Verification: `cd frontend; npm run test` (pass). Manual end-to-end flow not run.

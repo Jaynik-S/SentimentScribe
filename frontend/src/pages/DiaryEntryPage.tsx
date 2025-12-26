@@ -8,14 +8,13 @@ import { getRecommendations } from '../api/recommendations'
 import { formatLocalDateTime } from '../api/localDateTime'
 import type { EntryRequest } from '../api/types'
 import { KeywordsDropdown } from '../components/KeywordsDropdown'
+import { decryptEnvelope, encryptEnvelope } from '../crypto/envelope'
 import { useEntryDraft } from '../state/entryDraft'
+import { useE2ee } from '../state/e2ee'
 import { useRecommendations } from '../state/recommendations'
 import { useUi } from '../state/ui'
 
 const TOAST_DURATION_MS = 3000
-const DEFAULT_ALGO = 'AES-GCM'
-const DEFAULT_VERSION = 1
-const DEFAULT_IV = 'AAAAAAAAAAAAAAAAAAAAAA=='
 
 const formatDisplayDate = (value: string | null): string => {
   if (!value) {
@@ -62,6 +61,7 @@ export const DiaryEntryPage = () => {
     useEntryDraft()
   const { setRecommendations } = useRecommendations()
   const { setPageError, clearPageError, setPageLoading } = useUi()
+  const { key } = useE2ee()
   const [titleError, setTitleError] = useState<string | null>(null)
   const [textError, setTextError] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -69,12 +69,6 @@ export const DiaryEntryPage = () => {
   const [isRecommending, setIsRecommending] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const createdAtRef = useRef(draft.createdAt)
-  const cryptoRef = useRef({
-    titleIv: DEFAULT_IV,
-    bodyIv: DEFAULT_IV,
-    algo: DEFAULT_ALGO,
-    version: DEFAULT_VERSION,
-  })
 
   const entryPath = searchParams.get('path')
 
@@ -86,6 +80,10 @@ export const DiaryEntryPage = () => {
     if (!entryPath) {
       return
     }
+    if (!key) {
+      setPageError('Unlock your diary to view entries.')
+      return
+    }
 
     const loadEntry = async () => {
       setPageLoading(true)
@@ -93,15 +91,20 @@ export const DiaryEntryPage = () => {
 
       try {
         const response = await getEntryByPath(entryPath)
-        cryptoRef.current = {
-          titleIv: response.titleIv,
-          bodyIv: response.bodyIv,
-          algo: response.algo,
-          version: response.version,
-        }
+        const decrypted = await decryptEnvelope(
+          {
+            titleCiphertext: response.titleCiphertext,
+            titleIv: response.titleIv,
+            bodyCiphertext: response.bodyCiphertext,
+            bodyIv: response.bodyIv,
+            algo: response.algo,
+            version: response.version,
+          },
+          key,
+        )
         setDraft({
-          title: response.titleCiphertext,
-          text: response.bodyCiphertext,
+          title: decrypted.title,
+          text: decrypted.body,
           storagePath: response.storagePath,
           createdAt: response.createdAt ?? createdAtRef.current,
           keywords: [],
@@ -124,6 +127,7 @@ export const DiaryEntryPage = () => {
   }, [
     clearPageError,
     entryPath,
+    key,
     navigate,
     setDraft,
     setKeywordsVisible,
@@ -194,6 +198,10 @@ export const DiaryEntryPage = () => {
     if (isSaving) {
       return
     }
+    if (!key) {
+      setPageError('Unlock your diary to save entries.')
+      return
+    }
 
     const nextTitleError = validateTitle(draft.title)
     const nextTextError = validateText(draft.text)
@@ -213,32 +221,25 @@ export const DiaryEntryPage = () => {
       updateDraft({ createdAt })
     }
 
-    const { titleIv, bodyIv, algo, version } = cryptoRef.current
-    const payload: EntryRequest = {
-      storagePath: draft.storagePath,
-      createdAt,
-      titleCiphertext: draft.title,
-      titleIv,
-      bodyCiphertext: draft.text,
-      bodyIv,
-      algo,
-      version,
-    }
-
     try {
+      const encrypted = await encryptEnvelope(draft.title, draft.text, key)
+      const payload: EntryRequest = {
+        storagePath: draft.storagePath,
+        createdAt,
+        titleCiphertext: encrypted.titleCiphertext,
+        titleIv: encrypted.titleIv,
+        bodyCiphertext: encrypted.bodyCiphertext,
+        bodyIv: encrypted.bodyIv,
+        algo: encrypted.algo,
+        version: encrypted.version,
+      }
       const response = draft.storagePath
         ? await updateEntry(payload)
         : await createEntry(payload)
 
-      cryptoRef.current = {
-        titleIv: response.titleIv,
-        bodyIv: response.bodyIv,
-        algo: response.algo,
-        version: response.version,
-      }
       setDraft({
-        title: response.titleCiphertext,
-        text: response.bodyCiphertext,
+        title: draft.title,
+        text: draft.text,
         storagePath: response.storagePath,
         createdAt: response.createdAt ?? createdAt,
         keywords: draft.keywords,

@@ -1,8 +1,8 @@
-import type { EntrySummaryResponse } from '../api/types'
+import type { EntrySummaryView } from '../types/entries'
 
 type DeleteEntryModalProps = {
   open: boolean
-  entry: EntrySummaryResponse | null
+  entry: EntrySummaryView | null
   error: string | null
   isDeleting: boolean
   onCancel: () => void
@@ -30,7 +30,12 @@ export const DeleteEntryModal = ({
         <div className="modal__body">
           <p>
             This will permanently delete{' '}
-            <strong>{entry.titleCiphertext || 'this entry'}</strong>.
+            <strong>
+              {entry.titlePlaintext ||
+                entry.titleCiphertext ||
+                'this entry'}
+            </strong>
+            .
           </p>
           <p className="entry-path">{entry.storagePath}</p>
           {error ? <p className="modal__error">{error}</p> : null}

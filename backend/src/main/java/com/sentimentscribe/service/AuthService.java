@@ -2,19 +2,13 @@ package com.sentimentscribe.service;
 
 import com.sentimentscribe.persistence.postgres.entity.UserEntity;
 import com.sentimentscribe.persistence.postgres.repo.UserJpaRepository;
-import com.sentimentscribe.usecase.verify_password.RenderEntriesUserDataInterface;
-import com.sentimentscribe.usecase.verify_password.VerifyPasswordInputData;
-import com.sentimentscribe.usecase.verify_password.VerifyPasswordInteractor;
-import com.sentimentscribe.usecase.verify_password.VerifyPasswordOutputBoundary;
-import com.sentimentscribe.usecase.verify_password.VerifyPasswordOutputData;
-import com.sentimentscribe.usecase.verify_password.VerifyPasswordUserDataAccessInterface;
 import com.sentimentscribe.web.dto.AuthTokenResponse;
 import com.sentimentscribe.web.dto.E2eeParamsResponse;
 import com.sentimentscribe.web.dto.UserResponse;
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Optional;
-import java.security.SecureRandom;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,32 +19,16 @@ public class AuthService {
     private static final int DEFAULT_E2EE_SALT_BYTES = 16;
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    private final VerifyPasswordUserDataAccessInterface passwordAccess;
-    private final RenderEntriesUserDataInterface entriesAccess;
     private final UserJpaRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthService(VerifyPasswordUserDataAccessInterface passwordAccess,
-                       RenderEntriesUserDataInterface entriesAccess,
-                       UserJpaRepository userRepository,
+    public AuthService(UserJpaRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService) {
-        this.passwordAccess = passwordAccess;
-        this.entriesAccess = entriesAccess;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-    }
-
-    public ServiceResult<VerifyPasswordOutputData> verifyPassword(String password) {
-        VerifyPresenter presenter = new VerifyPresenter();
-        VerifyPasswordInteractor interactor = new VerifyPasswordInteractor(passwordAccess, presenter, entriesAccess);
-        interactor.execute(new VerifyPasswordInputData(password));
-        if (presenter.errorMessage != null) {
-            return ServiceResult.failure(presenter.errorMessage);
-        }
-        return ServiceResult.success(presenter.outputData);
     }
 
     public ServiceResult<AuthTokenResponse> register(String username, String password) {
@@ -121,18 +99,4 @@ public class AuthService {
         return salt;
     }
 
-    private static final class VerifyPresenter implements VerifyPasswordOutputBoundary {
-        private VerifyPasswordOutputData outputData;
-        private String errorMessage;
-
-        @Override
-        public void prepareSuccessView(VerifyPasswordOutputData outputData) {
-            this.outputData = outputData;
-        }
-
-        @Override
-        public void prepareFailView(String errorMessage) {
-            this.errorMessage = errorMessage;
-        }
-    }
 }

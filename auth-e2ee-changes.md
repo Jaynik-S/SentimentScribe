@@ -70,14 +70,14 @@
 
 ---
 
-## Step 6 — Delete the legacy password gate (`/api/auth/verify` + default-user logic)
+## Step 6 - Delete the legacy password gate (`/api/auth/verify` + default-user logic)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: backend/src/main/java/com/sentimentscribe/web/AuthController.java; backend/src/main/java/com/sentimentscribe/service/AuthService.java; backend/src/main/java/com/sentimentscribe/data/DiaryEntryRepository.java; backend/src/main/java/com/sentimentscribe/config/AppConfig.java; backend/src/main/java/com/sentimentscribe/usecase/save_entry/SaveEntryUserDataAccessInterface.java; backend/src/main/java/com/sentimentscribe/usecase/load_entry/LoadEntryUserDataAccessInterface.java; backend/src/main/java/com/sentimentscribe/usecase/delete_entry/DeleteEntryUserDataAccessInterface.java; backend/src/main/java/com/sentimentscribe/web/dto/AuthRequest.java; backend/src/main/java/com/sentimentscribe/web/dto/AuthResponse.java; backend/src/main/java/com/sentimentscribe/persistence/postgres/PostgresVerifyPasswordDataAccessObject.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/RenderEntriesUserDataInterface.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordInputBoundary.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordInputData.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordOutputBoundary.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordOutputData.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordInteractor.java; backend/src/main/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordUserDataAccessInterface.java; backend/src/test/java/com/sentimentscribe/usecase/verify_password/VerifyPasswordInteractorTest.java; auth-e2ee-changes.md
+- Summary: Removed legacy password-gate endpoint and verify-password usecase/data access code, leaving only register/login for auth.
+- Backend notes: `/api/auth/verify` and related DTOs/usecase classes were deleted; AuthService now only supports register/login. DiaryEntryRepository now declares list method directly after removing verify-password interfaces.
+- Frontend notes: None (frontend cleanup is scheduled for Step 7).
+- DB notes: None.
+- Verification: `cd backend; mvn test`
 
 ---
 

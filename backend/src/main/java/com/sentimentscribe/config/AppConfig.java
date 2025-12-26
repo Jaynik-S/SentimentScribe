@@ -4,7 +4,6 @@ import com.sentimentscribe.data.NLPAnalysisDataAccessObject;
 import com.sentimentscribe.data.NLPKeywordExtractor;
 import com.sentimentscribe.data.RecommendationAPIAccessObject;
 import com.sentimentscribe.persistence.postgres.PostgresDiaryEntryRepositoryAdapter;
-import com.sentimentscribe.persistence.postgres.PostgresVerifyPasswordDataAccessObject;
 import com.sentimentscribe.persistence.postgres.StoragePathGenerator;
 import com.sentimentscribe.persistence.postgres.repo.DiaryEntryJpaRepository;
 import com.sentimentscribe.persistence.postgres.repo.UserJpaRepository;
@@ -13,7 +12,6 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Properties;
 
@@ -56,14 +54,6 @@ public class AppConfig {
                 keywordExtractor,
                 storagePathGenerator
         );
-    }
-
-    @Bean
-    @Profile("postgres")
-    public PostgresVerifyPasswordDataAccessObject postgresVerifyPasswordDataAccessObject(
-            UserJpaRepository userJpaRepository,
-            PasswordEncoder passwordEncoder) {
-        return new PostgresVerifyPasswordDataAccessObject(userJpaRepository, passwordEncoder);
     }
 
     @Bean

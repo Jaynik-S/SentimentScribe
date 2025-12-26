@@ -1,9 +1,9 @@
-import type { EntrySummaryResponse } from '../api/types'
+import type { EntrySummaryView } from '../types/entries'
 
 type EntriesTableProps = {
-  entries: EntrySummaryResponse[]
-  onRowClick: (entry: EntrySummaryResponse) => void
-  onDeleteClick: (entry: EntrySummaryResponse) => void
+  entries: EntrySummaryView[]
+  onRowClick: (entry: EntrySummaryView) => void
+  onDeleteClick: (entry: EntrySummaryView) => void
 }
 
 const formatDate = (value: string | null): string => {
@@ -32,14 +32,13 @@ export const EntriesTable = ({
             <th>Title</th>
             <th>Date Created</th>
             <th>Date Edited</th>
-            <th>Keywords</th>
             <th aria-label="Delete" />
           </tr>
         </thead>
         <tbody>
           {entries.length === 0 ? (
             <tr>
-              <td colSpan={5} className="entries-table__empty">
+              <td colSpan={4} className="entries-table__empty">
                 No entries yet.
               </td>
             </tr>
@@ -59,15 +58,16 @@ export const EntriesTable = ({
               >
                 <td>
                   <div className="entry-title">
-                    <span>{entry.title}</span>
+                    <span>
+                      {entry.titlePlaintext ||
+                        entry.titleCiphertext ||
+                        'Encrypted entry'}
+                    </span>
                     <span className="entry-path">{entry.storagePath}</span>
                   </div>
                 </td>
                 <td>{formatDate(entry.createdAt)}</td>
                 <td>{formatDate(entry.updatedAt)}</td>
-                <td className="entries-table__keywords">
-                  {entry.keywords.length > 0 ? entry.keywords.join(', ') : '—'}
-                </td>
                 <td>
                   <button
                     type="button"

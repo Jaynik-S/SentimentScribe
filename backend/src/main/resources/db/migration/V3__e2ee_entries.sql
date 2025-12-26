@@ -1,0 +1,11 @@
+ALTER TABLE diary_entries
+    ADD COLUMN title_ciphertext TEXT NOT NULL DEFAULT '',
+    ADD COLUMN title_iv TEXT NOT NULL DEFAULT '',
+    ADD COLUMN body_ciphertext TEXT NOT NULL DEFAULT '',
+    ADD COLUMN body_iv TEXT NOT NULL DEFAULT '',
+    ADD COLUMN algo TEXT NOT NULL DEFAULT 'AES-GCM',
+    ADD COLUMN version INT NOT NULL DEFAULT 1;
+
+ALTER TABLE diary_entries
+    DROP COLUMN title,
+    DROP COLUMN text;

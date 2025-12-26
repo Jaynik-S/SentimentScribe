@@ -1,8 +1,14 @@
 import { request } from './http'
-import type { AuthRequest, AuthResponse } from './types'
+import type { AuthTokenResponse, LoginRequest, RegisterRequest } from './types'
 
-export const verifyPassword = (payload: AuthRequest): Promise<AuthResponse> =>
-  request<AuthResponse>('/api/auth/verify', {
+export const login = (payload: LoginRequest): Promise<AuthTokenResponse> =>
+  request<AuthTokenResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+
+export const register = (payload: RegisterRequest): Promise<AuthTokenResponse> =>
+  request<AuthTokenResponse>('/api/auth/register', {
     method: 'POST',
     body: JSON.stringify(payload),
   })

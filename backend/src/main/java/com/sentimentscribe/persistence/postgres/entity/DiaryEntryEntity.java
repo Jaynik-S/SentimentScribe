@@ -30,11 +30,23 @@ public class DiaryEntryEntity {
     @Column(name = "storage_path", nullable = false, unique = true)
     private String storagePath;
 
-    @Column(nullable = false)
-    private String title;
+    @Column(name = "title_ciphertext", nullable = false)
+    private String titleCiphertext;
+
+    @Column(name = "title_iv", nullable = false)
+    private String titleIv;
+
+    @Column(name = "body_ciphertext", nullable = false)
+    private String bodyCiphertext;
+
+    @Column(name = "body_iv", nullable = false)
+    private String bodyIv;
 
     @Column(nullable = false)
-    private String text;
+    private String algo;
+
+    @Column(nullable = false)
+    private int version;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -69,20 +81,52 @@ public class DiaryEntryEntity {
         this.storagePath = storagePath;
     }
 
-    public String getTitle() {
-        return title;
+    public String getTitleCiphertext() {
+        return titleCiphertext;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setTitleCiphertext(String titleCiphertext) {
+        this.titleCiphertext = titleCiphertext;
     }
 
-    public String getText() {
-        return text;
+    public String getTitleIv() {
+        return titleIv;
     }
 
-    public void setText(String text) {
-        this.text = text;
+    public void setTitleIv(String titleIv) {
+        this.titleIv = titleIv;
+    }
+
+    public String getBodyCiphertext() {
+        return bodyCiphertext;
+    }
+
+    public void setBodyCiphertext(String bodyCiphertext) {
+        this.bodyCiphertext = bodyCiphertext;
+    }
+
+    public String getBodyIv() {
+        return bodyIv;
+    }
+
+    public void setBodyIv(String bodyIv) {
+        this.bodyIv = bodyIv;
+    }
+
+    public String getAlgo() {
+        return algo;
+    }
+
+    public void setAlgo(String algo) {
+        this.algo = algo;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
     }
 
     public LocalDateTime getCreatedAt() {

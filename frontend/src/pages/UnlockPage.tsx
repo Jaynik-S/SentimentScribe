@@ -1,19 +1,23 @@
 import { useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { verifyPassword } from '../api/auth'
-import { isApiError } from '../api/http'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../state/auth'
+import { useE2ee } from '../state/e2ee'
 import { useUi } from '../state/ui'
 
-export const VerifyPasswordPage = () => {
-  const [password, setPassword] = useState('')
+export const UnlockPage = () => {
+  const [passphrase, setPassphrase] = useState('')
   const [inlineError, setInlineError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
-  const { setUnlocked } = useAuth()
+  const { auth } = useAuth()
+  const { unlock } = useE2ee()
   const { setPageError, clearPageError } = useUi()
+
+  if (!auth) {
+    return <Navigate to="/" replace />
+  }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -22,8 +26,8 @@ export const VerifyPasswordPage = () => {
       return
     }
 
-    if (!password.trim()) {
-      const message = 'Password is required.'
+    if (!passphrase.trim()) {
+      const message = 'Passphrase is required.'
       setInlineError(message)
       setPageError(message)
       inputRef.current?.focus()
@@ -35,25 +39,22 @@ export const VerifyPasswordPage = () => {
     clearPageError()
 
     try {
-      const response = await verifyPassword({ password })
-      setUnlocked(true, response.status)
-      setPassword('')
+      await unlock(passphrase, auth.e2eeParams)
+      setPassphrase('')
       navigate('/home')
     } catch (error) {
-      const message = isApiError(error)
-        ? error.data.error
-        : 'Unable to verify password.'
+      const message =
+        error instanceof Error ? error.message : 'Unable to unlock.'
       setInlineError(message)
       setPageError(message)
-      setPassword('')
       inputRef.current?.focus()
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handlePasswordChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setPassword(event.target.value)
+  const handlePassphraseChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setPassphrase(event.target.value)
     if (inlineError) {
       setInlineError(null)
     }
@@ -67,18 +68,18 @@ export const VerifyPasswordPage = () => {
           <p className="eyebrow">SentimentScribe</p>
           <h1>Unlock your diary</h1>
           <p className="subtle">
-            Enter your password to view or create entries.
+            Enter your passphrase to decrypt your entries locally.
           </p>
         </header>
 
         <form className="verify-form" onSubmit={handleSubmit}>
           <label className="field">
-            <span className="field__label">Password</span>
+            <span className="field__label">Passphrase</span>
             <input
               ref={inputRef}
               type="password"
-              value={password}
-              onChange={handlePasswordChange}
+              value={passphrase}
+              onChange={handlePassphraseChange}
               disabled={isSubmitting}
               autoComplete="current-password"
             />
@@ -90,10 +91,10 @@ export const VerifyPasswordPage = () => {
             {isSubmitting ? (
               <span className="button-content">
                 <span className="spinner" aria-hidden="true" />
-                Verifying...
+                Unlocking...
               </span>
             ) : (
-              'Submit / Enter'
+              'Unlock'
             )}
           </button>
         </form>

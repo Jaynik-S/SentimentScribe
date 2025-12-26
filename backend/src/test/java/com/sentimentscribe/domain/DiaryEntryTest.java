@@ -12,8 +12,10 @@ public class DiaryEntryTest {
     @Test
     public void testDefaultConstructorInitializesFields() {
         DiaryEntry entry = new DiaryEntry();
-        assertEquals("Untitled Document", entry.getTitle());
-        assertEquals("Enter your text here...", entry.getText());
+        assertEquals("", entry.getTitleCiphertext());
+        assertEquals("", entry.getBodyCiphertext());
+        assertEquals("AES-GCM", entry.getAlgo());
+        assertEquals(1, entry.getVersion());
         assertNotNull(entry.getCreatedAt());
         assertEquals(entry.getCreatedAt(), entry.getUpdatedAt());
     }
@@ -21,10 +23,22 @@ public class DiaryEntryTest {
     @Test
     public void testParameterizedConstructorInitializesFields() {
         LocalDateTime created = LocalDateTime.of(2024, 1, 1, 12, 0);
-        DiaryEntry entry = new DiaryEntry("My Day", "Some body text", created);
+        DiaryEntry entry = new DiaryEntry(
+                "title",
+                "title-iv",
+                "body",
+                "body-iv",
+                "AES-GCM",
+                2,
+                "entries/1.json",
+                created,
+                created
+        );
 
-        assertEquals("My Day", entry.getTitle());
-        assertEquals("Some body text", entry.getText());
+        assertEquals("title", entry.getTitleCiphertext());
+        assertEquals("body", entry.getBodyCiphertext());
+        assertEquals("AES-GCM", entry.getAlgo());
+        assertEquals(2, entry.getVersion());
         assertEquals(created, entry.getCreatedAt());
         assertEquals(created, entry.getUpdatedAt());
     }
@@ -32,13 +46,19 @@ public class DiaryEntryTest {
     @Test
     public void testSettersAndGetters() {
         DiaryEntry entry = new DiaryEntry();
-        entry.setTitle("Title");
-        entry.setText("This is a long enough diary entry to be used for testing.");
-        entry.setKeywords(List.of("a", "b"));
+        entry.setTitleCiphertext("Title");
+        entry.setTitleIv("title-iv");
+        entry.setBodyCiphertext("Body");
+        entry.setBodyIv("body-iv");
+        entry.setAlgo("AES-GCM");
+        entry.setVersion(3);
 
-        assertEquals("Title", entry.getTitle());
-        assertEquals("This is a long enough diary entry to be used for testing.", entry.getText());
-        assertEquals(List.of("a", "b"), entry.getKeywords());
+        assertEquals("Title", entry.getTitleCiphertext());
+        assertEquals("title-iv", entry.getTitleIv());
+        assertEquals("Body", entry.getBodyCiphertext());
+        assertEquals("body-iv", entry.getBodyIv());
+        assertEquals("AES-GCM", entry.getAlgo());
+        assertEquals(3, entry.getVersion());
     }
 
     @Test

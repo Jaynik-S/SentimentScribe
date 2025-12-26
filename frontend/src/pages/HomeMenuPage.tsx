@@ -2,17 +2,19 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { deleteEntry, listEntries } from '../api/entries'
 import { isApiError } from '../api/http'
-import type { EntrySummaryResponse } from '../api/types'
 import { DeleteEntryModal } from '../components/DeleteEntryModal'
 import { EntriesTable } from '../components/EntriesTable'
+import { decryptAesGcm } from '../crypto/aesGcm'
 import { useEntryDraft } from '../state/entryDraft'
+import { useE2ee } from '../state/e2ee'
 import { useUi } from '../state/ui'
+import type { EntrySummaryView } from '../types/entries'
 
 const TOAST_DURATION_MS = 3000
 
 export const HomeMenuPage = () => {
-  const [entries, setEntries] = useState<EntrySummaryResponse[]>([])
-  const [deleteTarget, setDeleteTarget] = useState<EntrySummaryResponse | null>(
+  const [entries, setEntries] = useState<EntrySummaryView[]>([])
+  const [deleteTarget, setDeleteTarget] = useState<EntrySummaryView | null>(
     null,
   )
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -21,6 +23,7 @@ export const HomeMenuPage = () => {
   const navigate = useNavigate()
   const { setPageError, clearPageError, setPageLoading } = useUi()
   const { startNewEntry } = useEntryDraft()
+  const { key } = useE2ee()
 
   const loadEntries = useCallback(async () => {
     setPageLoading(true)
@@ -28,7 +31,37 @@ export const HomeMenuPage = () => {
 
     try {
       const response = await listEntries()
-      setEntries(response)
+      if (!key) {
+        setEntries(
+          response.map((entry) => ({
+            ...entry,
+            titlePlaintext: 'Encrypted entry',
+          })),
+        )
+        setPageError('Unlock your diary to decrypt entries.')
+        return
+      }
+
+      let hadFailure = false
+      const decrypted = await Promise.all(
+        response.map(async (entry) => {
+          try {
+            const titlePlaintext = await decryptAesGcm(
+              entry.titleCiphertext,
+              entry.titleIv,
+              key,
+            )
+            return { ...entry, titlePlaintext }
+          } catch {
+            hadFailure = true
+            return { ...entry, titlePlaintext: 'Encrypted entry' }
+          }
+        }),
+      )
+      if (hadFailure) {
+        setPageError('Unable to decrypt some entries.')
+      }
+      setEntries(decrypted)
     } catch (error) {
       const message = isApiError(error)
         ? error.data.error
@@ -43,7 +76,7 @@ export const HomeMenuPage = () => {
     } finally {
       setPageLoading(false)
     }
-  }, [clearPageError, setPageError, setPageLoading])
+  }, [clearPageError, key, setPageError, setPageLoading])
 
   useEffect(() => {
     void loadEntries()
@@ -63,12 +96,12 @@ export const HomeMenuPage = () => {
     }
   }, [toastMessage])
 
-  const handleRowClick = (entry: EntrySummaryResponse) => {
+  const handleRowClick = (entry: EntrySummaryView) => {
     const path = encodeURIComponent(entry.storagePath)
     navigate(`/entry?path=${path}`)
   }
 
-  const handleDeleteClick = (entry: EntrySummaryResponse) => {
+  const handleDeleteClick = (entry: EntrySummaryView) => {
     setDeleteTarget(entry)
     setDeleteError(null)
   }

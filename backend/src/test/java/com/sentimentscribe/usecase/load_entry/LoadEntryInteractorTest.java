@@ -4,7 +4,7 @@ import com.sentimentscribe.domain.DiaryEntry;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,18 +16,24 @@ class LoadEntryInteractorTest {
         RecordingLoadEntryPresenter presenter = new RecordingLoadEntryPresenter();
         StubLoadEntryDataAccess dataAccess = new StubLoadEntryDataAccess();
         DiaryEntry entry = new DiaryEntry();
-        entry.setTitle("My Day");
-        entry.setText("a".repeat(60));
+        entry.setTitleCiphertext("VGVzdCBUaXRsZQ==");
+        entry.setTitleIv("AAAAAAAAAAAAAAAAAAAAAA==");
+        entry.setBodyCiphertext("VGVzdCBCb2R5");
+        entry.setBodyIv("AAAAAAAAAAAAAAAAAAAAAA==");
+        entry.setAlgo("AES-GCM");
+        entry.setVersion(1);
         dataAccess.setEntryToReturn(entry);
         LoadEntryInteractor interactor = new LoadEntryInteractor(presenter, dataAccess);
 
-        interactor.execute(new LoadEntryInputData("entries/1.json"));
+        UUID userId = UUID.randomUUID();
+        interactor.execute(new LoadEntryInputData(userId, "entries/1.json"));
 
+        assertEquals(userId, dataAccess.requestedUserId);
         assertEquals("entries/1.json", dataAccess.requestedPath);
         assertTrue(dataAccess.getCalled);
         assertNotNull(presenter.successData);
-        assertEquals("My Day", presenter.successData.getTitle());
-        assertEquals(entry.getText(), presenter.successData.getText());
+        assertEquals(entry.getTitleCiphertext(), presenter.successData.getTitleCiphertext());
+        assertEquals(entry.getBodyCiphertext(), presenter.successData.getBodyCiphertext());
         assertNull(presenter.errorMessage);
     }
 
@@ -38,7 +44,7 @@ class LoadEntryInteractorTest {
         StubLoadEntryDataAccess dataAccess = new StubLoadEntryDataAccess();
         LoadEntryInteractor interactor = new LoadEntryInteractor(presenter, dataAccess);
 
-        interactor.execute(new LoadEntryInputData(""));
+        interactor.execute(new LoadEntryInputData(UUID.randomUUID(), ""));
 
         assertEquals("Entry path cannot be empty.", presenter.errorMessage);
         assertNull(presenter.successData);
@@ -52,7 +58,7 @@ class LoadEntryInteractorTest {
         FailingLoadEntryDataAccess dataAccess = new FailingLoadEntryDataAccess();
         LoadEntryInteractor interactor = new LoadEntryInteractor(presenter, dataAccess);
 
-        interactor.execute(new LoadEntryInputData("entries/2.json"));
+        interactor.execute(new LoadEntryInputData(UUID.randomUUID(), "entries/2.json"));
 
         assertEquals("Failed to load entry: boom", presenter.errorMessage);
         assertNull(presenter.successData);
@@ -66,7 +72,7 @@ class LoadEntryInteractorTest {
         dataAccess.setEntryToReturn(null);
         LoadEntryInteractor interactor = new LoadEntryInteractor(presenter, dataAccess);
 
-        interactor.execute(new LoadEntryInputData("entries/3.json"));
+        interactor.execute(new LoadEntryInputData(UUID.randomUUID(), "entries/3.json"));
 
         assertEquals("Failed to load entry from path: entries/3.json", presenter.errorMessage);
         assertNull(presenter.successData);
@@ -75,8 +81,20 @@ class LoadEntryInteractorTest {
     @Test
     void loadEntryOutputData_exposesDate() {
         LocalDateTime now = LocalDateTime.now();
-        LoadEntryOutputData data = new LoadEntryOutputData("title", "text", now, "entries/1.json", List.of(), true);
-        assertEquals(now, data.getDate());
+        LoadEntryOutputData data = new LoadEntryOutputData(
+                "title",
+                "iv",
+                "body",
+                "body-iv",
+                "AES-GCM",
+                1,
+                "entries/1.json",
+                now,
+                now,
+                true
+        );
+        assertEquals(now, data.getCreatedAt());
+        assertEquals(now, data.getUpdatedAt());
     }
 
     private static final class RecordingLoadEntryPresenter implements LoadEntryOutputBoundary {
@@ -98,10 +116,12 @@ class LoadEntryInteractorTest {
         private DiaryEntry entryToReturn = new DiaryEntry();
         private boolean getCalled;
         private String requestedPath;
+        private UUID requestedUserId;
 
         @Override
-        public DiaryEntry getByPath(String entryPath) {
+        public DiaryEntry getByPath(UUID userId, String entryPath) {
             this.getCalled = true;
+            this.requestedUserId = userId;
             this.requestedPath = entryPath;
             return entryToReturn;
         }
@@ -113,7 +133,7 @@ class LoadEntryInteractorTest {
 
     private static class FailingLoadEntryDataAccess implements LoadEntryUserDataAccessInterface {
         @Override
-        public DiaryEntry getByPath(String entryPath) {
+        public DiaryEntry getByPath(UUID userId, String entryPath) {
             throw new RuntimeException("boom");
         }
     }

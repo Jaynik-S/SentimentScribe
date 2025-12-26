@@ -4,11 +4,9 @@ import com.sentimentscribe.data.NLPAnalysisDataAccessObject;
 import com.sentimentscribe.data.NLPKeywordExtractor;
 import com.sentimentscribe.data.RecommendationAPIAccessObject;
 import com.sentimentscribe.persistence.postgres.PostgresDiaryEntryRepositoryAdapter;
-import com.sentimentscribe.persistence.postgres.PostgresVerifyPasswordDataAccessObject;
 import com.sentimentscribe.persistence.postgres.StoragePathGenerator;
 import com.sentimentscribe.persistence.postgres.repo.DiaryEntryJpaRepository;
 import com.sentimentscribe.persistence.postgres.repo.UserJpaRepository;
-import com.sentimentscribe.usecase.save_entry.SaveEntryKeywordExtractor;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,21 +45,12 @@ public class AppConfig {
     public PostgresDiaryEntryRepositoryAdapter postgresDiaryEntryRepositoryAdapter(
             DiaryEntryJpaRepository diaryEntryRepository,
             UserJpaRepository userJpaRepository,
-            SaveEntryKeywordExtractor keywordExtractor,
             StoragePathGenerator storagePathGenerator) {
         return new PostgresDiaryEntryRepositoryAdapter(
                 diaryEntryRepository,
                 userJpaRepository,
-                keywordExtractor,
                 storagePathGenerator
         );
-    }
-
-    @Bean
-    @Profile("postgres")
-    public PostgresVerifyPasswordDataAccessObject postgresVerifyPasswordDataAccessObject(
-            UserJpaRepository userJpaRepository) {
-        return new PostgresVerifyPasswordDataAccessObject(userJpaRepository);
     }
 
     @Bean

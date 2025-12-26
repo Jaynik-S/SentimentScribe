@@ -1,45 +1,73 @@
 package com.sentimentscribe.usecase.save_entry;
 
-import java.util.List;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class SaveEntryInputData {
-    private final String title;
-    private final LocalDateTime date;
-    private final String textBody;
+    private final UUID userId;
+    private final String titleCiphertext;
+    private final String titleIv;
+    private final String bodyCiphertext;
+    private final String bodyIv;
+    private final String algo;
+    private final int version;
     private final String storagePath;
-    private final List<String> keywords;
+    private final LocalDateTime createdAt;
 
-    public SaveEntryInputData(String title,
-                              LocalDateTime date,
-                              String textBody,
+    public SaveEntryInputData(UUID userId,
+                              String titleCiphertext,
+                              String titleIv,
+                              String bodyCiphertext,
+                              String bodyIv,
+                              String algo,
+                              int version,
                               String storagePath,
-                              List<String> keywords) {
-        this.title = title;
-        this.date = date;
-        this.textBody = textBody;
+                              LocalDateTime createdAt) {
+        this.userId = userId;
+        this.titleCiphertext = titleCiphertext;
+        this.titleIv = titleIv;
+        this.bodyCiphertext = bodyCiphertext;
+        this.bodyIv = bodyIv;
+        this.algo = algo;
+        this.version = version;
         this.storagePath = storagePath;
-        this.keywords = keywords;
+        this.createdAt = createdAt;
     }
 
-    public String getTitle() {
-        return title;
+    public UUID getUserId() {
+        return userId;
     }
 
-    public LocalDateTime getDate() {
-        return date;
+    public String getTitleCiphertext() {
+        return titleCiphertext;
     }
 
-    public String getTextBody() {
-        return textBody;
+    public String getTitleIv() {
+        return titleIv;
+    }
+
+    public String getBodyCiphertext() {
+        return bodyCiphertext;
+    }
+
+    public String getBodyIv() {
+        return bodyIv;
+    }
+
+    public String getAlgo() {
+        return algo;
+    }
+
+    public int getVersion() {
+        return version;
     }
 
     public String getStoragePath() {
         return storagePath;
     }
 
-    public List<String> getKeywords() {
-        return keywords;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
 }

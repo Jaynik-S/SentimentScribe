@@ -13,6 +13,10 @@ public class LoadEntryInteractor implements LoadEntryInputBoundary {
 
     @Override
     public void execute(LoadEntryInputData inputData) {
+        if (inputData.getUserId() == null) {
+            presenter.prepareFailView("User is required.");
+            return;
+        }
         String entryPath = inputData.getEntryPath();
 
         if (entryPath == null || entryPath.length() == 0) {
@@ -21,7 +25,7 @@ public class LoadEntryInteractor implements LoadEntryInputBoundary {
         }
         DiaryEntry entry;
         try {
-            entry = dataAccess.getByPath(entryPath);
+            entry = dataAccess.getByPath(inputData.getUserId(), entryPath);
         }
         catch (Exception error) {
             String message = "Failed to load entry: " + error.getMessage();
@@ -35,12 +39,17 @@ public class LoadEntryInteractor implements LoadEntryInputBoundary {
         }
 
         LoadEntryOutputData outputData = new LoadEntryOutputData(
-                entry.getTitle(),
-                entry.getText(),
-                entry.getCreatedAt(),
+                entry.getTitleCiphertext(),
+                entry.getTitleIv(),
+                entry.getBodyCiphertext(),
+                entry.getBodyIv(),
+                entry.getAlgo(),
+                entry.getVersion(),
                 entry.getStoragePath() == null || entry.getStoragePath().isBlank() ? entryPath : entry.getStoragePath(),
-                entry.getKeywords(),
-                true);
+                entry.getCreatedAt(),
+                entry.getUpdatedAt(),
+                true
+        );
 
         presenter.prepareSuccessView(outputData);
     }

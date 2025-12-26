@@ -19,8 +19,17 @@ public class UserEntity {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false)
-    private String password;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
+    @Column(name = "e2ee_kdf", nullable = false)
+    private String e2eeKdf;
+
+    @Column(name = "e2ee_salt", nullable = false)
+    private byte[] e2eeSalt;
+
+    @Column(name = "e2ee_iterations", nullable = false)
+    private int e2eeIterations;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -47,12 +56,36 @@ public class UserEntity {
         this.username = username;
     }
 
-    public String getPassword() {
-        return password;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public String getE2eeKdf() {
+        return e2eeKdf;
+    }
+
+    public void setE2eeKdf(String e2eeKdf) {
+        this.e2eeKdf = e2eeKdf;
+    }
+
+    public byte[] getE2eeSalt() {
+        return e2eeSalt;
+    }
+
+    public void setE2eeSalt(byte[] e2eeSalt) {
+        this.e2eeSalt = e2eeSalt;
+    }
+
+    public int getE2eeIterations() {
+        return e2eeIterations;
+    }
+
+    public void setE2eeIterations(int e2eeIterations) {
+        this.e2eeIterations = e2eeIterations;
     }
 
     public LocalDateTime getCreatedAt() {

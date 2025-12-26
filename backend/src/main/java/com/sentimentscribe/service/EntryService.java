@@ -11,34 +11,35 @@ import com.sentimentscribe.usecase.load_entry.LoadEntryOutputBoundary;
 import com.sentimentscribe.usecase.load_entry.LoadEntryOutputData;
 import com.sentimentscribe.usecase.save_entry.SaveEntryInputData;
 import com.sentimentscribe.usecase.save_entry.SaveEntryInteractor;
-import com.sentimentscribe.usecase.save_entry.SaveEntryKeywordExtractor;
 import com.sentimentscribe.usecase.save_entry.SaveEntryOutputBoundary;
 import com.sentimentscribe.usecase.save_entry.SaveEntryOutputData;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class EntryService {
 
     private final DiaryEntryRepository repository;
-    private final SaveEntryKeywordExtractor keywordExtractor;
-
-    public EntryService(DiaryEntryRepository repository, SaveEntryKeywordExtractor keywordExtractor) {
+    public EntryService(DiaryEntryRepository repository) {
         this.repository = repository;
-        this.keywordExtractor = keywordExtractor;
     }
 
-    public ServiceResult<SaveEntryOutputData> save(EntryCommand command) {
+    public ServiceResult<SaveEntryOutputData> save(UUID userId, EntryCommand command) {
         SaveEntryPresenter presenter = new SaveEntryPresenter();
-        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, repository, keywordExtractor);
+        SaveEntryInteractor interactor = new SaveEntryInteractor(presenter, repository);
         SaveEntryInputData inputData = new SaveEntryInputData(
-                command.title(),
-                command.createdAt(),
-                command.text(),
+                userId,
+                command.titleCiphertext(),
+                command.titleIv(),
+                command.bodyCiphertext(),
+                command.bodyIv(),
+                command.algo(),
+                command.version(),
                 command.storagePath(),
-                command.keywords()
+                command.createdAt()
         );
         interactor.execute(inputData);
         if (presenter.errorMessage != null) {
@@ -47,29 +48,29 @@ public class EntryService {
         return ServiceResult.success(presenter.outputData);
     }
 
-    public ServiceResult<LoadEntryOutputData> load(String entryPath) {
+    public ServiceResult<LoadEntryOutputData> load(UUID userId, String entryPath) {
         LoadEntryPresenter presenter = new LoadEntryPresenter();
         LoadEntryInteractor interactor = new LoadEntryInteractor(presenter, repository);
-        interactor.execute(new LoadEntryInputData(entryPath));
+        interactor.execute(new LoadEntryInputData(userId, entryPath));
         if (presenter.errorMessage != null) {
             return ServiceResult.failure(presenter.errorMessage);
         }
         return ServiceResult.success(presenter.outputData);
     }
 
-    public ServiceResult<DeleteEntryOutputData> delete(String entryPath) {
+    public ServiceResult<DeleteEntryOutputData> delete(UUID userId, String entryPath) {
         DeleteEntryPresenter presenter = new DeleteEntryPresenter();
         DeleteEntryInteractor interactor = new DeleteEntryInteractor(presenter, repository);
-        interactor.execute(new DeleteEntryInputData(entryPath));
+        interactor.execute(new DeleteEntryInputData(userId, entryPath));
         if (presenter.errorMessage != null) {
             return ServiceResult.failure(presenter.errorMessage);
         }
         return ServiceResult.success(presenter.outputData);
     }
 
-    public ServiceResult<List<Map<String, Object>>> list() {
+    public ServiceResult<List<Map<String, Object>>> list(UUID userId) {
         try {
-            return ServiceResult.success(repository.getAll());
+            return ServiceResult.success(repository.getAll(userId));
         }
         catch (Exception error) {
             return ServiceResult.failure("Failed to load entries: " + error.getMessage());

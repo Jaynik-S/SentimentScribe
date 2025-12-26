@@ -127,12 +127,12 @@
 
 ## Step 11 — Add “Unlock” flow (passphrase → key in memory only)
 
-- Files changed:
-- Summary:
-- Backend notes:
-- Frontend notes:
-- DB notes:
-- Verification:
+- Files changed: frontend/src/state/e2ee.tsx; frontend/src/pages/UnlockPage.tsx; frontend/src/routes.tsx; frontend/src/App.tsx; frontend/src/test/renderWithRouter.tsx; frontend/src/routes.test.tsx; frontend/src/state/__tests__/e2ee.test.tsx; auth-e2ee-changes.md
+- Summary: Added an in-memory E2EE key provider, unlock screen, and route guard so authenticated users must unlock before viewing protected pages.
+- Backend notes: None.
+- Frontend notes: Added `E2eeProvider` and `RequireUnlocked`, wired `/unlock` into routes, and wrapped app/test providers to include the E2EE context. Added route-guard coverage for locked users and a provider test for `unlock`.
+- DB notes: None.
+- Verification: `cd frontend; npm run test` (fails at `src/pages/__tests__/DiaryEntryPage.test.tsx` "requests recommendations and navigates": missing `[data-testid="location"]`, same failure as earlier).
 
 ---
 

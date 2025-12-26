@@ -3,11 +3,13 @@ import { Navigate, Outlet, createBrowserRouter } from 'react-router-dom'
 import { GlobalLoadingOverlay } from './components/GlobalLoadingOverlay'
 import { PageErrorBanner } from './components/PageErrorBanner'
 import { useAuth } from './state/auth'
+import { useE2ee } from './state/e2ee'
 import { DiaryEntryPage } from './pages/DiaryEntryPage'
 import { HomeMenuPage } from './pages/HomeMenuPage'
 import { RecommendationPage } from './pages/RecommendationPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { UnlockPage } from './pages/UnlockPage'
 
 const RootLayout = () => {
   return (
@@ -31,6 +33,16 @@ export const RequireAuth = ({ children }: { children: ReactNode }) => {
   return children
 }
 
+export const RequireUnlocked = ({ children }: { children: ReactNode }) => {
+  const { isUnlocked } = useE2ee()
+
+  if (!isUnlocked) {
+    return <Navigate to="/unlock" replace />
+  }
+
+  return children
+}
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -39,10 +51,20 @@ export const router = createBrowserRouter([
       { index: true, element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       {
+        path: 'unlock',
+        element: (
+          <RequireAuth>
+            <UnlockPage />
+          </RequireAuth>
+        ),
+      },
+      {
         path: 'home',
         element: (
           <RequireAuth>
-            <HomeMenuPage />
+            <RequireUnlocked>
+              <HomeMenuPage />
+            </RequireUnlocked>
           </RequireAuth>
         ),
       },
@@ -50,7 +72,9 @@ export const router = createBrowserRouter([
         path: 'entry',
         element: (
           <RequireAuth>
-            <DiaryEntryPage />
+            <RequireUnlocked>
+              <DiaryEntryPage />
+            </RequireUnlocked>
           </RequireAuth>
         ),
       },
@@ -58,7 +82,9 @@ export const router = createBrowserRouter([
         path: 'recommendations',
         element: (
           <RequireAuth>
-            <RecommendationPage />
+            <RequireUnlocked>
+              <RecommendationPage />
+            </RequireUnlocked>
           </RequireAuth>
         ),
       },

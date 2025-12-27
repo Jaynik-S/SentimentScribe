@@ -52,15 +52,15 @@
 - Sync notes: none
 - Verification: not run in this step
 
-## Step 5 — Implement sync queue repository
+## Step 5 - Implement sync queue repository
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/offline/syncQueueRepo.ts`
+- Summary: added a typed repository for enqueueing, listing, updating, and removing sync queue items
+- UI flow notes: none
+- Crypto notes: none
+- IndexedDB notes: uses `syncQueue` store and `byUserId` index; ordering is preserved via auto-increment id
+- Sync notes: provides helpers to fetch next item and count per user for pending indicators
+- Verification: not run in this step
 
 ## Step 6 — Implement sync engine (push-only)
 

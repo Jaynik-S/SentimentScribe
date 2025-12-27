@@ -122,29 +122,33 @@ describe('DiaryEntryPage', () => {
 
     await waitFor(() => expect(enqueueSyncItemMock).toHaveBeenCalled())
 
-    const payload = enqueueSyncItemMock.mock.calls[0][0].payload
-    expect(payload.storagePath).toMatch(/^entries\//)
-    expect(payload.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    expect(payload.algo).toBe('AES-GCM')
-    expect(payload.version).toBe(1)
+    const firstCall = enqueueSyncItemMock.mock.calls[0]?.[0]
+    expect(firstCall).toBeTruthy()
+    const payload = firstCall?.payload
+    expect(payload).toBeTruthy()
+    const safePayload = payload!
+    expect(safePayload.storagePath).toMatch(/^entries\//)
+    expect(safePayload.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    expect(safePayload.algo).toBe('AES-GCM')
+    expect(safePayload.version).toBe(1)
     expect(upsertEntryMock).toHaveBeenCalled()
     expect(flushSyncQueueMock).toHaveBeenCalledWith('user-1')
 
     const decryptedTitle = await decrypt(
       {
-        ciphertext: payload.titleCiphertext,
-        iv: payload.titleIv,
-        algo: payload.algo,
-        version: payload.version,
+        ciphertext: safePayload.titleCiphertext,
+        iv: safePayload.titleIv,
+        algo: safePayload.algo,
+        version: safePayload.version,
       },
       mockKey!,
     )
     const decryptedBody = await decrypt(
       {
-        ciphertext: payload.bodyCiphertext,
-        iv: payload.bodyIv,
-        algo: payload.algo,
-        version: payload.version,
+        ciphertext: safePayload.bodyCiphertext,
+        iv: safePayload.bodyIv,
+        algo: safePayload.algo,
+        version: safePayload.version,
       },
       mockKey!,
     )

@@ -1,0 +1,11 @@
+FROM maven:3.9.9-eclipse-temurin-21
+
+WORKDIR /workspace
+
+# Prime dependency cache (works even when source is bind-mounted later)
+COPY pom.xml ./pom.xml
+RUN mvn -q -DskipTests dependency:go-offline
+
+EXPOSE 8080
+
+CMD ["mvn", "-q", "-DskipTests", "spring-boot:run"]

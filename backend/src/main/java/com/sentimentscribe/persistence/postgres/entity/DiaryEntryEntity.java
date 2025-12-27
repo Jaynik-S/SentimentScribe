@@ -16,7 +16,7 @@ import java.util.UUID;
 @Entity
 @Table(
         name = "diary_entries",
-        uniqueConstraints = @UniqueConstraint(columnNames = "storage_path")
+        uniqueConstraints = @UniqueConstraint(columnNames = { "user_id", "storage_path" })
 )
 public class DiaryEntryEntity {
     @Id
@@ -27,7 +27,7 @@ public class DiaryEntryEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
-    @Column(name = "storage_path", nullable = false, unique = true)
+    @Column(name = "storage_path", nullable = false)
     private String storagePath;
 
     @Column(name = "title_ciphertext", nullable = false)

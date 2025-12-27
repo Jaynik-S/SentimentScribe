@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { deriveAesKey } from '../crypto/kdf'
+import { deriveKey } from '../crypto/diaryCrypto'
 import type { E2eeParams } from '../api/types'
 import { useAuth } from './auth'
 
@@ -31,6 +31,21 @@ export const E2eeProvider = ({ children }: E2eeProviderProps) => {
     setKey(null)
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const handleBeforeUnload = () => {
+      clear()
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [clear])
+
   const unlock = useCallback(async (passphrase: string, params: E2eeParams) => {
     if (!passphrase.trim()) {
       throw new Error('Passphrase is required.')
@@ -39,7 +54,7 @@ export const E2eeProvider = ({ children }: E2eeProviderProps) => {
       throw new Error('E2EE parameters are missing.')
     }
 
-    const derived = await deriveAesKey(passphrase, params.salt, params.iterations)
+    const derived = await deriveKey(passphrase, params)
     setKey(derived)
   }, [])
 

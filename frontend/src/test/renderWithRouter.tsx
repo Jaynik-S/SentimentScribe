@@ -6,6 +6,7 @@ import { PageErrorBanner } from '../components/PageErrorBanner'
 import { AuthProvider } from '../state/auth'
 import { E2eeProvider } from '../state/e2ee'
 import { EntryDraftProvider } from '../state/entryDraft'
+import { OfflineProvider } from '../state/offline'
 import { RecommendationsProvider } from '../state/recommendations'
 import { UiProvider } from '../state/ui'
 
@@ -25,23 +26,25 @@ export const renderWithRouter = ({
 }: RenderOptions) => {
   return render(
     <AuthProvider>
-      <E2eeProvider>
-        <EntryDraftProvider>
-          <RecommendationsProvider>
-            <UiProvider>
-              <MemoryRouter initialEntries={initialEntries}>
-                <PageErrorBanner />
-                <GlobalLoadingOverlay />
-                <Routes>
-                  {routes.map((route) => (
-                    <Route key={route.path} path={route.path} element={route.element} />
-                  ))}
-                </Routes>
-              </MemoryRouter>
-            </UiProvider>
-          </RecommendationsProvider>
-        </EntryDraftProvider>
-      </E2eeProvider>
+      <OfflineProvider>
+        <E2eeProvider>
+          <EntryDraftProvider>
+            <RecommendationsProvider>
+              <UiProvider>
+                <MemoryRouter initialEntries={initialEntries}>
+                  <PageErrorBanner />
+                  <GlobalLoadingOverlay />
+                  <Routes>
+                    {routes.map((route) => (
+                      <Route key={route.path} path={route.path} element={route.element} />
+                    ))}
+                  </Routes>
+                </MemoryRouter>
+              </UiProvider>
+            </RecommendationsProvider>
+          </EntryDraftProvider>
+        </E2eeProvider>
+      </OfflineProvider>
     </AuthProvider>,
   )
 }

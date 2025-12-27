@@ -16,10 +16,10 @@ export const bytesToBase64 = (bytes: Uint8Array): string => {
   throw new Error('Base64 encoding is not supported in this environment.')
 }
 
-export const base64ToBytes = (base64: string): Uint8Array => {
+export const base64ToBytes = (base64: string): Uint8Array<ArrayBuffer> => {
   if (typeof atob === 'function') {
     const binary = atob(base64)
-    const bytes = new Uint8Array(binary.length)
+    const bytes = new Uint8Array(new ArrayBuffer(binary.length))
     for (let i = 0; i < binary.length; i += 1) {
       bytes[i] = binary.charCodeAt(i)
     }
@@ -27,7 +27,8 @@ export const base64ToBytes = (base64: string): Uint8Array => {
   }
 
   if (hasBuffer) {
-    return new Uint8Array(Buffer.from(base64, 'base64'))
+    const buf = Buffer.from(base64, 'base64')
+    return new Uint8Array(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength))
   }
 
   throw new Error('Base64 decoding is not supported in this environment.')

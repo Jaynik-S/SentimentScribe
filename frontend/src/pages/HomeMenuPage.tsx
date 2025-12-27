@@ -1,12 +1,24 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { deleteEntry, listEntries } from '../api/entries'
+import { listEntries } from '../api/entries'
 import { isApiError } from '../api/http'
+import { formatLocalDateTime } from '../api/localDateTime'
 import { DeleteEntryModal } from '../components/DeleteEntryModal'
 import { EntriesTable } from '../components/EntriesTable'
-import { decryptAesGcm } from '../crypto/aesGcm'
+import { decrypt } from '../crypto/diaryCrypto'
+import {
+  getEntry,
+  listEntriesByUser,
+  markEntryDeleted,
+  upsertEntry,
+} from '../offline/entriesRepo'
+import { flushSyncQueue } from '../offline/syncEngine'
+import { enqueueDelete } from '../offline/syncQueueRepo'
+import type { IndexedDbEntryRecord } from '../offline/types'
+import { useAuth } from '../state/auth'
 import { useEntryDraft } from '../state/entryDraft'
 import { useE2ee } from '../state/e2ee'
+import { useOffline } from '../state/offline'
 import { useUi } from '../state/ui'
 import type { EntrySummaryView } from '../types/entries'
 
@@ -21,19 +33,38 @@ export const HomeMenuPage = () => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const navigate = useNavigate()
+  const { auth } = useAuth()
   const { setPageError, clearPageError, setPageLoading } = useUi()
-  const { startNewEntry } = useEntryDraft()
-  const { key } = useE2ee()
+  const { startNewEntry, clearDraft } = useEntryDraft()
+  const { key, clear } = useE2ee()
+  const { isOffline, refreshPendingCount } = useOffline()
 
-  const loadEntries = useCallback(async () => {
-    setPageLoading(true)
-    clearPageError()
+  const userId = auth?.user.id ?? null
 
-    try {
-      const response = await listEntries()
+  const mapRecordToSummary = useCallback(
+    (record: IndexedDbEntryRecord): EntrySummaryView => ({
+      storagePath: record.storagePath,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+      titleCiphertext: record.titleCiphertext,
+      titleIv: record.titleIv,
+      algo: record.algo,
+      version: record.version,
+    }),
+    [],
+  )
+
+  const hydrateEntries = useCallback(
+    async (records: IndexedDbEntryRecord[]) => {
+      const summaries = records.map(mapRecordToSummary)
+      if (!summaries.length) {
+        setEntries([])
+        return
+      }
+
       if (!key) {
         setEntries(
-          response.map((entry) => ({
+          summaries.map((entry) => ({
             ...entry,
             titlePlaintext: 'Encrypted entry',
           })),
@@ -44,11 +75,15 @@ export const HomeMenuPage = () => {
 
       let hadFailure = false
       const decrypted = await Promise.all(
-        response.map(async (entry) => {
+        summaries.map(async (entry) => {
           try {
-            const titlePlaintext = await decryptAesGcm(
-              entry.titleCiphertext,
-              entry.titleIv,
+            const titlePlaintext = await decrypt(
+              {
+                ciphertext: entry.titleCiphertext,
+                iv: entry.titleIv,
+                algo: entry.algo,
+                version: entry.version,
+              },
               key,
             )
             return { ...entry, titlePlaintext }
@@ -62,21 +97,98 @@ export const HomeMenuPage = () => {
         setPageError('Unable to decrypt some entries.')
       }
       setEntries(decrypted)
+    },
+    [key, mapRecordToSummary, setPageError],
+  )
+
+  const loadLocalEntries = useCallback(async () => {
+    if (!userId) {
+      setEntries([])
+      return []
+    }
+
+    const records = await listEntriesByUser(userId)
+    await hydrateEntries(records)
+    return records
+  }, [hydrateEntries, userId])
+
+  const refreshFromApi = useCallback(async (): Promise<boolean> => {
+    if (!userId || isOffline) {
+      return false
+    }
+
+    try {
+      clearPageError()
+      const response = await listEntries()
+      const localRecords = await listEntriesByUser(userId, { includeDeleted: true })
+      const localByPath = new Map(
+        localRecords.map((record) => [record.storagePath, record]),
+      )
+
+      await Promise.all(
+        response.map(async (entry) => {
+          const local = localByPath.get(entry.storagePath)
+          if (local?.dirty || local?.deletedAt) {
+            return
+          }
+
+          await upsertEntry({
+            userId,
+            storagePath: entry.storagePath,
+            createdAt: entry.createdAt ?? local?.createdAt ?? null,
+            updatedAt: entry.updatedAt ?? local?.updatedAt ?? null,
+            titleCiphertext: entry.titleCiphertext,
+            titleIv: entry.titleIv,
+            bodyCiphertext: local?.bodyCiphertext ?? null,
+            bodyIv: local?.bodyIv ?? null,
+            algo: entry.algo,
+            version: entry.version,
+            dirty: false,
+            deletedAt: null,
+          })
+        }),
+      )
+
+      return true
     } catch (error) {
       const message = isApiError(error)
         ? error.data.error
-        : 'Unable to load entries.'
-      setEntries([])
+        : 'Unable to refresh entries.'
       setPageError(message, {
         label: 'Retry',
         onClick: () => {
-          void loadEntries()
+          void refreshFromApi()
         },
       })
+      return false
+    }
+  }, [clearPageError, isOffline, setPageError, userId])
+
+  const loadEntries = useCallback(async () => {
+    setPageLoading(true)
+    clearPageError()
+
+    try {
+      await loadLocalEntries()
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Unable to load entries.'
+      setPageError(message)
     } finally {
       setPageLoading(false)
     }
-  }, [clearPageError, key, setPageError, setPageLoading])
+
+    const refreshed = await refreshFromApi()
+    if (refreshed) {
+      await loadLocalEntries()
+    }
+  }, [
+    clearPageError,
+    loadLocalEntries,
+    refreshFromApi,
+    setPageError,
+    setPageLoading,
+  ])
 
   useEffect(() => {
     void loadEntries()
@@ -116,23 +228,48 @@ export const HomeMenuPage = () => {
     if (!deleteTarget || isDeleting) {
       return
     }
+    if (!userId) {
+      setDeleteError('Unable to delete entry.')
+      return
+    }
 
     setIsDeleting(true)
     setDeleteError(null)
 
     try {
-      const response = await deleteEntry(deleteTarget.storagePath)
-      if (response.deleted) {
-        setDeleteTarget(null)
-        setToastMessage('Deleted entry')
-        await loadEntries()
-      } else {
-        setDeleteError('Delete failed. Please retry.')
+      const deletedAt = formatLocalDateTime(new Date())
+      const existing = await getEntry(userId, deleteTarget.storagePath)
+      const record: IndexedDbEntryRecord = existing ?? {
+        userId,
+        storagePath: deleteTarget.storagePath,
+        createdAt: deleteTarget.createdAt,
+        updatedAt: deleteTarget.updatedAt,
+        titleCiphertext: deleteTarget.titleCiphertext,
+        titleIv: deleteTarget.titleIv,
+        bodyCiphertext: null,
+        bodyIv: null,
+        algo: deleteTarget.algo,
+        version: deleteTarget.version,
+        dirty: true,
+        deletedAt: null,
       }
+
+      await markEntryDeleted(record, deletedAt)
+      await enqueueDelete(userId, deleteTarget.storagePath, deletedAt)
+      if (!isOffline) {
+        await flushSyncQueue(userId)
+      }
+      await refreshPendingCount()
+      setDeleteTarget(null)
+      setToastMessage('Deleted entry')
+      await loadLocalEntries()
     } catch (error) {
-      const message = isApiError(error)
-        ? error.data.error
-        : 'Unable to delete entry.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : isApiError(error)
+            ? error.data.error
+            : 'Unable to delete entry.'
       setDeleteError(message)
     } finally {
       setIsDeleting(false)
@@ -142,6 +279,12 @@ export const HomeMenuPage = () => {
   const handleNewEntry = () => {
     startNewEntry()
     navigate('/entry')
+  }
+
+  const handleLock = () => {
+    clearDraft()
+    clear()
+    navigate('/unlock')
   }
 
   const isDeleteOpen = Boolean(deleteTarget)
@@ -154,9 +297,22 @@ export const HomeMenuPage = () => {
           <h1>Home Menu</h1>
           <p className="subtle">Open an entry or start a new one.</p>
         </div>
-        <button className="primary-button" type="button" onClick={handleNewEntry}>
-          New Entry
-        </button>
+        <div className="page-header__actions">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleLock}
+          >
+            Lock
+          </button>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={handleNewEntry}
+          >
+            New Entry
+          </button>
+        </div>
       </header>
 
       {toastMessage ? <div className="toast">{toastMessage}</div> : null}

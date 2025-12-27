@@ -8,16 +8,22 @@ export type AesGcmCiphertext = {
   iv: string
 }
 
+const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => {
+  const buffer = new ArrayBuffer(bytes.byteLength)
+  new Uint8Array(buffer).set(bytes)
+  return buffer
+}
+
 export const encryptAesGcm = async (
   plaintext: string,
   key: CryptoKey,
-  ivBytes?: Uint8Array,
+  ivBytes?: Uint8Array<ArrayBuffer>,
 ): Promise<AesGcmCiphertext> => {
-  const iv = ivBytes ?? crypto.getRandomValues(new Uint8Array(12))
+  const iv = ivBytes ?? crypto.getRandomValues(new Uint8Array(new ArrayBuffer(12)))
   const encrypted = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     key,
-    textEncoder.encode(plaintext),
+    toArrayBuffer(textEncoder.encode(plaintext)),
   )
   return {
     ciphertext: bytesToBase64(new Uint8Array(encrypted)),
@@ -30,10 +36,12 @@ export const decryptAesGcm = async (
   ivBase64: string,
   key: CryptoKey,
 ): Promise<string> => {
+  const ivBytes = base64ToBytes(ivBase64)
+  const ciphertextBytes = base64ToBytes(ciphertextBase64)
   const decrypted = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: base64ToBytes(ivBase64) },
+    { name: 'AES-GCM', iv: ivBytes },
     key,
-    base64ToBytes(ciphertextBase64),
+    ciphertextBytes,
   )
   return textDecoder.decode(new Uint8Array(decrypted))
 }

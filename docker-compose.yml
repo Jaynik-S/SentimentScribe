@@ -10,7 +10,52 @@ services:
       - "5432:5432"
     volumes:
       - sentiment-scribe_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U diary -d sentiment_scribe"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: sentiment-scribe-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/sentiment_scribe
+      POSTGRES_USER: diary
+      POSTGRES_PASSWORD: diary
+      SENTIMENTSCRIBE_CORS_ORIGIN: http://localhost:3000
+      SENTIMENTSCRIBE_CORS_ORIGIN_2: http://127.0.0.1:3000
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./backend:/workspace
+      - maven-repo:/root/.m2
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: sentiment-scribe-frontend
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
 
 volumes:
   sentiment-scribe_pgdata:
+  maven-repo:
+  frontend-node-modules:
 

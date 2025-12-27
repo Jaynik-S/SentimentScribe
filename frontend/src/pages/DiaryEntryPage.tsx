@@ -2,15 +2,20 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { analyzeText } from '../api/analysis'
-import { createEntry, getEntryByPath, updateEntry } from '../api/entries'
+import { getEntryByPath } from '../api/entries'
 import { isApiError } from '../api/http'
 import { getRecommendations } from '../api/recommendations'
 import { formatLocalDateTime } from '../api/localDateTime'
 import type { EntryRequest } from '../api/types'
 import { KeywordsDropdown } from '../components/KeywordsDropdown'
-import { decryptEnvelope, encryptEnvelope } from '../crypto/envelope'
+import { decryptEntry, encryptEntry } from '../crypto/diaryCrypto'
+import { getEntry, upsertEntry } from '../offline/entriesRepo'
+import { flushSyncQueue } from '../offline/syncEngine'
+import { enqueueSyncItem } from '../offline/syncQueueRepo'
+import { useAuth } from '../state/auth'
 import { useEntryDraft } from '../state/entryDraft'
 import { useE2ee } from '../state/e2ee'
+import { useOffline } from '../state/offline'
 import { useRecommendations } from '../state/recommendations'
 import { useUi } from '../state/ui'
 
@@ -54,14 +59,31 @@ const validateText = (value: string): string | null => {
   return null
 }
 
+const createStoragePath = (): string => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `entries/${crypto.randomUUID()}.json`
+  }
+
+  const fallback = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  return `entries/${fallback}.json`
+}
+
 export const DiaryEntryPage = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { draft, updateDraft, setDraft, keywordsVisible, setKeywordsVisible } =
-    useEntryDraft()
+  const {
+    draft,
+    updateDraft,
+    setDraft,
+    keywordsVisible,
+    setKeywordsVisible,
+    clearDraft,
+  } = useEntryDraft()
   const { setRecommendations } = useRecommendations()
   const { setPageError, clearPageError, setPageLoading } = useUi()
-  const { key } = useE2ee()
+  const { key, clear } = useE2ee()
+  const { auth } = useAuth()
+  const { isOffline, refreshPendingCount } = useOffline()
   const [titleError, setTitleError] = useState<string | null>(null)
   const [textError, setTextError] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -71,6 +93,7 @@ export const DiaryEntryPage = () => {
   const createdAtRef = useRef(draft.createdAt)
 
   const entryPath = searchParams.get('path')
+  const userId = auth?.user.id ?? null
 
   useEffect(() => {
     createdAtRef.current = draft.createdAt
@@ -84,14 +107,70 @@ export const DiaryEntryPage = () => {
       setPageError('Unlock your diary to view entries.')
       return
     }
+    if (!userId) {
+      setPageError('Unable to load entry.')
+      return
+    }
 
     const loadEntry = async () => {
       setPageLoading(true)
       clearPageError()
 
       try {
+        const cached = await getEntry(userId, entryPath)
+        if (
+          cached &&
+          !cached.deletedAt &&
+          cached.bodyCiphertext &&
+          cached.bodyIv
+        ) {
+          try {
+            const decrypted = await decryptEntry(
+              {
+                titleCiphertext: cached.titleCiphertext,
+                titleIv: cached.titleIv,
+                bodyCiphertext: cached.bodyCiphertext,
+                bodyIv: cached.bodyIv,
+                algo: cached.algo,
+                version: cached.version,
+              },
+              key,
+            )
+            setDraft({
+              title: decrypted.title,
+              text: decrypted.body,
+              storagePath: cached.storagePath,
+              createdAt: cached.createdAt ?? createdAtRef.current,
+              keywords: [],
+            })
+            setKeywordsVisible(false)
+            return
+          } catch {
+            // Fall back to API when cached payload cannot be decrypted.
+          }
+        }
+
+        if (isOffline) {
+          throw new Error('Entry not available offline yet.')
+        }
+
         const response = await getEntryByPath(entryPath)
-        const decrypted = await decryptEnvelope(
+        await upsertEntry({
+          userId,
+          storagePath: response.storagePath,
+          createdAt: response.createdAt ?? createdAtRef.current ?? null,
+          updatedAt: response.updatedAt ?? null,
+          titleCiphertext: response.titleCiphertext,
+          titleIv: response.titleIv,
+          bodyCiphertext: response.bodyCiphertext,
+          bodyIv: response.bodyIv,
+          algo: response.algo,
+          version: response.version,
+          dirty: false,
+          deletedAt: null,
+        })
+
+        const decrypted = await decryptEntry(
           {
             titleCiphertext: response.titleCiphertext,
             titleIv: response.titleIv,
@@ -111,9 +190,12 @@ export const DiaryEntryPage = () => {
         })
         setKeywordsVisible(false)
       } catch (error) {
-        const message = isApiError(error)
-          ? error.data.error
-          : 'Unable to load entry.'
+        const message =
+          error instanceof Error
+            ? error.message
+            : isApiError(error)
+              ? error.data.error
+              : 'Unable to load entry.'
         setPageError(message, {
           label: 'Back to Home',
           onClick: () => navigate('/home'),
@@ -127,12 +209,14 @@ export const DiaryEntryPage = () => {
   }, [
     clearPageError,
     entryPath,
+    isOffline,
     key,
     navigate,
     setDraft,
     setKeywordsVisible,
     setPageError,
     setPageLoading,
+    userId,
   ])
 
   useEffect(() => {
@@ -202,6 +286,10 @@ export const DiaryEntryPage = () => {
       setPageError('Unlock your diary to save entries.')
       return
     }
+    if (!userId) {
+      setPageError('Unable to save entry.')
+      return
+    }
 
     const nextTitleError = validateTitle(draft.title)
     const nextTextError = validateText(draft.text)
@@ -222,9 +310,14 @@ export const DiaryEntryPage = () => {
     }
 
     try {
-      const encrypted = await encryptEnvelope(draft.title, draft.text, key)
+      const storagePath = draft.storagePath ?? createStoragePath()
+      if (!draft.storagePath) {
+        updateDraft({ storagePath })
+      }
+
+      const encrypted = await encryptEntry(draft.title, draft.text, key)
       const payload: EntryRequest = {
-        storagePath: draft.storagePath,
+        storagePath,
         createdAt,
         titleCiphertext: encrypted.titleCiphertext,
         titleIv: encrypted.titleIv,
@@ -233,22 +326,49 @@ export const DiaryEntryPage = () => {
         algo: encrypted.algo,
         version: encrypted.version,
       }
-      const response = draft.storagePath
-        ? await updateEntry(payload)
-        : await createEntry(payload)
-
+      await upsertEntry({
+        userId,
+        storagePath,
+        createdAt,
+        updatedAt: null,
+        titleCiphertext: payload.titleCiphertext,
+        titleIv: payload.titleIv,
+        bodyCiphertext: payload.bodyCiphertext,
+        bodyIv: payload.bodyIv,
+        algo: payload.algo,
+        version: payload.version,
+        dirty: true,
+        deletedAt: null,
+      })
+      await enqueueSyncItem({
+        userId,
+        op: 'upsert',
+        storagePath,
+        payload,
+        enqueuedAt: formatLocalDateTime(new Date()),
+        retryCount: 0,
+        lastAttemptAt: null,
+        lastError: null,
+      })
+      if (!isOffline) {
+        await flushSyncQueue(userId)
+      }
+      await refreshPendingCount()
       setDraft({
         title: draft.title,
         text: draft.text,
-        storagePath: response.storagePath,
-        createdAt: response.createdAt ?? createdAt,
+        storagePath,
+        createdAt,
         keywords: draft.keywords,
       })
       setToastMessage('Saved')
     } catch (error) {
-      const message = isApiError(error)
-        ? error.data.error
-        : 'Unable to save entry.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : isApiError(error)
+            ? error.data.error
+            : 'Unable to save entry.'
       const lowered = message.toLowerCase()
       if (lowered.startsWith('title')) {
         setTitleError(message)
@@ -286,6 +406,12 @@ export const DiaryEntryPage = () => {
     }
   }
 
+  const handleLock = () => {
+    clearDraft()
+    clear()
+    navigate('/unlock')
+  }
+
   const keywordsLabel = keywordsVisible ? 'Hide Keywords' : 'Show Keywords'
 
   const metadata = useMemo(
@@ -304,13 +430,22 @@ export const DiaryEntryPage = () => {
           <h1>Diary Entry</h1>
           <p className="subtle">Draft, analyze, and save your entry.</p>
         </div>
-        <button
-          className="secondary-button"
-          type="button"
-          onClick={() => navigate('/home')}
-        >
-          Back to Home
-        </button>
+        <div className="page-header__actions">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleLock}
+          >
+            Lock
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => navigate('/home')}
+          >
+            Back to Home
+          </button>
+        </div>
       </header>
 
       {toastMessage ? <div className="toast">{toastMessage}</div> : null}

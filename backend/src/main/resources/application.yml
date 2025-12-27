@@ -9,19 +9,19 @@ spring:
 
 sentimentscribe:
   spotify:
-    client-id: ${SPOTIFY_CLIENT_ID:3302f8d729f747aea634c70bdc8cc670}
-    client-secret: ${SPOTIFY_CLIENT_SECRET:dcfadc850ebc4081a58fc839c2434825}
+    client-id: ${SPOTIFY_CLIENT_ID:}
+    client-secret: ${SPOTIFY_CLIENT_SECRET:}
   tmdb:
-    api-key: ${TMDB_API_KEY:e112ddda993eb2247a0602076d5ba0b7}
-  auth:
-    password: ${SENTIMENTSCRIBE_PASSWORD:123}
+    api-key: ${TMDB_API_KEY:}
   jwt:
-    secret: ${SENTIMENTSCRIBE_JWT_SECRET:change-me}
+    # HS256 requires a sufficiently long secret; override in env for non-dev usage.
+    secret: ${SENTIMENTSCRIBE_JWT_SECRET:change-me-change-me-change-me-change-me}
     issuer: ${SENTIMENTSCRIBE_JWT_ISSUER:sentimentscribe}
     ttl-seconds: ${SENTIMENTSCRIBE_JWT_TTL_SECONDS:3600}
   cors:
     allowed-origins:
       - ${SENTIMENTSCRIBE_CORS_ORIGIN:http://localhost:3000}
+      - ${SENTIMENTSCRIBE_CORS_ORIGIN_2:http://127.0.0.1:3000}
 
 logging:
   level:

@@ -4,16 +4,49 @@ import userEvent from '@testing-library/user-event'
 import { useLocation } from 'react-router-dom'
 import { HomeMenuPage } from '../HomeMenuPage'
 import { renderWithRouter } from '../../test/renderWithRouter'
-import { deleteEntry, listEntries } from '../../api/entries'
+import { listEntries } from '../../api/entries'
 import type { EntrySummaryResponse } from '../../api/types'
 import { ApiError } from '../../api/http'
-import { encryptAesGcm } from '../../crypto/aesGcm'
-import { deriveAesKey } from '../../crypto/kdf'
+import { deriveKey, encrypt } from '../../crypto/diaryCrypto'
+import { getEntry, listEntriesByUser, markEntryDeleted } from '../../offline/entriesRepo'
+import { flushSyncQueue } from '../../offline/syncEngine'
+import { enqueueDelete } from '../../offline/syncQueueRepo'
 
 vi.mock('../../api/entries', () => ({
   listEntries: vi.fn(),
-  deleteEntry: vi.fn(),
 }))
+
+vi.mock('../../offline/entriesRepo', () => ({
+  getEntry: vi.fn(),
+  listEntriesByUser: vi.fn(),
+  markEntryDeleted: vi.fn(),
+  upsertEntry: vi.fn(),
+}))
+
+vi.mock('../../offline/syncEngine', () => ({
+  flushSyncQueue: vi.fn(),
+}))
+
+vi.mock('../../offline/syncQueueRepo', () => ({
+  enqueueDelete: vi.fn(),
+}))
+
+vi.mock('../../state/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../state/auth')>()
+  return {
+    ...actual,
+    useAuth: () => ({
+      auth: {
+        accessToken: 'token',
+        user: { id: 'user-1', username: 'tester' },
+        e2eeParams: { kdf: 'PBKDF2-SHA256', salt: 'c2FsdA==', iterations: 1 },
+      },
+      isAuthenticated: true,
+      setAuth: vi.fn(),
+      clear: vi.fn(),
+    }),
+  }
+})
 
 const LocationSpy = () => {
   const location = useLocation()
@@ -38,27 +71,58 @@ vi.mock('../../state/e2ee', async (importOriginal) => {
   }
 })
 
+vi.mock('../../state/offline', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../state/offline')>()
+  return {
+    ...actual,
+    useOffline: () => ({
+      isOffline: false,
+      pendingCount: 0,
+      isSyncing: false,
+      syncNow: vi.fn(),
+      refreshPendingCount: vi.fn(),
+    }),
+  }
+})
+
 let entryFixture: EntrySummaryResponse
 
 describe('HomeMenuPage', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
-    mockKey = await deriveAesKey(passphrase, params.salt, params.iterations)
-    const encryptedTitle = await encryptAesGcm('Morning Thoughts', mockKey!)
+    mockKey = await deriveKey(passphrase, params)
+    const encryptedTitle = await encrypt('Morning Thoughts', mockKey!)
     entryFixture = {
       storagePath: 'entries/morning.txt',
       createdAt: '2025-01-01T10:00:00',
       updatedAt: null,
       titleCiphertext: encryptedTitle.ciphertext,
       titleIv: encryptedTitle.iv,
-      algo: 'AES-GCM',
-      version: 1,
+      algo: encryptedTitle.algo,
+      version: encryptedTitle.version,
     }
   })
 
   it('loads entries and navigates on row click', async () => {
     const listEntriesMock = vi.mocked(listEntries)
-    listEntriesMock.mockResolvedValue([entryFixture])
+    const listEntriesByUserMock = vi.mocked(listEntriesByUser)
+    listEntriesByUserMock.mockResolvedValue([
+      {
+        userId: 'user-1',
+        storagePath: entryFixture.storagePath,
+        createdAt: entryFixture.createdAt,
+        updatedAt: entryFixture.updatedAt,
+        titleCiphertext: entryFixture.titleCiphertext,
+        titleIv: entryFixture.titleIv,
+        bodyCiphertext: null,
+        bodyIv: null,
+        algo: entryFixture.algo,
+        version: entryFixture.version,
+        dirty: false,
+        deletedAt: null,
+      },
+    ])
+    listEntriesMock.mockResolvedValue([])
 
     const user = userEvent.setup()
     renderWithRouter({
@@ -81,13 +145,45 @@ describe('HomeMenuPage', () => {
 
   it('opens delete modal and confirms delete', async () => {
     const listEntriesMock = vi.mocked(listEntries)
-    const deleteEntryMock = vi.mocked(deleteEntry)
-    listEntriesMock.mockResolvedValueOnce([entryFixture])
-    listEntriesMock.mockResolvedValueOnce([entryFixture])
-    deleteEntryMock.mockResolvedValue({
-      deleted: true,
+    const getEntryMock = vi.mocked(getEntry)
+    const markEntryDeletedMock = vi.mocked(markEntryDeleted)
+    const enqueueDeleteMock = vi.mocked(enqueueDelete)
+    const flushSyncQueueMock = vi.mocked(flushSyncQueue)
+    const listEntriesByUserMock = vi.mocked(listEntriesByUser)
+    listEntriesByUserMock.mockResolvedValue([
+      {
+        userId: 'user-1',
+        storagePath: entryFixture.storagePath,
+        createdAt: entryFixture.createdAt,
+        updatedAt: entryFixture.updatedAt,
+        titleCiphertext: entryFixture.titleCiphertext,
+        titleIv: entryFixture.titleIv,
+        bodyCiphertext: null,
+        bodyIv: null,
+        algo: entryFixture.algo,
+        version: entryFixture.version,
+        dirty: false,
+        deletedAt: null,
+      },
+    ])
+    listEntriesMock.mockResolvedValue([])
+    getEntryMock.mockResolvedValue({
+      userId: 'user-1',
       storagePath: entryFixture.storagePath,
+      createdAt: entryFixture.createdAt,
+      updatedAt: entryFixture.updatedAt,
+      titleCiphertext: entryFixture.titleCiphertext,
+      titleIv: entryFixture.titleIv,
+      bodyCiphertext: null,
+      bodyIv: null,
+      algo: entryFixture.algo,
+      version: entryFixture.version,
+      dirty: false,
+      deletedAt: null,
     })
+    markEntryDeletedMock.mockResolvedValue()
+    enqueueDeleteMock.mockResolvedValue(1)
+    flushSyncQueueMock.mockResolvedValue()
 
     const user = userEvent.setup()
     renderWithRouter({
@@ -104,15 +200,38 @@ describe('HomeMenuPage', () => {
 
     await user.click(screen.getByRole('button', { name: /confirm delete/i }))
 
-    expect(deleteEntryMock).toHaveBeenCalledWith(entryFixture.storagePath)
-    expect(listEntriesMock).toHaveBeenCalledTimes(2)
+    expect(markEntryDeletedMock).toHaveBeenCalled()
+    expect(enqueueDeleteMock).toHaveBeenCalledWith(
+      'user-1',
+      entryFixture.storagePath,
+      expect.any(String),
+    )
+    expect(flushSyncQueueMock).toHaveBeenCalledWith('user-1')
+    expect(listEntriesByUserMock).toHaveBeenCalled()
   })
 
   it('shows retry action when list fails', async () => {
     const listEntriesMock = vi.mocked(listEntries)
+    const listEntriesByUserMock = vi.mocked(listEntriesByUser)
+    listEntriesByUserMock.mockResolvedValue([
+      {
+        userId: 'user-1',
+        storagePath: entryFixture.storagePath,
+        createdAt: entryFixture.createdAt,
+        updatedAt: entryFixture.updatedAt,
+        titleCiphertext: entryFixture.titleCiphertext,
+        titleIv: entryFixture.titleIv,
+        bodyCiphertext: null,
+        bodyIv: null,
+        algo: entryFixture.algo,
+        version: entryFixture.version,
+        dirty: false,
+        deletedAt: null,
+      },
+    ])
     listEntriesMock
       .mockRejectedValueOnce(new ApiError(500, 'Server down'))
-      .mockResolvedValueOnce([entryFixture])
+      .mockResolvedValueOnce([])
 
     const user = userEvent.setup()
     renderWithRouter({
@@ -124,7 +243,6 @@ describe('HomeMenuPage', () => {
 
     await user.click(screen.getByRole('button', { name: /retry/i }))
 
-    const entries = await screen.findAllByText('Morning Thoughts')
-    expect(entries.length).toBeGreaterThan(0)
+    expect(listEntriesMock).toHaveBeenCalledTimes(2)
   })
 })

@@ -92,15 +92,15 @@
 - Sync notes: none
 - Verification: not run in this step
 
-## Step 9 — Entry page: offline load + offline save (enqueue + attempt sync)
+## Step 9 - Entry page: offline load + offline save (enqueue + attempt sync)
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/pages/DiaryEntryPage.tsx`, `frontend/src/state/entryDraft.tsx`, `frontend/src/pages/__tests__/DiaryEntryPage.test.tsx`
+- Summary: entry load now prefers IndexedDB and falls back to API when online; saves write ciphertext to IndexedDB, enqueue an upsert, and attempt sync
+- UI flow notes: new entries generate a client storagePath; save updates local cache and shows toast even when offline; missing offline entries show a clear error
+- Crypto notes: encrypt/decrypt unchanged; entry page decrypts cached envelopes when available
+- IndexedDB notes: entry loads read from `entries` by `[userId, storagePath]`; saves persist ciphertext records with `dirty=true`
+- Sync notes: save enqueues `upsert` items and attempts a queue flush when online, then refreshes pending count
+- Verification: not run in this step
 
 ## Step 10 — Delete flow: offline delete + queued delete
 

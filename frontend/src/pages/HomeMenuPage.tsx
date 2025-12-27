@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { deleteEntry, listEntries } from '../api/entries'
+import { listEntries } from '../api/entries'
 import { isApiError } from '../api/http'
+import { formatLocalDateTime } from '../api/localDateTime'
 import { DeleteEntryModal } from '../components/DeleteEntryModal'
 import { EntriesTable } from '../components/EntriesTable'
 import { decrypt } from '../crypto/diaryCrypto'
-import { listEntriesByUser, upsertEntry } from '../offline/entriesRepo'
+import {
+  getEntry,
+  listEntriesByUser,
+  markEntryDeleted,
+  upsertEntry,
+} from '../offline/entriesRepo'
+import { flushSyncQueue } from '../offline/syncEngine'
+import { enqueueDelete } from '../offline/syncQueueRepo'
 import type { IndexedDbEntryRecord } from '../offline/types'
 import { useAuth } from '../state/auth'
 import { useEntryDraft } from '../state/entryDraft'
@@ -29,7 +37,7 @@ export const HomeMenuPage = () => {
   const { setPageError, clearPageError, setPageLoading } = useUi()
   const { startNewEntry, clearDraft } = useEntryDraft()
   const { key, clear } = useE2ee()
-  const { isOffline } = useOffline()
+  const { isOffline, refreshPendingCount } = useOffline()
 
   const userId = auth?.user.id ?? null
 
@@ -220,23 +228,48 @@ export const HomeMenuPage = () => {
     if (!deleteTarget || isDeleting) {
       return
     }
+    if (!userId) {
+      setDeleteError('Unable to delete entry.')
+      return
+    }
 
     setIsDeleting(true)
     setDeleteError(null)
 
     try {
-      const response = await deleteEntry(deleteTarget.storagePath)
-      if (response.deleted) {
-        setDeleteTarget(null)
-        setToastMessage('Deleted entry')
-        await loadEntries()
-      } else {
-        setDeleteError('Delete failed. Please retry.')
+      const deletedAt = formatLocalDateTime(new Date())
+      const existing = await getEntry(userId, deleteTarget.storagePath)
+      const record: IndexedDbEntryRecord = existing ?? {
+        userId,
+        storagePath: deleteTarget.storagePath,
+        createdAt: deleteTarget.createdAt,
+        updatedAt: deleteTarget.updatedAt,
+        titleCiphertext: deleteTarget.titleCiphertext,
+        titleIv: deleteTarget.titleIv,
+        bodyCiphertext: null,
+        bodyIv: null,
+        algo: deleteTarget.algo,
+        version: deleteTarget.version,
+        dirty: true,
+        deletedAt: null,
       }
+
+      await markEntryDeleted(record, deletedAt)
+      await enqueueDelete(userId, deleteTarget.storagePath, deletedAt)
+      if (!isOffline) {
+        await flushSyncQueue(userId)
+      }
+      await refreshPendingCount()
+      setDeleteTarget(null)
+      setToastMessage('Deleted entry')
+      await loadLocalEntries()
     } catch (error) {
-      const message = isApiError(error)
-        ? error.data.error
-        : 'Unable to delete entry.'
+      const message =
+        error instanceof Error
+          ? error.message
+          : isApiError(error)
+            ? error.data.error
+            : 'Unable to delete entry.'
       setDeleteError(message)
     } finally {
       setIsDeleting(false)

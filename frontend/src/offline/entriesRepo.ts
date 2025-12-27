@@ -1,3 +1,4 @@
+import type { LocalDateTime } from '../api/types'
 import { ENTRIES_STORE, requestToPromise, withTransaction } from './db'
 import type { IndexedDbEntryRecord } from './types'
 
@@ -49,5 +50,16 @@ export const removeEntry = async (
 ): Promise<void> => {
   await withTransaction(ENTRIES_STORE, 'readwrite', async ({ entries }) => {
     await requestToPromise(entries.delete([userId, storagePath]))
+  })
+}
+
+export const markEntryDeleted = async (
+  record: IndexedDbEntryRecord,
+  deletedAt: LocalDateTime,
+): Promise<void> => {
+  await upsertEntry({
+    ...record,
+    deletedAt,
+    dirty: true,
   })
 }

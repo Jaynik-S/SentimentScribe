@@ -4,21 +4,49 @@ import userEvent from '@testing-library/user-event'
 import { useLocation } from 'react-router-dom'
 import { HomeMenuPage } from '../HomeMenuPage'
 import { renderWithRouter } from '../../test/renderWithRouter'
-import { deleteEntry, listEntries } from '../../api/entries'
+import { listEntries } from '../../api/entries'
 import type { EntrySummaryResponse } from '../../api/types'
 import { ApiError } from '../../api/http'
 import { deriveKey, encrypt } from '../../crypto/diaryCrypto'
-import { listEntriesByUser } from '../../offline/entriesRepo'
+import { getEntry, listEntriesByUser, markEntryDeleted } from '../../offline/entriesRepo'
+import { flushSyncQueue } from '../../offline/syncEngine'
+import { enqueueDelete } from '../../offline/syncQueueRepo'
 
 vi.mock('../../api/entries', () => ({
   listEntries: vi.fn(),
-  deleteEntry: vi.fn(),
 }))
 
 vi.mock('../../offline/entriesRepo', () => ({
+  getEntry: vi.fn(),
   listEntriesByUser: vi.fn(),
+  markEntryDeleted: vi.fn(),
   upsertEntry: vi.fn(),
 }))
+
+vi.mock('../../offline/syncEngine', () => ({
+  flushSyncQueue: vi.fn(),
+}))
+
+vi.mock('../../offline/syncQueueRepo', () => ({
+  enqueueDelete: vi.fn(),
+}))
+
+vi.mock('../../state/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../state/auth')>()
+  return {
+    ...actual,
+    useAuth: () => ({
+      auth: {
+        accessToken: 'token',
+        user: { id: 'user-1', username: 'tester' },
+        e2eeParams: { kdf: 'PBKDF2-SHA256', salt: 'c2FsdA==', iterations: 1 },
+      },
+      isAuthenticated: true,
+      setAuth: vi.fn(),
+      clear: vi.fn(),
+    }),
+  }
+})
 
 const LocationSpy = () => {
   const location = useLocation()
@@ -39,6 +67,20 @@ vi.mock('../../state/e2ee', async (importOriginal) => {
       isUnlocked: Boolean(mockKey),
       unlock: vi.fn(),
       clear: vi.fn(),
+    }),
+  }
+})
+
+vi.mock('../../state/offline', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../state/offline')>()
+  return {
+    ...actual,
+    useOffline: () => ({
+      isOffline: false,
+      pendingCount: 0,
+      isSyncing: false,
+      syncNow: vi.fn(),
+      refreshPendingCount: vi.fn(),
     }),
   }
 })
@@ -103,7 +145,10 @@ describe('HomeMenuPage', () => {
 
   it('opens delete modal and confirms delete', async () => {
     const listEntriesMock = vi.mocked(listEntries)
-    const deleteEntryMock = vi.mocked(deleteEntry)
+    const getEntryMock = vi.mocked(getEntry)
+    const markEntryDeletedMock = vi.mocked(markEntryDeleted)
+    const enqueueDeleteMock = vi.mocked(enqueueDelete)
+    const flushSyncQueueMock = vi.mocked(flushSyncQueue)
     const listEntriesByUserMock = vi.mocked(listEntriesByUser)
     listEntriesByUserMock.mockResolvedValue([
       {
@@ -122,10 +167,23 @@ describe('HomeMenuPage', () => {
       },
     ])
     listEntriesMock.mockResolvedValue([])
-    deleteEntryMock.mockResolvedValue({
-      deleted: true,
+    getEntryMock.mockResolvedValue({
+      userId: 'user-1',
       storagePath: entryFixture.storagePath,
+      createdAt: entryFixture.createdAt,
+      updatedAt: entryFixture.updatedAt,
+      titleCiphertext: entryFixture.titleCiphertext,
+      titleIv: entryFixture.titleIv,
+      bodyCiphertext: null,
+      bodyIv: null,
+      algo: entryFixture.algo,
+      version: entryFixture.version,
+      dirty: false,
+      deletedAt: null,
     })
+    markEntryDeletedMock.mockResolvedValue()
+    enqueueDeleteMock.mockResolvedValue(1)
+    flushSyncQueueMock.mockResolvedValue()
 
     const user = userEvent.setup()
     renderWithRouter({
@@ -142,7 +200,13 @@ describe('HomeMenuPage', () => {
 
     await user.click(screen.getByRole('button', { name: /confirm delete/i }))
 
-    expect(deleteEntryMock).toHaveBeenCalledWith(entryFixture.storagePath)
+    expect(markEntryDeletedMock).toHaveBeenCalled()
+    expect(enqueueDeleteMock).toHaveBeenCalledWith(
+      'user-1',
+      entryFixture.storagePath,
+      expect.any(String),
+    )
+    expect(flushSyncQueueMock).toHaveBeenCalledWith('user-1')
     expect(listEntriesByUserMock).toHaveBeenCalled()
   })
 

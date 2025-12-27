@@ -102,15 +102,15 @@
 - Sync notes: save enqueues `upsert` items and attempts a queue flush when online, then refreshes pending count
 - Verification: not run in this step
 
-## Step 10 — Delete flow: offline delete + queued delete
+## Step 10 - Delete flow: offline delete + queued delete
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/pages/HomeMenuPage.tsx`, `frontend/src/offline/entriesRepo.ts`, `frontend/src/offline/syncQueueRepo.ts`, `frontend/src/pages/__tests__/HomeMenuPage.test.tsx`
+- Summary: delete now tombstones entries locally, enqueues delete operations, and attempts sync when online
+- UI flow notes: delete immediately removes entries from the list via local cache updates, with a queued sync in the background
+- Crypto notes: none
+- IndexedDB notes: delete marks entries with `deletedAt` and `dirty=true` to prevent API refresh from resurrecting them
+- Sync notes: delete enqueues `op: 'delete'` items and flushes the queue when online
+- Verification: not run in this step
 
 ## Step 11 — Tests + verification matrix
 

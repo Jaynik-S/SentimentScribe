@@ -1,3 +1,4 @@
+import type { LocalDateTime } from '../api/types'
 import { requestToPromise, SYNC_QUEUE_STORE, withTransaction } from './db'
 import type { IndexedDbSyncQueueItem } from './types'
 
@@ -10,6 +11,21 @@ export const enqueueSyncItem = async (
   withTransaction(SYNC_QUEUE_STORE, 'readwrite', async ({ syncQueue }) => {
     const id = await requestToPromise(syncQueue.add(item))
     return id as number
+  })
+
+export const enqueueDelete = async (
+  userId: string,
+  storagePath: string,
+  enqueuedAt: LocalDateTime,
+): Promise<number> =>
+  enqueueSyncItem({
+    userId,
+    op: 'delete',
+    storagePath,
+    enqueuedAt,
+    retryCount: 0,
+    lastAttemptAt: null,
+    lastError: null,
   })
 
 export const listSyncQueueByUser = async (

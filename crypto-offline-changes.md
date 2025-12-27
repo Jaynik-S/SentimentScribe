@@ -112,12 +112,12 @@
 - Sync notes: delete enqueues `op: 'delete'` items and flushes the queue when online
 - Verification: not run in this step
 
-## Step 11 — Tests + verification matrix
+## Step 11 - Tests + verification matrix
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/components/__tests__/OfflineIndicator.test.tsx`, `crypto-offline-changes.md`
+- Summary: added indicator tests and documented a manual verification matrix for offline flows
+- UI flow notes: tests cover offline/pending badges and sync button states
+- Crypto notes: none
+- IndexedDB notes: none
+- Sync notes: none
+- Verification: Automated: `npm --prefix frontend test` (not run). Manual: online create/save shows in Home; go offline and create/save then refresh and reopen; open missing entry offline shows error; offline delete persists after refresh; return online and confirm queue flush/pending count drops; lock and refresh require unlock again

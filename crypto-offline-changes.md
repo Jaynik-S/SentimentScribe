@@ -72,15 +72,15 @@
 - Sync notes: processes queue in order, retries on failure by recording `lastAttemptAt`, `retryCount`, and `lastError`, and stops at first failure
 - Verification: not run in this step
 
-## Step 7 — Add offline/sync state + UI indicator
+## Step 7 - Add offline/sync state + UI indicator
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/state/offline.tsx`, `frontend/src/components/OfflineIndicator.tsx`, `frontend/src/App.tsx`, `frontend/src/routes.tsx`, `frontend/src/test/renderWithRouter.tsx`, `frontend/src/App.css`
+- Summary: added offline state context with pending sync count and a global indicator badge with a manual sync action
+- UI flow notes: indicator appears for authenticated users when offline or when pending sync items exist; sync button is disabled offline
+- Crypto notes: none
+- IndexedDB notes: pending count sourced from `syncQueue` by user id; provider skips counts when IndexedDB is unavailable
+- Sync notes: `syncNow` flushes the queue via the push-only sync engine and refreshes pending counts
+- Verification: not run in this step
 
 ## Step 8 — Home list: IndexedDB-first, API fallback/refresh
 

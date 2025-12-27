@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet, createBrowserRouter } from 'react-router-dom'
 import { GlobalLoadingOverlay } from './components/GlobalLoadingOverlay'
+import { OfflineIndicator } from './components/OfflineIndicator'
 import { PageErrorBanner } from './components/PageErrorBanner'
 import { useAuth } from './state/auth'
 import { useE2ee } from './state/e2ee'
@@ -16,6 +17,7 @@ const RootLayout = () => {
     <div className="app-shell">
       <PageErrorBanner />
       <GlobalLoadingOverlay />
+      <OfflineIndicator />
       <main className="app-content">
         <Outlet />
       </main>

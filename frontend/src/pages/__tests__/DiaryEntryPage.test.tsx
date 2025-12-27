@@ -7,9 +7,7 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 import { analyzeText } from '../../api/analysis'
 import { createEntry, getEntryByPath } from '../../api/entries'
 import { getRecommendations } from '../../api/recommendations'
-import { decryptAesGcm } from '../../crypto/aesGcm'
-import { encryptEnvelope } from '../../crypto/envelope'
-import { deriveAesKey } from '../../crypto/kdf'
+import { decrypt, deriveKey, encryptEntry } from '../../crypto/diaryCrypto'
 
 vi.mock('../../api/analysis', () => ({
   analyzeText: vi.fn(),
@@ -52,12 +50,12 @@ const params = { kdf: 'PBKDF2-SHA256', salt: 'c2FsdA==', iterations: 1 }
 describe('DiaryEntryPage', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
-    mockKey = await deriveAesKey(passphrase, params.salt, params.iterations)
+    mockKey = await deriveKey(passphrase, params)
   })
 
   it('creates a new entry with generated createdAt', async () => {
     const createEntryMock = vi.mocked(createEntry)
-    const responseEnvelope = await encryptEnvelope('Today', longText, mockKey!)
+    const responseEnvelope = await encryptEntry('Today', longText, mockKey!)
     createEntryMock.mockResolvedValue({
       storagePath: 'entry.txt',
       createdAt: '2025-01-01T12:00:00',
@@ -87,14 +85,22 @@ describe('DiaryEntryPage', () => {
     expect(payload.algo).toBe('AES-GCM')
     expect(payload.version).toBe(1)
 
-    const decryptedTitle = await decryptAesGcm(
-      payload.titleCiphertext,
-      payload.titleIv,
+    const decryptedTitle = await decrypt(
+      {
+        ciphertext: payload.titleCiphertext,
+        iv: payload.titleIv,
+        algo: payload.algo,
+        version: payload.version,
+      },
       mockKey!,
     )
-    const decryptedBody = await decryptAesGcm(
-      payload.bodyCiphertext,
-      payload.bodyIv,
+    const decryptedBody = await decrypt(
+      {
+        ciphertext: payload.bodyCiphertext,
+        iv: payload.bodyIv,
+        algo: payload.algo,
+        version: payload.version,
+      },
       mockKey!,
     )
     expect(decryptedTitle).toBe('Today')
@@ -103,7 +109,7 @@ describe('DiaryEntryPage', () => {
 
   it('loads entry when path query param is present', async () => {
     const getEntryByPathMock = vi.mocked(getEntryByPath)
-    const responseEnvelope = await encryptEnvelope('Loaded', longText, mockKey!)
+    const responseEnvelope = await encryptEntry('Loaded', longText, mockKey!)
     getEntryByPathMock.mockResolvedValue({
       storagePath: 'entry.txt',
       createdAt: '2025-01-01T10:00:00',

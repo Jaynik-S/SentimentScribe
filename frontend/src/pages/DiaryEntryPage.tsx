@@ -8,7 +8,7 @@ import { getRecommendations } from '../api/recommendations'
 import { formatLocalDateTime } from '../api/localDateTime'
 import type { EntryRequest } from '../api/types'
 import { KeywordsDropdown } from '../components/KeywordsDropdown'
-import { decryptEnvelope, encryptEnvelope } from '../crypto/envelope'
+import { decryptEntry, encryptEntry } from '../crypto/diaryCrypto'
 import { useEntryDraft } from '../state/entryDraft'
 import { useE2ee } from '../state/e2ee'
 import { useRecommendations } from '../state/recommendations'
@@ -91,7 +91,7 @@ export const DiaryEntryPage = () => {
 
       try {
         const response = await getEntryByPath(entryPath)
-        const decrypted = await decryptEnvelope(
+        const decrypted = await decryptEntry(
           {
             titleCiphertext: response.titleCiphertext,
             titleIv: response.titleIv,
@@ -222,7 +222,7 @@ export const DiaryEntryPage = () => {
     }
 
     try {
-      const encrypted = await encryptEnvelope(draft.title, draft.text, key)
+      const encrypted = await encryptEntry(draft.title, draft.text, key)
       const payload: EntryRequest = {
         storagePath: draft.storagePath,
         createdAt,

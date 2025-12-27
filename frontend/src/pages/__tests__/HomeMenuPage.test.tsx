@@ -7,8 +7,7 @@ import { renderWithRouter } from '../../test/renderWithRouter'
 import { deleteEntry, listEntries } from '../../api/entries'
 import type { EntrySummaryResponse } from '../../api/types'
 import { ApiError } from '../../api/http'
-import { encryptAesGcm } from '../../crypto/aesGcm'
-import { deriveAesKey } from '../../crypto/kdf'
+import { deriveKey, encrypt } from '../../crypto/diaryCrypto'
 
 vi.mock('../../api/entries', () => ({
   listEntries: vi.fn(),
@@ -43,16 +42,16 @@ let entryFixture: EntrySummaryResponse
 describe('HomeMenuPage', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
-    mockKey = await deriveAesKey(passphrase, params.salt, params.iterations)
-    const encryptedTitle = await encryptAesGcm('Morning Thoughts', mockKey!)
+    mockKey = await deriveKey(passphrase, params)
+    const encryptedTitle = await encrypt('Morning Thoughts', mockKey!)
     entryFixture = {
       storagePath: 'entries/morning.txt',
       createdAt: '2025-01-01T10:00:00',
       updatedAt: null,
       titleCiphertext: encryptedTitle.ciphertext,
       titleIv: encryptedTitle.iv,
-      algo: 'AES-GCM',
-      version: 1,
+      algo: encryptedTitle.algo,
+      version: encryptedTitle.version,
     }
   })
 

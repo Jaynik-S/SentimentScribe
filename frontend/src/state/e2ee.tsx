@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { deriveAesKey } from '../crypto/kdf'
+import { deriveKey } from '../crypto/diaryCrypto'
 import type { E2eeParams } from '../api/types'
 import { useAuth } from './auth'
 
@@ -39,7 +39,7 @@ export const E2eeProvider = ({ children }: E2eeProviderProps) => {
       throw new Error('E2EE parameters are missing.')
     }
 
-    const derived = await deriveAesKey(passphrase, params.salt, params.iterations)
+    const derived = await deriveKey(passphrase, params)
     setKey(derived)
   }, [])
 

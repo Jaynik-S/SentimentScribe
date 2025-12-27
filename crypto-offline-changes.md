@@ -2,25 +2,25 @@
 
 > Rule: after completing **each** step from `crypto-offline-plan.md` Section 9, document what changed here under the matching step.
 
-## Step 0 — Baseline + guardrails
+## Step 0 - Baseline + guardrails
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: none
+- Summary: reviewed current entry list/load/save/delete flows and crypto helpers; no code changes in Step 0
+- UI flow notes: Home loads via `listEntries()` and decrypts titles client-side when key is present; entry page loads via `getEntryByPath()` and decrypts envelope; save encrypts then POST/PUTs ciphertext fields; delete calls `deleteEntry()` then reloads list
+- Crypto notes: AES-GCM with 12-byte IV, envelope version 1 with title/body ciphertext+IV; PBKDF2-SHA256 derive key, in-memory only
+- IndexedDB notes: none (not yet implemented)
+- Sync notes: none (not yet implemented)
+- Verification: manual devtools/network checks not run in this step
 
 ## Step 1 — Consolidate crypto API surface (deriveKey → encrypt → decrypt)
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/crypto/diaryCrypto.ts`, `frontend/src/state/e2ee.tsx`, `frontend/src/pages/HomeMenuPage.tsx`, `frontend/src/pages/DiaryEntryPage.tsx`, `frontend/src/crypto/__tests__/crypto.test.ts`, `frontend/src/pages/__tests__/HomeMenuPage.test.tsx`, `frontend/src/pages/__tests__/DiaryEntryPage.test.tsx`
+- Summary: added a consolidated crypto facade and moved UI/tests onto it while keeping existing envelope/AES-GCM primitives intact
+- UI flow notes: Home list decrypts titles via `diaryCrypto.decrypt` using entry algo/version; entry page encrypts/decrypts via `diaryCrypto.encryptEntry/decryptEntry`; unlock uses `diaryCrypto.deriveKey` and validates KDF
+- Crypto notes: new `diaryCrypto` wrapper exposes `deriveKey`, `encrypt`, `decrypt`, `encryptEntry`, `decryptEntry`; single-field encrypt includes `{ version, algo }` and decrypt enforces expected version/algo
+- IndexedDB notes: none
+- Sync notes: none
+- Verification: tests updated but not run in this step
 
 ## Step 2 — Lock/unlock lifecycle hardening (clear key on lock/logout/tab close)
 
@@ -121,4 +121,3 @@
 - IndexedDB notes:
 - Sync notes:
 - Verification:
-

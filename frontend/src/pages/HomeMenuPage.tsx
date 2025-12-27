@@ -4,7 +4,7 @@ import { deleteEntry, listEntries } from '../api/entries'
 import { isApiError } from '../api/http'
 import { DeleteEntryModal } from '../components/DeleteEntryModal'
 import { EntriesTable } from '../components/EntriesTable'
-import { decryptAesGcm } from '../crypto/aesGcm'
+import { decrypt } from '../crypto/diaryCrypto'
 import { useEntryDraft } from '../state/entryDraft'
 import { useE2ee } from '../state/e2ee'
 import { useUi } from '../state/ui'
@@ -46,9 +46,13 @@ export const HomeMenuPage = () => {
       const decrypted = await Promise.all(
         response.map(async (entry) => {
           try {
-            const titlePlaintext = await decryptAesGcm(
-              entry.titleCiphertext,
-              entry.titleIv,
+            const titlePlaintext = await decrypt(
+              {
+                ciphertext: entry.titleCiphertext,
+                iv: entry.titleIv,
+                algo: entry.algo,
+                version: entry.version,
+              },
               key,
             )
             return { ...entry, titlePlaintext }

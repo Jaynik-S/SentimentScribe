@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { base64ToBytes, bytesToBase64 } from '../base64'
-import { decryptAesGcm, encryptAesGcm } from '../aesGcm'
-import { deriveAesKey } from '../kdf'
-import { decryptEnvelope, encryptEnvelope } from '../envelope'
+import {
+  decrypt,
+  decryptEntry,
+  deriveKey,
+  encrypt,
+  encryptEntry,
+} from '../diaryCrypto'
 
 const PASS_PHRASE = 'correct horse battery staple'
 const SALT_BASE64 = 'AAAAAAAAAAAAAAAAAAAAAA=='
 const ITERATIONS = 1000
+const PARAMS = { kdf: 'PBKDF2-SHA256', salt: SALT_BASE64, iterations: ITERATIONS }
 
 describe('crypto utilities', () => {
   it('round-trips base64 encoding', () => {
@@ -17,26 +22,28 @@ describe('crypto utilities', () => {
   })
 
   it('derives a usable AES-GCM key', async () => {
-    const key = await deriveAesKey(PASS_PHRASE, SALT_BASE64, ITERATIONS)
+    const key = await deriveKey(PASS_PHRASE, PARAMS)
     expect(key.type).toBe('secret')
     expect(key.algorithm.name).toBe('AES-GCM')
   })
 
-  it('encrypts and decrypts with AES-GCM', async () => {
-    const key = await deriveAesKey(PASS_PHRASE, SALT_BASE64, ITERATIONS)
-    const iv = base64ToBytes('AAAAAAAAAAAAAAAAAAAAAA==')
+  it('encrypts and decrypts a single field envelope', async () => {
+    const key = await deriveKey(PASS_PHRASE, PARAMS)
     const plaintext = 'Hello from SentimentScribe'
-    const encrypted = await encryptAesGcm(plaintext, key, iv)
-    const decrypted = await decryptAesGcm(encrypted.ciphertext, encrypted.iv, key)
+    const encrypted = await encrypt(plaintext, key)
+    const decrypted = await decrypt(encrypted, key)
+    expect(encrypted.algo).toBe('AES-GCM')
+    expect(encrypted.version).toBe(1)
+    expect(base64ToBytes(encrypted.iv)).toHaveLength(12)
     expect(decrypted).toBe(plaintext)
   })
 
   it('round-trips encrypted envelopes', async () => {
-    const key = await deriveAesKey(PASS_PHRASE, SALT_BASE64, ITERATIONS)
+    const key = await deriveKey(PASS_PHRASE, PARAMS)
     const title = 'Encrypted title'
     const body = 'Encrypted body'
-    const envelope = await encryptEnvelope(title, body, key)
-    const decrypted = await decryptEnvelope(envelope, key)
+    const envelope = await encryptEntry(title, body, key)
+    const decrypted = await decryptEntry(envelope, key)
     expect(decrypted).toEqual({ title, body })
   })
 })

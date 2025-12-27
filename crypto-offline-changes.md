@@ -62,15 +62,15 @@
 - Sync notes: provides helpers to fetch next item and count per user for pending indicators
 - Verification: not run in this step
 
-## Step 6 — Implement sync engine (push-only)
+## Step 6 - Implement sync engine (push-only)
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/offline/syncEngine.ts`
+- Summary: added a push-only sync engine that flushes queued upserts/deletes to the backend and updates local records on success
+- UI flow notes: none
+- Crypto notes: sync engine only handles ciphertext payloads from the queue
+- IndexedDB notes: clears dirty flag and updates timestamps after successful upsert; removes local records after successful delete
+- Sync notes: processes queue in order, retries on failure by recording `lastAttemptAt`, `retryCount`, and `lastError`, and stops at first failure
+- Verification: not run in this step
 
 ## Step 7 — Add offline/sync state + UI indicator
 

@@ -42,15 +42,15 @@
 - Sync notes: none
 - Verification: not run in this step
 
-## Step 4 — Implement local encrypted entries repository (ciphertext-only)
+## Step 4 - Implement local encrypted entries repository (ciphertext-only)
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/offline/entriesRepo.ts`
+- Summary: added a typed repository for reading/writing ciphertext entry records in IndexedDB
+- UI flow notes: none
+- Crypto notes: ciphertext-only records stored/returned; no plaintext handling
+- IndexedDB notes: repository uses `entries` store and userId index; list returns newest-first and can exclude tombstones
+- Sync notes: none
+- Verification: not run in this step
 
 ## Step 5 — Implement sync queue repository
 

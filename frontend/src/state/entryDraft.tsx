@@ -18,6 +18,7 @@ type EntryDraftContextValue = {
   updateDraft: (partial: Partial<EntryDraft>) => void
   setKeywordsVisible: (value: boolean) => void
   startNewEntry: () => void
+  clearDraft: () => void
 }
 
 const defaultDraft: EntryDraft = {
@@ -26,6 +27,15 @@ const defaultDraft: EntryDraft = {
   storagePath: null,
   keywords: [],
   createdAt: null,
+}
+
+const createStoragePath = (): string => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `entries/${crypto.randomUUID()}.json`
+  }
+
+  const fallback = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+  return `entries/${fallback}.json`
 }
 
 const EntryDraftContext = createContext<EntryDraftContextValue | undefined>(
@@ -56,10 +66,15 @@ export const EntryDraftProvider = ({ children }: EntryDraftProviderProps) => {
     setDraftState({
       title: '',
       text: '',
-      storagePath: null,
+      storagePath: createStoragePath(),
       keywords: [],
       createdAt: formatLocalDateTime(new Date()),
     })
+    setKeywordsVisibleState(false)
+  }, [])
+
+  const clearDraft = useCallback(() => {
+    setDraftState(defaultDraft)
     setKeywordsVisibleState(false)
   }, [])
 
@@ -71,10 +86,12 @@ export const EntryDraftProvider = ({ children }: EntryDraftProviderProps) => {
       updateDraft,
       setKeywordsVisible,
       startNewEntry,
+      clearDraft,
     }),
     [
       draft,
       keywordsVisible,
+      clearDraft,
       setDraft,
       setKeywordsVisible,
       startNewEntry,

@@ -5,24 +5,36 @@ import { useLocation } from 'react-router-dom'
 import { DiaryEntryPage } from '../DiaryEntryPage'
 import { renderWithRouter } from '../../test/renderWithRouter'
 import { analyzeText } from '../../api/analysis'
-import { createEntry, getEntryByPath } from '../../api/entries'
+import { getEntryByPath } from '../../api/entries'
 import { getRecommendations } from '../../api/recommendations'
-import { decryptAesGcm } from '../../crypto/aesGcm'
-import { encryptEnvelope } from '../../crypto/envelope'
-import { deriveAesKey } from '../../crypto/kdf'
+import { decrypt, deriveKey, encryptEntry } from '../../crypto/diaryCrypto'
+import { getEntry, upsertEntry } from '../../offline/entriesRepo'
+import { flushSyncQueue } from '../../offline/syncEngine'
+import { enqueueSyncItem } from '../../offline/syncQueueRepo'
 
 vi.mock('../../api/analysis', () => ({
   analyzeText: vi.fn(),
 }))
 
 vi.mock('../../api/entries', () => ({
-  createEntry: vi.fn(),
-  updateEntry: vi.fn(),
   getEntryByPath: vi.fn(),
 }))
 
 vi.mock('../../api/recommendations', () => ({
   getRecommendations: vi.fn(),
+}))
+
+vi.mock('../../offline/entriesRepo', () => ({
+  getEntry: vi.fn(),
+  upsertEntry: vi.fn(),
+}))
+
+vi.mock('../../offline/syncEngine', () => ({
+  flushSyncQueue: vi.fn(),
+}))
+
+vi.mock('../../offline/syncQueueRepo', () => ({
+  enqueueSyncItem: vi.fn(),
 }))
 
 let mockKey: CryptoKey | null = null
@@ -40,6 +52,37 @@ vi.mock('../../state/e2ee', async (importOriginal) => {
   }
 })
 
+vi.mock('../../state/auth', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../state/auth')>()
+  return {
+    ...actual,
+    useAuth: () => ({
+      auth: {
+        accessToken: 'token',
+        user: { id: 'user-1', username: 'tester' },
+        e2eeParams: { kdf: 'PBKDF2-SHA256', salt: 'c2FsdA==', iterations: 1 },
+      },
+      isAuthenticated: true,
+      setAuth: vi.fn(),
+      clear: vi.fn(),
+    }),
+  }
+})
+
+vi.mock('../../state/offline', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../state/offline')>()
+  return {
+    ...actual,
+    useOffline: () => ({
+      isOffline: false,
+      pendingCount: 0,
+      isSyncing: false,
+      syncNow: vi.fn(),
+      refreshPendingCount: vi.fn(),
+    }),
+  }
+})
+
 const LocationSpy = () => {
   const location = useLocation()
   return <div data-testid="location">{location.pathname + location.search}</div>
@@ -52,18 +95,16 @@ const params = { kdf: 'PBKDF2-SHA256', salt: 'c2FsdA==', iterations: 1 }
 describe('DiaryEntryPage', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
-    mockKey = await deriveAesKey(passphrase, params.salt, params.iterations)
+    mockKey = await deriveKey(passphrase, params)
   })
 
   it('creates a new entry with generated createdAt', async () => {
-    const createEntryMock = vi.mocked(createEntry)
-    const responseEnvelope = await encryptEnvelope('Today', longText, mockKey!)
-    createEntryMock.mockResolvedValue({
-      storagePath: 'entry.txt',
-      createdAt: '2025-01-01T12:00:00',
-      updatedAt: null,
-      ...responseEnvelope,
-    })
+    const upsertEntryMock = vi.mocked(upsertEntry)
+    const enqueueSyncItemMock = vi.mocked(enqueueSyncItem)
+    const flushSyncQueueMock = vi.mocked(flushSyncQueue)
+    upsertEntryMock.mockResolvedValue()
+    enqueueSyncItemMock.mockResolvedValue(1)
+    flushSyncQueueMock.mockResolvedValue()
 
     const user = userEvent.setup()
     renderWithRouter({
@@ -79,22 +120,36 @@ describe('DiaryEntryPage', () => {
     })
     await user.click(screen.getByRole('button', { name: /save entry/i }))
 
-    await waitFor(() => expect(createEntryMock).toHaveBeenCalled())
+    await waitFor(() => expect(enqueueSyncItemMock).toHaveBeenCalled())
 
-    const payload = createEntryMock.mock.calls[0][0]
-    expect(payload.storagePath).toBeNull()
-    expect(payload.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
-    expect(payload.algo).toBe('AES-GCM')
-    expect(payload.version).toBe(1)
+    const firstCall = enqueueSyncItemMock.mock.calls[0]?.[0]
+    expect(firstCall).toBeTruthy()
+    const payload = firstCall?.payload
+    expect(payload).toBeTruthy()
+    const safePayload = payload!
+    expect(safePayload.storagePath).toMatch(/^entries\//)
+    expect(safePayload.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+    expect(safePayload.algo).toBe('AES-GCM')
+    expect(safePayload.version).toBe(1)
+    expect(upsertEntryMock).toHaveBeenCalled()
+    expect(flushSyncQueueMock).toHaveBeenCalledWith('user-1')
 
-    const decryptedTitle = await decryptAesGcm(
-      payload.titleCiphertext,
-      payload.titleIv,
+    const decryptedTitle = await decrypt(
+      {
+        ciphertext: safePayload.titleCiphertext,
+        iv: safePayload.titleIv,
+        algo: safePayload.algo,
+        version: safePayload.version,
+      },
       mockKey!,
     )
-    const decryptedBody = await decryptAesGcm(
-      payload.bodyCiphertext,
-      payload.bodyIv,
+    const decryptedBody = await decrypt(
+      {
+        ciphertext: safePayload.bodyCiphertext,
+        iv: safePayload.bodyIv,
+        algo: safePayload.algo,
+        version: safePayload.version,
+      },
       mockKey!,
     )
     expect(decryptedTitle).toBe('Today')
@@ -103,7 +158,11 @@ describe('DiaryEntryPage', () => {
 
   it('loads entry when path query param is present', async () => {
     const getEntryByPathMock = vi.mocked(getEntryByPath)
-    const responseEnvelope = await encryptEnvelope('Loaded', longText, mockKey!)
+    const getEntryMock = vi.mocked(getEntry)
+    const upsertEntryMock = vi.mocked(upsertEntry)
+    getEntryMock.mockResolvedValue(null)
+    upsertEntryMock.mockResolvedValue()
+    const responseEnvelope = await encryptEntry('Loaded', longText, mockKey!)
     getEntryByPathMock.mockResolvedValue({
       storagePath: 'entry.txt',
       createdAt: '2025-01-01T10:00:00',

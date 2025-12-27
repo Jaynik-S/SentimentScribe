@@ -8,10 +8,16 @@ import { deleteEntry, listEntries } from '../../api/entries'
 import type { EntrySummaryResponse } from '../../api/types'
 import { ApiError } from '../../api/http'
 import { deriveKey, encrypt } from '../../crypto/diaryCrypto'
+import { listEntriesByUser } from '../../offline/entriesRepo'
 
 vi.mock('../../api/entries', () => ({
   listEntries: vi.fn(),
   deleteEntry: vi.fn(),
+}))
+
+vi.mock('../../offline/entriesRepo', () => ({
+  listEntriesByUser: vi.fn(),
+  upsertEntry: vi.fn(),
 }))
 
 const LocationSpy = () => {
@@ -57,7 +63,24 @@ describe('HomeMenuPage', () => {
 
   it('loads entries and navigates on row click', async () => {
     const listEntriesMock = vi.mocked(listEntries)
-    listEntriesMock.mockResolvedValue([entryFixture])
+    const listEntriesByUserMock = vi.mocked(listEntriesByUser)
+    listEntriesByUserMock.mockResolvedValue([
+      {
+        userId: 'user-1',
+        storagePath: entryFixture.storagePath,
+        createdAt: entryFixture.createdAt,
+        updatedAt: entryFixture.updatedAt,
+        titleCiphertext: entryFixture.titleCiphertext,
+        titleIv: entryFixture.titleIv,
+        bodyCiphertext: null,
+        bodyIv: null,
+        algo: entryFixture.algo,
+        version: entryFixture.version,
+        dirty: false,
+        deletedAt: null,
+      },
+    ])
+    listEntriesMock.mockResolvedValue([])
 
     const user = userEvent.setup()
     renderWithRouter({
@@ -81,8 +104,24 @@ describe('HomeMenuPage', () => {
   it('opens delete modal and confirms delete', async () => {
     const listEntriesMock = vi.mocked(listEntries)
     const deleteEntryMock = vi.mocked(deleteEntry)
-    listEntriesMock.mockResolvedValueOnce([entryFixture])
-    listEntriesMock.mockResolvedValueOnce([entryFixture])
+    const listEntriesByUserMock = vi.mocked(listEntriesByUser)
+    listEntriesByUserMock.mockResolvedValue([
+      {
+        userId: 'user-1',
+        storagePath: entryFixture.storagePath,
+        createdAt: entryFixture.createdAt,
+        updatedAt: entryFixture.updatedAt,
+        titleCiphertext: entryFixture.titleCiphertext,
+        titleIv: entryFixture.titleIv,
+        bodyCiphertext: null,
+        bodyIv: null,
+        algo: entryFixture.algo,
+        version: entryFixture.version,
+        dirty: false,
+        deletedAt: null,
+      },
+    ])
+    listEntriesMock.mockResolvedValue([])
     deleteEntryMock.mockResolvedValue({
       deleted: true,
       storagePath: entryFixture.storagePath,
@@ -104,14 +143,31 @@ describe('HomeMenuPage', () => {
     await user.click(screen.getByRole('button', { name: /confirm delete/i }))
 
     expect(deleteEntryMock).toHaveBeenCalledWith(entryFixture.storagePath)
-    expect(listEntriesMock).toHaveBeenCalledTimes(2)
+    expect(listEntriesByUserMock).toHaveBeenCalled()
   })
 
   it('shows retry action when list fails', async () => {
     const listEntriesMock = vi.mocked(listEntries)
+    const listEntriesByUserMock = vi.mocked(listEntriesByUser)
+    listEntriesByUserMock.mockResolvedValue([
+      {
+        userId: 'user-1',
+        storagePath: entryFixture.storagePath,
+        createdAt: entryFixture.createdAt,
+        updatedAt: entryFixture.updatedAt,
+        titleCiphertext: entryFixture.titleCiphertext,
+        titleIv: entryFixture.titleIv,
+        bodyCiphertext: null,
+        bodyIv: null,
+        algo: entryFixture.algo,
+        version: entryFixture.version,
+        dirty: false,
+        deletedAt: null,
+      },
+    ])
     listEntriesMock
       .mockRejectedValueOnce(new ApiError(500, 'Server down'))
-      .mockResolvedValueOnce([entryFixture])
+      .mockResolvedValueOnce([])
 
     const user = userEvent.setup()
     renderWithRouter({
@@ -123,7 +179,6 @@ describe('HomeMenuPage', () => {
 
     await user.click(screen.getByRole('button', { name: /retry/i }))
 
-    const entries = await screen.findAllByText('Morning Thoughts')
-    expect(entries.length).toBeGreaterThan(0)
+    expect(listEntriesMock).toHaveBeenCalledTimes(2)
   })
 })

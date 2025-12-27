@@ -82,15 +82,15 @@
 - Sync notes: `syncNow` flushes the queue via the push-only sync engine and refreshes pending counts
 - Verification: not run in this step
 
-## Step 8 — Home list: IndexedDB-first, API fallback/refresh
+## Step 8 - Home list: IndexedDB-first, API fallback/refresh
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/pages/HomeMenuPage.tsx`, `frontend/src/pages/__tests__/HomeMenuPage.test.tsx`, `frontend/src/offline/types.ts`
+- Summary: Home list now loads from IndexedDB first and refreshes from the API when online without overwriting dirty/tombstoned local records
+- UI flow notes: entries render from local cache; refresh uses API summaries and updates local cache, then rehydrates titles for display
+- Crypto notes: title decryption now uses `diaryCrypto.decrypt` on cached ciphertext
+- IndexedDB notes: summary refresh updates `entries` store for non-dirty records while preserving cached bodies
+- Sync notes: none
+- Verification: not run in this step
 
 ## Step 9 — Entry page: offline load + offline save (enqueue + attempt sync)
 

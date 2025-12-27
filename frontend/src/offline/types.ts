@@ -7,8 +7,8 @@ export type IndexedDbEntryRecord = {
   updatedAt: LocalDateTime | null
   titleCiphertext: string
   titleIv: string
-  bodyCiphertext: string
-  bodyIv: string
+  bodyCiphertext: string | null
+  bodyIv: string | null
   algo: string
   version: number
   dirty: boolean

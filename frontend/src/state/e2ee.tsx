@@ -31,6 +31,21 @@ export const E2eeProvider = ({ children }: E2eeProviderProps) => {
     setKey(null)
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const handleBeforeUnload = () => {
+      clear()
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [clear])
+
   const unlock = useCallback(async (passphrase: string, params: E2eeParams) => {
     if (!passphrase.trim()) {
       throw new Error('Passphrase is required.')

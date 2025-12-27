@@ -199,6 +199,13 @@
   margin-bottom: 24px;
 }
 
+.page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .entries-table {
   background: #ffffff;
   border: 1px solid #e5e1d6;

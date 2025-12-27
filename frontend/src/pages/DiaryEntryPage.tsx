@@ -57,11 +57,17 @@ const validateText = (value: string): string | null => {
 export const DiaryEntryPage = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { draft, updateDraft, setDraft, keywordsVisible, setKeywordsVisible } =
-    useEntryDraft()
+  const {
+    draft,
+    updateDraft,
+    setDraft,
+    keywordsVisible,
+    setKeywordsVisible,
+    clearDraft,
+  } = useEntryDraft()
   const { setRecommendations } = useRecommendations()
   const { setPageError, clearPageError, setPageLoading } = useUi()
-  const { key } = useE2ee()
+  const { key, clear } = useE2ee()
   const [titleError, setTitleError] = useState<string | null>(null)
   const [textError, setTextError] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -286,6 +292,12 @@ export const DiaryEntryPage = () => {
     }
   }
 
+  const handleLock = () => {
+    clearDraft()
+    clear()
+    navigate('/unlock')
+  }
+
   const keywordsLabel = keywordsVisible ? 'Hide Keywords' : 'Show Keywords'
 
   const metadata = useMemo(
@@ -304,13 +316,22 @@ export const DiaryEntryPage = () => {
           <h1>Diary Entry</h1>
           <p className="subtle">Draft, analyze, and save your entry.</p>
         </div>
-        <button
-          className="secondary-button"
-          type="button"
-          onClick={() => navigate('/home')}
-        >
-          Back to Home
-        </button>
+        <div className="page-header__actions">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleLock}
+          >
+            Lock
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => navigate('/home')}
+          >
+            Back to Home
+          </button>
+        </div>
       </header>
 
       {toastMessage ? <div className="toast">{toastMessage}</div> : null}

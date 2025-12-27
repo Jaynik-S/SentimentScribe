@@ -18,6 +18,7 @@ type EntryDraftContextValue = {
   updateDraft: (partial: Partial<EntryDraft>) => void
   setKeywordsVisible: (value: boolean) => void
   startNewEntry: () => void
+  clearDraft: () => void
 }
 
 const defaultDraft: EntryDraft = {
@@ -63,6 +64,11 @@ export const EntryDraftProvider = ({ children }: EntryDraftProviderProps) => {
     setKeywordsVisibleState(false)
   }, [])
 
+  const clearDraft = useCallback(() => {
+    setDraftState(defaultDraft)
+    setKeywordsVisibleState(false)
+  }, [])
+
   const contextValue = useMemo(
     () => ({
       draft,
@@ -71,10 +77,12 @@ export const EntryDraftProvider = ({ children }: EntryDraftProviderProps) => {
       updateDraft,
       setKeywordsVisible,
       startNewEntry,
+      clearDraft,
     }),
     [
       draft,
       keywordsVisible,
+      clearDraft,
       setDraft,
       setKeywordsVisible,
       startNewEntry,

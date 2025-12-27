@@ -22,8 +22,8 @@ export const HomeMenuPage = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const navigate = useNavigate()
   const { setPageError, clearPageError, setPageLoading } = useUi()
-  const { startNewEntry } = useEntryDraft()
-  const { key } = useE2ee()
+  const { startNewEntry, clearDraft } = useEntryDraft()
+  const { key, clear } = useE2ee()
 
   const loadEntries = useCallback(async () => {
     setPageLoading(true)
@@ -148,6 +148,12 @@ export const HomeMenuPage = () => {
     navigate('/entry')
   }
 
+  const handleLock = () => {
+    clearDraft()
+    clear()
+    navigate('/unlock')
+  }
+
   const isDeleteOpen = Boolean(deleteTarget)
 
   return (
@@ -158,9 +164,22 @@ export const HomeMenuPage = () => {
           <h1>Home Menu</h1>
           <p className="subtle">Open an entry or start a new one.</p>
         </div>
-        <button className="primary-button" type="button" onClick={handleNewEntry}>
-          New Entry
-        </button>
+        <div className="page-header__actions">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={handleLock}
+          >
+            Lock
+          </button>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={handleNewEntry}
+          >
+            New Entry
+          </button>
+        </div>
       </header>
 
       {toastMessage ? <div className="toast">{toastMessage}</div> : null}

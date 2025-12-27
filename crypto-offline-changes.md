@@ -22,15 +22,15 @@
 - Sync notes: none
 - Verification: tests updated but not run in this step
 
-## Step 2 — Lock/unlock lifecycle hardening (clear key on lock/logout/tab close)
+## Step 2 - Lock/unlock lifecycle hardening (clear key on lock/logout/tab close)
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/state/e2ee.tsx`, `frontend/src/state/entryDraft.tsx`, `frontend/src/pages/HomeMenuPage.tsx`, `frontend/src/pages/DiaryEntryPage.tsx`, `frontend/src/App.css`
+- Summary: added explicit Lock actions, draft clearing helper, and a beforeunload hook to clear the in-memory key
+- UI flow notes: Home and entry headers include a Lock button that clears draft + key and navigates to `/unlock`; header actions grouped for layout
+- Crypto notes: key is cleared on tab close via `beforeunload` listener in `E2eeProvider`
+- IndexedDB notes: none
+- Sync notes: none
+- Verification: not run in this step
 
 ## Step 3 — Add IndexedDB foundation (schema + helper)
 

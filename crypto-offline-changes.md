@@ -32,15 +32,15 @@
 - Sync notes: none
 - Verification: not run in this step
 
-## Step 3 — Add IndexedDB foundation (schema + helper)
+## Step 3 - Add IndexedDB foundation (schema + helper)
 
-- Files changed:
-- Summary:
-- UI flow notes:
-- Crypto notes:
-- IndexedDB notes:
-- Sync notes:
-- Verification:
+- Files changed: `frontend/src/offline/db.ts`, `frontend/src/offline/types.ts`
+- Summary: added a versioned IndexedDB wrapper and type definitions for offline entry and sync queue records
+- UI flow notes: none
+- Crypto notes: none
+- IndexedDB notes: DB `sentimentscribe.offline` v1 with `entries` (compound key `[userId, storagePath]` and indexes by user, updatedAt, storagePath, dirty) and `syncQueue` (auto-increment `id`, index by userId)
+- Sync notes: none
+- Verification: not run in this step
 
 ## Step 4 — Implement local encrypted entries repository (ciphertext-only)
 

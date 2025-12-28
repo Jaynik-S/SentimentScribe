@@ -11,30 +11,43 @@ export const MoviesTable = ({ movies }: MoviesTableProps) => {
 
   return (
     <div className="recommendations-grid">
-      {movies.map((movie) => (
-        <article key={`${movie.movieTitle}-${movie.releaseYear}`} className="rec-card">
-          {movie.imageUrl ? (
-            <img
-              src={movie.imageUrl}
-              alt={`${movie.movieTitle} poster`}
-              className="rec-card__image"
-            />
-          ) : null}
-          <div className="rec-card__body">
-            <h3>{movie.movieTitle}</h3>
-            <p className="rec-card__meta">Rating: {movie.movieRating || '—'}</p>
-            <dl className="rec-card__details">
-              <div>
-                <dt>Year</dt>
-                <dd>{movie.releaseYear || '—'}</dd>
+      {movies.map((movie, index) => {
+        const isTopPick = index === 0
+        return (
+          <article
+            key={`${movie.movieTitle}-${movie.releaseYear}`}
+            className={`rec-card${isTopPick ? ' rec-card--top' : ''}`}
+          >
+            {movie.imageUrl ? (
+              <img
+                src={movie.imageUrl}
+                alt={`${movie.movieTitle} poster`}
+                className="rec-card__image"
+              />
+            ) : (
+              <div className="rec-card__placeholder" aria-hidden="true" />
+            )}
+            <div className="rec-card__body">
+              <div className="rec-card__title">
+                <h3>{movie.movieTitle}</h3>
+                {isTopPick ? (
+                  <span className="rec-card__badge">Top pick</span>
+                ) : null}
               </div>
-            </dl>
-            <p className="rec-card__overview">
-              {movie.overview || 'No overview available.'}
-            </p>
-          </div>
-        </article>
-      ))}
+              <p className="rec-card__meta">Rating: {movie.movieRating || '-'}</p>
+              <dl className="rec-card__details">
+                <div>
+                  <dt>Year</dt>
+                  <dd>{movie.releaseYear || '-'}</dd>
+                </div>
+              </dl>
+              <p className="rec-card__overview">
+                {movie.overview || 'No overview available.'}
+              </p>
+            </div>
+          </article>
+        )
+      })}
     </div>
   )
 }

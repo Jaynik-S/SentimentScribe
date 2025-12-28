@@ -130,7 +130,7 @@ export const RegisterPage = () => {
           </button>
         </form>
 
-        <p className="subtle">
+        <p className="subtle verify-card__footer">
           Already have an account? <Link to="/">Sign in.</Link>
         </p>
       </div>

@@ -35,7 +35,7 @@ export const HomeMenuPage = () => {
   const navigate = useNavigate()
   const { auth } = useAuth()
   const { setPageError, clearPageError, setPageLoading } = useUi()
-  const { startNewEntry, clearDraft } = useEntryDraft()
+  const { draft, startNewEntry, clearDraft } = useEntryDraft()
   const { key, clear } = useE2ee()
   const { isOffline, refreshPendingCount } = useOffline()
 
@@ -56,17 +56,17 @@ export const HomeMenuPage = () => {
 
   const hydrateEntries = useCallback(
     async (records: IndexedDbEntryRecord[]) => {
-      const summaries = records.map(mapRecordToSummary)
-      if (!summaries.length) {
+      if (!records.length) {
         setEntries([])
         return
       }
 
       if (!key) {
         setEntries(
-          summaries.map((entry) => ({
-            ...entry,
+          records.map((record) => ({
+            ...mapRecordToSummary(record),
             titlePlaintext: 'Encrypted entry',
+            bodyPlaintext: '',
           })),
         )
         setPageError('Unlock your diary to decrypt entries.')
@@ -75,22 +75,42 @@ export const HomeMenuPage = () => {
 
       let hadFailure = false
       const decrypted = await Promise.all(
-        summaries.map(async (entry) => {
+        records.map(async (record) => {
+          const summary = mapRecordToSummary(record)
+          let titlePlaintext = 'Encrypted entry'
+          let bodyPlaintext = ''
+
           try {
-            const titlePlaintext = await decrypt(
+            titlePlaintext = await decrypt(
               {
-                ciphertext: entry.titleCiphertext,
-                iv: entry.titleIv,
-                algo: entry.algo,
-                version: entry.version,
+                ciphertext: record.titleCiphertext,
+                iv: record.titleIv,
+                algo: record.algo,
+                version: record.version,
               },
               key,
             )
-            return { ...entry, titlePlaintext }
           } catch {
             hadFailure = true
-            return { ...entry, titlePlaintext: 'Encrypted entry' }
           }
+
+          if (record.bodyCiphertext && record.bodyIv) {
+            try {
+              bodyPlaintext = await decrypt(
+                {
+                  ciphertext: record.bodyCiphertext,
+                  iv: record.bodyIv,
+                  algo: record.algo,
+                  version: record.version,
+                },
+                key,
+              )
+            } catch {
+              hadFailure = true
+            }
+          }
+
+          return { ...summary, titlePlaintext, bodyPlaintext }
         }),
       )
       if (hadFailure) {
@@ -261,7 +281,7 @@ export const HomeMenuPage = () => {
       }
       await refreshPendingCount()
       setDeleteTarget(null)
-      setToastMessage('Deleted entry')
+      setToastMessage('Entry deleted.')
       await loadLocalEntries()
     } catch (error) {
       const message =
@@ -294,12 +314,11 @@ export const HomeMenuPage = () => {
       <header className="page-header">
         <div>
           <p className="eyebrow">SentimentScribe</p>
-          <h1>Home Menu</h1>
-          <p className="subtle">Open an entry or start a new one.</p>
+          <h1>Home</h1>
         </div>
         <div className="page-header__actions">
           <button
-            className="secondary-button"
+            className="ghost-button danger"
             type="button"
             onClick={handleLock}
           >
@@ -321,6 +340,7 @@ export const HomeMenuPage = () => {
         entries={entries}
         onRowClick={handleRowClick}
         onDeleteClick={handleDeleteClick}
+        activePath={draft.storagePath}
       />
 
       <DeleteEntryModal

@@ -1,8 +1,30 @@
 :root {
-  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande", "Lucida Sans", sans-serif;
-  line-height: 1.5;
+  --font-body: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif;
+  --font-ui: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  --color-text: #1f1e1c;
+  --color-muted: #5d564d;
+  --color-subtle: #736b61;
+  --color-primary: #1f2a24;
+  --color-primary-strong: #162019;
+  --color-primary-soft: #2f3f35;
+  --color-surface: #ffffff;
+  --color-surface-muted: #fdfaf3;
+  --color-surface-alt: #f6f1e8;
+  --color-border: #e5e1d6;
+  --color-border-strong: #d3ccbf;
+  --color-danger: #8a2f24;
+  --color-danger-soft: #fbe9e6;
+  --color-success: #2f4a32;
+  --color-success-soft: #f1f7ef;
+  --shadow-soft: 0 18px 35px rgba(26, 24, 19, 0.08);
+  --shadow-card: 0 14px 30px rgba(26, 24, 19, 0.08);
+  --shadow-floating: 0 24px 48px rgba(26, 24, 19, 0.12);
+  --transition-fast: 0.18s ease;
+  --transition-slow: 0.24s ease;
+  font-family: var(--font-body);
+  line-height: 1.55;
   font-weight: 400;
-  color: #1f1e1c;
+  color: var(--color-text);
   background-color: #f4f1ea;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -16,7 +38,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #fdfaf3 0%, #f4f1ea 45%, #efe6d8 100%);
+  background: radial-gradient(circle at top, #fdfaf5 0%, #f6efe2 45%, #efe4d4 100%);
 }
 
 a {
@@ -25,6 +47,8 @@ a {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
+  font-family: var(--font-ui);
 }

@@ -11,41 +11,54 @@ export const SongsTable = ({ songs }: SongsTableProps) => {
 
   return (
     <div className="recommendations-grid">
-      {songs.map((song) => (
-        <article key={`${song.songName}-${song.artistName}`} className="rec-card">
-          {song.imageUrl ? (
-            <img
-              src={song.imageUrl}
-              alt={`${song.songName} cover`}
-              className="rec-card__image"
-            />
-          ) : null}
-          <div className="rec-card__body">
-            <h3>{song.songName}</h3>
-            <p className="rec-card__meta">{song.artistName}</p>
-            <dl className="rec-card__details">
-              <div>
-                <dt>Year</dt>
-                <dd>{song.releaseYear || '—'}</dd>
+      {songs.map((song, index) => {
+        const isTopPick = index === 0
+        return (
+          <article
+            key={`${song.songName}-${song.artistName}`}
+            className={`rec-card${isTopPick ? ' rec-card--top' : ''}`}
+          >
+            {song.imageUrl ? (
+              <img
+                src={song.imageUrl}
+                alt={`${song.songName} cover`}
+                className="rec-card__image"
+              />
+            ) : (
+              <div className="rec-card__placeholder" aria-hidden="true" />
+            )}
+            <div className="rec-card__body">
+              <div className="rec-card__title">
+                <h3>{song.songName}</h3>
+                {isTopPick ? (
+                  <span className="rec-card__badge">Top pick</span>
+                ) : null}
               </div>
-              <div>
-                <dt>Popularity</dt>
-                <dd>{song.popularityScore || '—'}</dd>
-              </div>
-            </dl>
-            {song.externalUrl ? (
-              <a
-                className="rec-card__link"
-                href={song.externalUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Open in Spotify
-              </a>
-            ) : null}
-          </div>
-        </article>
-      ))}
+              <p className="rec-card__meta">{song.artistName}</p>
+              <dl className="rec-card__details">
+                <div>
+                  <dt>Year</dt>
+                  <dd>{song.releaseYear || '-'}</dd>
+                </div>
+                <div>
+                  <dt>Popularity</dt>
+                  <dd>{song.popularityScore || '-'}</dd>
+                </div>
+              </dl>
+              {song.externalUrl ? (
+                <a
+                  className="secondary-button rec-card__button"
+                  href={song.externalUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Open in Spotify
+                </a>
+              ) : null}
+            </div>
+          </article>
+        )
+      })}
     </div>
   )
 }

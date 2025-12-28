@@ -35,9 +35,8 @@ export const DeleteEntryModal = ({
                 entry.titleCiphertext ||
                 'this entry'}
             </strong>
-            .
+            . This action will sync across your devices.
           </p>
-          <p className="entry-path">{entry.storagePath}</p>
           {error ? <p className="modal__error">{error}</p> : null}
         </div>
         <footer className="modal__footer">

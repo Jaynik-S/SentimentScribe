@@ -90,6 +90,13 @@ export const DiaryEntryPage = () => {
   const [isSaving, setIsSaving] = useState(false)
   const [isRecommending, setIsRecommending] = useState(false)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null)
+  const [lastAnalyzedAt, setLastAnalyzedAt] = useState<string | null>(null)
+  const savedSnapshotRef = useRef<{
+    title: string
+    text: string
+    storagePath: string | null
+  } | null>(null)
   const createdAtRef = useRef(draft.createdAt)
 
   const entryPath = searchParams.get('path')
@@ -98,6 +105,14 @@ export const DiaryEntryPage = () => {
   useEffect(() => {
     createdAtRef.current = draft.createdAt
   }, [draft.createdAt])
+
+  useEffect(() => {
+    if (!entryPath) {
+      savedSnapshotRef.current = null
+      setLastSavedAt(null)
+      setLastAnalyzedAt(null)
+    }
+  }, [entryPath])
 
   useEffect(() => {
     if (!entryPath) {
@@ -143,6 +158,13 @@ export const DiaryEntryPage = () => {
               createdAt: cached.createdAt ?? createdAtRef.current,
               keywords: [],
             })
+            savedSnapshotRef.current = {
+              title: decrypted.title,
+              text: decrypted.body,
+              storagePath: cached.storagePath,
+            }
+            setLastSavedAt(cached.updatedAt ?? cached.createdAt ?? null)
+            setLastAnalyzedAt(null)
             setKeywordsVisible(false)
             return
           } catch {
@@ -188,6 +210,13 @@ export const DiaryEntryPage = () => {
           createdAt: response.createdAt ?? createdAtRef.current,
           keywords: [],
         })
+        savedSnapshotRef.current = {
+          title: decrypted.title,
+          text: decrypted.body,
+          storagePath: response.storagePath,
+        }
+        setLastSavedAt(response.updatedAt ?? response.createdAt ?? null)
+        setLastAnalyzedAt(null)
         setKeywordsVisible(false)
       } catch (error) {
         const message =
@@ -268,6 +297,8 @@ export const DiaryEntryPage = () => {
       })
       updateDraft({ keywords: response.keywords })
       setKeywordsVisible(true)
+      setLastAnalyzedAt(formatLocalDateTime(new Date()))
+      setToastMessage('Keywords updated.')
     } catch (error) {
       const message = isApiError(error)
         ? error.data.error
@@ -361,7 +392,14 @@ export const DiaryEntryPage = () => {
         createdAt,
         keywords: draft.keywords,
       })
-      setToastMessage('Saved')
+      savedSnapshotRef.current = {
+        title: draft.title,
+        text: draft.text,
+        storagePath,
+      }
+      const savedAt = formatLocalDateTime(new Date())
+      setLastSavedAt(savedAt)
+      setToastMessage('Saved safely.')
     } catch (error) {
       const message =
         error instanceof Error
@@ -395,7 +433,14 @@ export const DiaryEntryPage = () => {
         text: `${draft.title}\n\n${draft.text}`,
       })
       setRecommendations(response)
-      navigate('/recommendations')
+      const trimmedTitle = draft.title.trim()
+      navigate('/recommendations', {
+        state: {
+          entryTitle: trimmedTitle || 'Untitled entry',
+          hasUnsavedChanges,
+          toast: 'Recommendations ready.',
+        },
+      })
     } catch (error) {
       const message = isApiError(error)
         ? error.data.error
@@ -412,14 +457,23 @@ export const DiaryEntryPage = () => {
     navigate('/unlock')
   }
 
+  const hasUnsavedChanges = useMemo(() => {
+    const snapshot = savedSnapshotRef.current
+    if (!snapshot) {
+      return Boolean(draft.title.trim() || draft.text.trim())
+    }
+    return snapshot.title !== draft.title || snapshot.text !== draft.text
+  }, [draft.text, draft.title])
+
   const keywordsLabel = keywordsVisible ? 'Hide Keywords' : 'Show Keywords'
+  const updatedDetail = formatDisplayDate(lastSavedAt)
+  const analyzedDetail = lastAnalyzedAt
+    ? formatDisplayDate(lastAnalyzedAt)
+    : 'Not analyzed yet'
 
   const metadata = useMemo(
-    () => [
-      { label: 'Created At', value: formatDisplayDate(draft.createdAt) },
-      { label: 'Storage Path', value: draft.storagePath ?? '—' },
-    ],
-    [draft.createdAt, draft.storagePath],
+    () => [{ label: 'Created', value: formatDisplayDate(draft.createdAt) }],
+    [draft.createdAt],
   )
 
   return (
@@ -428,23 +482,24 @@ export const DiaryEntryPage = () => {
         <div>
           <p className="eyebrow">SentimentScribe</p>
           <h1>Diary Entry</h1>
-          <p className="subtle">Draft, analyze, and save your entry.</p>
         </div>
         <div className="page-header__actions">
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={handleLock}
-          >
-            Lock
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={() => navigate('/home')}
-          >
-            Back to Home
-          </button>
+          <div className="page-header__nav">
+            <button
+              className="ghost-button"
+              type="button"
+              onClick={() => navigate('/home')}
+            >
+              Home
+            </button>
+            <button
+              className="ghost-button danger"
+              type="button"
+              onClick={handleLock}
+            >
+              Lock
+            </button>
+          </div>
         </div>
       </header>
 
@@ -452,44 +507,65 @@ export const DiaryEntryPage = () => {
 
       <div className="entry-layout">
         <div className="entry-form">
-          <label className="field">
-            <span className="field__label">Title</span>
-            <input
-              type="text"
-              value={draft.title}
-              onChange={handleTitleChange}
-            />
-          </label>
-          {titleError ? <p className="field__error">{titleError}</p> : null}
+          <div className="entry-form__header">
+            <label className="field field--title">
+              <span className="field__label">Title</span>
+              <input
+                type="text"
+                value={draft.title}
+                onChange={handleTitleChange}
+              />
+            </label>
+            {titleError ? <p className="field__error">{titleError}</p> : null}
 
-          <div className="keywords-section">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={handleKeywordsToggle}
-              disabled={isAnalyzing}
-            >
-              {isAnalyzing ? (
-                <span className="button-content">
-                  <span className="spinner" aria-hidden="true" />
-                  Analyzing...
-                </span>
-              ) : (
-                keywordsLabel
-              )}
-            </button>
+            <div className="keywords-row">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={handleKeywordsToggle}
+                disabled={isAnalyzing}
+              >
+                {isAnalyzing ? (
+                  <span className="button-content">
+                    <span className="spinner" aria-hidden="true" />
+                    Reflecting...
+                  </span>
+                ) : (
+                  <span className="button-content">
+                    <svg
+                      viewBox="0 0 20 20"
+                      className="icon"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M4.5 6.5h6.5a3 3 0 0 1 0 6H9l-2.5 3V12.5H4.5a3 3 0 0 1 0-6Z"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    {keywordsLabel}
+                  </span>
+                )}
+              </button>
+              <span className="keywords-hint">
+                Use keywords to guide recommendations.
+              </span>
+            </div>
 
             {keywordsVisible ? (
               <KeywordsDropdown keywords={draft.keywords} />
             ) : null}
           </div>
 
-          <label className="field">
+          <label className="field field--text">
             <span className="field__label">Entry Text</span>
             <textarea
               value={draft.text}
               onChange={handleTextChange}
-              rows={10}
+              rows={12}
             />
           </label>
           {textError ? <p className="field__error">{textError}</p> : null}
@@ -519,7 +595,7 @@ export const DiaryEntryPage = () => {
               {isRecommending ? (
                 <span className="button-content">
                   <span className="spinner" aria-hidden="true" />
-                  Fetching...
+                  Gathering...
                 </span>
               ) : (
                 'Get Media Recommendations'
@@ -529,8 +605,30 @@ export const DiaryEntryPage = () => {
         </div>
 
         <aside className="entry-meta">
-          <h2>Entry Metadata</h2>
+          <h2>Entry Details</h2>
           <dl>
+            <div className="entry-meta__row">
+              <dt>Status</dt>
+              <dd>
+                <span
+                  className={`status-pill ${
+                    hasUnsavedChanges
+                      ? 'status-pill--draft'
+                      : 'status-pill--saved'
+                  }`}
+                >
+                  {hasUnsavedChanges ? 'Unsaved changes' : 'Saved'}
+                </span>
+              </dd>
+            </div>
+            <div className="entry-meta__row">
+              <dt>Updated</dt>
+              <dd>{updatedDetail}</dd>
+            </div>
+            <div className="entry-meta__row">
+              <dt>Analyzed</dt>
+              <dd>{analyzedDetail}</dd>
+            </div>
             {metadata.map((item) => (
               <div key={item.label} className="entry-meta__row">
                 <dt>{item.label}</dt>

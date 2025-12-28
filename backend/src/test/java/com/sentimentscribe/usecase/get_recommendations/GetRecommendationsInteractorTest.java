@@ -19,7 +19,7 @@ class GetRecommendationsInteractorTest {
         GetRecommendationsInteractor interactor = new GetRecommendationsInteractor(dataAccess, presenter);
 
         String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        interactor.execute(new GetRecommendationsInputData(validText));
+        interactor.execute(new GetRecommendationsInputData(validText, List.of(), List.of()));
 
         assertNotNull(presenter.successData);
         assertNull(presenter.errorMessage);
@@ -40,7 +40,7 @@ class GetRecommendationsInteractorTest {
         StubRecommendationsDataAccess dataAccess = new StubRecommendationsDataAccess();
         GetRecommendationsInteractor interactor = new GetRecommendationsInteractor(dataAccess, presenter);
 
-        interactor.execute(new GetRecommendationsInputData("too short"));
+        interactor.execute(new GetRecommendationsInputData("too short", List.of(), List.of()));
 
         assertEquals("Diary entry is too short to extract recommendations.", presenter.errorMessage);
         assertNull(presenter.successData);
@@ -58,7 +58,7 @@ class GetRecommendationsInteractorTest {
         GetRecommendationsInteractor interactor = new GetRecommendationsInteractor(dataAccess, presenter);
 
         String tooLong = "a".repeat(DiaryEntry.MAX_TEXT_LENGTH + 1);
-        interactor.execute(new GetRecommendationsInputData(tooLong));
+        interactor.execute(new GetRecommendationsInputData(tooLong, List.of(), List.of()));
 
         assertEquals("Diary entry is too long to extract recommendations.", presenter.errorMessage);
         assertNull(presenter.successData);
@@ -76,7 +76,7 @@ class GetRecommendationsInteractorTest {
         GetRecommendationsInteractor interactor = new GetRecommendationsInteractor(dataAccess, presenter);
 
         String validText = "a".repeat(DiaryEntry.MIN_TEXT_LENGTH);
-        interactor.execute(new GetRecommendationsInputData(validText));
+        interactor.execute(new GetRecommendationsInputData(validText, List.of(), List.of()));
 
         assertTrue(presenter.errorMessage.startsWith("Failed to get recommendations: "));
         assertNull(presenter.successData);
@@ -107,9 +107,9 @@ class GetRecommendationsInteractorTest {
     private static final class StubRecommendationsDataAccess implements GetRecommendationsUserDataAccessInterface {
         private final List<String> keywordsToReturn = List.of("calm", "focus");
         private final List<SongRecommendation> songRecommendationsToReturn =
-                List.of(new SongRecommendation("2020", "img", "song", "artist", "90", "url"));
+                List.of(new SongRecommendation("track-1", "2020", "img", "song", "artist", "90", "url"));
         private final List<MovieRecommendation> movieRecommendationsToReturn =
-                List.of(new MovieRecommendation("2021", "poster", "title", "8/10", "summary"));
+                List.of(new MovieRecommendation("movie-1", "2021", "poster", "title", "8/10", "summary"));
         private boolean fetchKeywordsCalled;
         private boolean fetchSongsCalled;
         private boolean fetchMoviesCalled;
@@ -123,13 +123,15 @@ class GetRecommendationsInteractorTest {
         }
 
         @Override
-        public List<SongRecommendation> fetchSongRecommendations(List<String> keywords) {
+        public List<SongRecommendation> fetchSongRecommendations(List<String> keywords,
+                                                                 List<String> excludeSongIds) {
             this.fetchSongsCalled = true;
             return songRecommendationsToReturn;
         }
 
         @Override
-        public List<MovieRecommendation> fetchMovieRecommendations(List<String> keywords) {
+        public List<MovieRecommendation> fetchMovieRecommendations(List<String> keywords,
+                                                                   List<String> excludeMovieIds) {
             this.fetchMoviesCalled = true;
             return movieRecommendationsToReturn;
         }
@@ -143,12 +145,14 @@ class GetRecommendationsInteractorTest {
         }
 
         @Override
-        public List<SongRecommendation> fetchSongRecommendations(List<String> keywords) {
+        public List<SongRecommendation> fetchSongRecommendations(List<String> keywords,
+                                                                 List<String> excludeSongIds) {
             return List.of();
         }
 
         @Override
-        public List<MovieRecommendation> fetchMovieRecommendations(List<String> keywords) {
+        public List<MovieRecommendation> fetchMovieRecommendations(List<String> keywords,
+                                                                   List<String> excludeMovieIds) {
             return List.of();
         }
     }

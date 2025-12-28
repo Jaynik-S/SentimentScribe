@@ -10,12 +10,13 @@ export const SongsTable = ({ songs }: SongsTableProps) => {
   }
 
   return (
-    <div className="recommendations-grid">
+    <div className="recommendations-grid recommendations-grid--songs">
       {songs.map((song, index) => {
         const isTopPick = index === 0
+        const key = song.songId || `${song.songName}-${song.artistName}`
         return (
           <article
-            key={`${song.songName}-${song.artistName}`}
+            key={key}
             className={`rec-card${isTopPick ? ' rec-card--top' : ''}`}
           >
             {song.imageUrl ? (

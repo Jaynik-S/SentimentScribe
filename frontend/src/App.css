@@ -708,6 +708,60 @@
   gap: 16px;
 }
 
+.recommendations-grid--songs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.recommendations-footer {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recommendations-footer__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pagination {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.pagination__button {
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-muted);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.pagination__button:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.pagination__button--active {
+  border-color: rgba(31, 42, 36, 0.25);
+  color: var(--color-primary);
+  background: rgba(31, 42, 36, 0.08);
+}
+
+.section-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: 0.85rem;
+}
+
 .rec-card {
   display: grid;
   grid-template-columns: 120px 1fr;
@@ -799,8 +853,10 @@
 }
 
 .rec-card__button {
-  margin-top: 8px;
+  margin-top: 6px;
   align-self: flex-start;
+  padding: 6px 12px;
+  font-size: 0.85rem;
 }
 
 .empty-state {
@@ -880,6 +936,10 @@ a:focus-visible {
   }
 
   .rec-card {
+    grid-template-columns: 1fr;
+  }
+
+  .recommendations-grid--songs {
     grid-template-columns: 1fr;
   }
 }

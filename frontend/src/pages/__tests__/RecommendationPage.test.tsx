@@ -39,6 +39,7 @@ describe('RecommendationPage', () => {
       keywords: [],
       songs: [
         {
+          songId: 'track-1',
           releaseYear: '2024',
           imageUrl: 'https://example.com/song.jpg',
           songName: 'Quiet Storm',
@@ -49,6 +50,7 @@ describe('RecommendationPage', () => {
       ],
       movies: [
         {
+          movieId: 'movie-1',
           releaseYear: '2022',
           imageUrl: 'https://example.com/movie.jpg',
           movieTitle: 'Night Walk',

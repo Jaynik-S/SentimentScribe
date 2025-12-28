@@ -5,8 +5,8 @@ import java.util.List;
 
 public class DiaryEntry {
     public static final int MAX_TITLE_LENGTH = 30;
-    public static final int MIN_TEXT_LENGTH = 50;
-    public static final int MAX_TEXT_LENGTH = 1000;
+    public static final int MIN_TEXT_LENGTH = 100;
+    public static final int MAX_TEXT_LENGTH = 5000;
 
     private String titleCiphertext;
     private String titleIv;

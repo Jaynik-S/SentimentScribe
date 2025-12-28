@@ -1,6 +1,7 @@
 package com.sentimentscribe.domain;
 
 public class SongRecommendation {
+    private String songId;
     private String releaseYear;
     private String imageUrl;
     private String songName;
@@ -8,15 +9,22 @@ public class SongRecommendation {
     private String popularityScore;
     private String externalUrl;
 
-    public SongRecommendation(String releaseYear, String imageUrl,
+    public SongRecommendation(String songId,
+                              String releaseYear,
+                              String imageUrl,
                               String songName, String artistName,
                               String popularityScore, String externalUrl) {
+        this.songId = songId;
         this.releaseYear = releaseYear;
         this.imageUrl = imageUrl;
         this.songName = songName;
         this.artistName = artistName;
         this.popularityScore = popularityScore;
         this.externalUrl = externalUrl;
+    }
+
+    public String getSongId() {
+        return songId;
     }
 
     public String getReleaseYear() {

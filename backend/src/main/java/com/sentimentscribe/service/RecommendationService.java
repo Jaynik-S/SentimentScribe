@@ -17,9 +17,17 @@ public class RecommendationService {
     }
 
     public ServiceResult<GetRecommendationsOutputData> recommend(String text) {
+        return recommend(text, java.util.List.of(), java.util.List.of());
+    }
+
+    public ServiceResult<GetRecommendationsOutputData> recommend(
+            String text,
+            java.util.List<String> excludeSongIds,
+            java.util.List<String> excludeMovieIds
+    ) {
         RecommendationPresenter presenter = new RecommendationPresenter();
         GetRecommendationsInteractor interactor = new GetRecommendationsInteractor(recommendationsAccess, presenter);
-        interactor.execute(new GetRecommendationsInputData(text));
+        interactor.execute(new GetRecommendationsInputData(text, excludeSongIds, excludeMovieIds));
         if (presenter.errorMessage != null) {
             return ServiceResult.failure(presenter.errorMessage);
         }

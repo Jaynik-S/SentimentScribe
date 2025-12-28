@@ -15,6 +15,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 
 public class SpotifyAPIAccessObject {
@@ -22,7 +23,7 @@ public class SpotifyAPIAccessObject {
     private final String clientSecret;
     private String accessToken;
     private static String yearRange = "2006-2025";
-    private static int limit = 5;
+    private static int limit = 6;
     private static final int MIN_POPULARITY = 15;
 
     private final List<String> terms;
@@ -56,7 +57,8 @@ public class SpotifyAPIAccessObject {
         return json.getString("access_token");
     }
 
-    private List<JSONObject> getSongsByKeywords(List<String> keywords)
+    private List<JSONObject> getSongsByKeywords(List<String> keywords,
+                                                Set<String> excludeIds)
             throws Exception {
         if (keywords == null || keywords.isEmpty() || limit <= 0) {
             return List.of();
@@ -66,6 +68,10 @@ public class SpotifyAPIAccessObject {
         List<JSONObject> collected = new ArrayList<>();
         Set<String> seenIds = new LinkedHashSet<>();
         Set<String> seenArtists = new LinkedHashSet<>();
+
+        if (excludeIds != null && !excludeIds.isEmpty()) {
+            seenIds.addAll(excludeIds);
+        }
 
         List<String> queries = new ArrayList<>();
         for (int i = 0; i < keywords.size(); i++) {
@@ -85,55 +91,67 @@ public class SpotifyAPIAccessObject {
             String q = "(" + keywordStr + ")" + yearClause;
             // System.out.println(q);
             String encoded = URLEncoder.encode(q, StandardCharsets.UTF_8);
-            int perRequest = Math.min(50, limit - collected.size()); // Spotify limit is 50
+            int perRequest = 50; // Spotify limit is 50
+            int maxPages = 3;
 
-            String url = String.format(
-                    "https://api.spotify.com/v1/search?q=%s&type=track&limit=%d",
-                    encoded, perRequest);
+            for (int page = 0; page < maxPages && collected.size() < limit; page++) {
+                int offset = page * perRequest;
+                String url = String.format(
+                        "https://api.spotify.com/v1/search?q=%s&type=track&limit=%d&offset=%d",
+                        encoded, perRequest, offset);
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
-                    .header("Authorization", "Bearer " + accessToken)
-                    .header("Accept", "application/json")
-                    .GET()
-                    .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url))
+                        .header("Authorization", "Bearer " + accessToken)
+                        .header("Accept", "application/json")
+                        .GET()
+                        .build();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new Exception("Spotify search failed: " + response.statusCode());
-            }
-
-            JSONObject json = new JSONObject(response.body());
-            JSONObject tracksObj = json.optJSONObject("tracks");
-            JSONArray items = tracksObj != null ? tracksObj.optJSONArray("items") : null;
-            if (items == null) continue;
-
-            for (int i = 0; i < items.length(); i++) {
-                JSONObject track = items.getJSONObject(i);
-                String id = track.optString("id", null);
-                if (id == null || id.isEmpty()) continue;
-
-                // Skip tracks with popularity below the minimum
-                int popularity = track.optInt("popularity", 0);
-                if (popularity < MIN_POPULARITY) {
-                    continue;
+                if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                    throw new Exception("Spotify search failed: " + response.statusCode());
                 }
 
-                // Enforce unique primary artist per collected track
-                JSONArray artistsArr = track.optJSONArray("artists");
-                String primaryArtist = null;
-                if (artistsArr != null && artistsArr.length() > 0) {
-                    primaryArtist = artistsArr.getJSONObject(0).optString("name", "").trim();
-                }
-                if (primaryArtist == null || primaryArtist.isEmpty() || seenArtists.contains(primaryArtist)) {
-                    continue;
+                JSONObject json = new JSONObject(response.body());
+                JSONObject tracksObj = json.optJSONObject("tracks");
+                JSONArray items = tracksObj != null ? tracksObj.optJSONArray("items") : null;
+                if (items == null || items.length() == 0) {
+                    break;
                 }
 
-                if (seenIds.add(id)) {
-                    seenArtists.add(primaryArtist);
-                    collected.add(track);
-                    if (collected.size() >= limit) break;
+                for (int i = 0; i < items.length(); i++) {
+                    JSONObject track = items.getJSONObject(i);
+                    String id = track.optString("id", null);
+                    if (id == null || id.isEmpty()) continue;
+
+                    if (excludeIds != null && excludeIds.contains(id)) {
+                        continue;
+                    }
+
+                    // System.out.println("========\n" + track.toString(2) + "\n========"); // Debug print
+
+                    // Skip tracks with popularity below the minimum
+                    int popularity = track.optInt("popularity", 0);
+                    if (popularity < MIN_POPULARITY) {
+                        continue;
+                    }
+
+                    // Enforce unique primary artist per collected track
+                    JSONArray artistsArr = track.optJSONArray("artists");
+                    String primaryArtist = null;
+                    if (artistsArr != null && artistsArr.length() > 0) {
+                        primaryArtist = artistsArr.getJSONObject(0).optString("name", "").trim();
+                    }
+                    if (primaryArtist == null || primaryArtist.isEmpty() || seenArtists.contains(primaryArtist)) {
+                        continue;
+                    }
+
+                    if (seenIds.add(id)) {
+                        seenArtists.add(primaryArtist);
+                        collected.add(track);
+                        if (collected.size() >= limit) break;
+                    }
                 }
             }
         }
@@ -141,6 +159,7 @@ public class SpotifyAPIAccessObject {
     }
 
     public SongRecommendation JSONtoSongRecommendation(JSONObject track) {
+        String songId = track.optString("id", "");
         String songName = track.optString("name", "Unknown");
         String artistName = track.optJSONArray("artists") != null && track.getJSONArray("artists").length() > 0
                 ? track.getJSONArray("artists").getJSONObject(0).optString("name", "Unknown")
@@ -168,13 +187,20 @@ public class SpotifyAPIAccessObject {
         popularity = popularity + "/100";
 
         System.out.println(songName + " by " + artistName + " (" + releaseYear + ") " + popularity); // Debug print
-        return new SongRecommendation(releaseYear, coverUrl, songName, artistName, popularity, externalUrl);
+        return new SongRecommendation(songId, releaseYear, coverUrl, songName, artistName, popularity, externalUrl);
     }
 
     public List<SongRecommendation> fetchSongRecommendations() throws Exception {
+        return fetchSongRecommendations(List.of());
+    }
+
+    public List<SongRecommendation> fetchSongRecommendations(List<String> excludeSongIds) throws Exception {
         try {
             accessToken = getAccessToken();
-            List<JSONObject> songs = getSongsByKeywords(terms);
+            Set<String> exclude = excludeSongIds == null
+                    ? new HashSet<>()
+                    : new HashSet<>(excludeSongIds);
+            List<JSONObject> songs = getSongsByKeywords(terms, exclude);
             List<SongRecommendation> songList = new ArrayList<>();
             for (JSONObject track : songs) {
                 songList.add(JSONtoSongRecommendation(track));

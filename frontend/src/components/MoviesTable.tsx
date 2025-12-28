@@ -13,9 +13,10 @@ export const MoviesTable = ({ movies }: MoviesTableProps) => {
     <div className="recommendations-grid">
       {movies.map((movie, index) => {
         const isTopPick = index === 0
+        const key = movie.movieId || `${movie.movieTitle}-${movie.releaseYear}`
         return (
           <article
-            key={`${movie.movieTitle}-${movie.releaseYear}`}
+            key={key}
             className={`rec-card${isTopPick ? ' rec-card--top' : ''}`}
           >
             {movie.imageUrl ? (

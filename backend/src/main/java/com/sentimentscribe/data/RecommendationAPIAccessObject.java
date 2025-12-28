@@ -38,10 +38,11 @@ public class RecommendationAPIAccessObject implements GetRecommendationsUserData
     }
 
     @Override
-    public List<SongRecommendation> fetchSongRecommendations(List<String> keywords) throws Exception {
+    public List<SongRecommendation> fetchSongRecommendations(List<String> keywords,
+                                                             List<String> excludeSongIds) throws Exception {
         try {
             SpotifyAPIAccessObject spotifyAPI = new SpotifyAPIAccessObject(keywords, spotifyProperties);
-            return spotifyAPI.fetchSongRecommendations();
+            return spotifyAPI.fetchSongRecommendations(excludeSongIds);
         }
         catch (Exception error) {
             throw new Exception("Error fetching song recommendations: " + error.getMessage());
@@ -49,10 +50,11 @@ public class RecommendationAPIAccessObject implements GetRecommendationsUserData
     }
 
     @Override
-    public List<MovieRecommendation> fetchMovieRecommendations(List<String> keywords) throws Exception {
+    public List<MovieRecommendation> fetchMovieRecommendations(List<String> keywords,
+                                                               List<String> excludeMovieIds) throws Exception {
         try {
             TMDbAPIAccessObject tmdbAPI = new TMDbAPIAccessObject(keywords, tmdbProperties);
-            return tmdbAPI.fetchMovieRecommendations();
+            return tmdbAPI.fetchMovieRecommendations(excludeMovieIds);
         }
         catch (Exception error) {
             throw new Exception("Error fetching movie recommendations: " + error.getMessage());

@@ -81,6 +81,8 @@ export type AnalysisResponse = {
 
 export type RecommendationRequest = {
   text: string
+  excludeSongIds?: string[]
+  excludeMovieIds?: string[]
 }
 
 export type RecommendationResponse = {
@@ -90,6 +92,7 @@ export type RecommendationResponse = {
 }
 
 export type SongRecommendationResponse = {
+  songId: string
   releaseYear: string
   imageUrl: string
   songName: string
@@ -99,6 +102,7 @@ export type SongRecommendationResponse = {
 }
 
 export type MovieRecommendationResponse = {
+  movieId: string
   releaseYear: string
   imageUrl: string
   movieTitle: string

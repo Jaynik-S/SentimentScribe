@@ -1,4 +1,10 @@
 package com.sentimentscribe.web.dto;
 
-public record RecommendationRequest(String text) {
+import java.util.List;
+
+public record RecommendationRequest(
+        String text,
+        List<String> excludeSongIds,
+        List<String> excludeMovieIds
+) {
 }

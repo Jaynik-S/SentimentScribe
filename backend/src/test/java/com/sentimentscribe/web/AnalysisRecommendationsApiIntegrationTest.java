@@ -35,6 +35,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -75,10 +76,10 @@ class AnalysisRecommendationsApiIntegrationTest {
 
         GetRecommendationsOutputData outputData = new GetRecommendationsOutputData(
                 List.of("focus"),
-                List.of(new SongRecommendation("2024", "img", "song", "artist", "90", "url")),
-                List.of(new MovieRecommendation("2023", "img2", "movie", "8", "overview"))
+                List.of(new SongRecommendation("track-1", "2024", "img", "song", "artist", "90", "url")),
+                List.of(new MovieRecommendation("movie-1", "2023", "img2", "movie", "8", "overview"))
         );
-        when(recommendationService.recommend(anyString()))
+        when(recommendationService.recommend(anyString(), anyList(), anyList()))
                 .thenReturn(ServiceResult.success(outputData));
     }
 
@@ -100,7 +101,7 @@ class AnalysisRecommendationsApiIntegrationTest {
         ResponseEntity<ErrorResponse> response =
                 restTemplate.postForEntity(
                         baseUrl() + "/api/recommendations",
-                        new RecommendationRequest("Hello"),
+                        new RecommendationRequest("Hello", null, null),
                         ErrorResponse.class);
 
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
@@ -132,7 +133,7 @@ class AnalysisRecommendationsApiIntegrationTest {
                 restTemplate.exchange(
                         baseUrl() + "/api/recommendations",
                         HttpMethod.POST,
-                        new HttpEntity<>(new RecommendationRequest("Hello"), headers),
+                        new HttpEntity<>(new RecommendationRequest("Hello", null, null), headers),
                         RecommendationResponse.class);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());

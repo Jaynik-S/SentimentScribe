@@ -4,7 +4,11 @@ import type { RecommendationResponse } from '../api/types'
 
 type RecommendationsContextValue = {
   recommendations: RecommendationResponse | null
-  setRecommendations: (data: RecommendationResponse | null) => void
+  sourceText: string | null
+  setRecommendations: (
+    data: RecommendationResponse | null,
+    sourceText?: string | null,
+  ) => void
   clearRecommendations: () => void
 }
 
@@ -21,22 +25,31 @@ export const RecommendationsProvider = ({
 }: RecommendationsProviderProps) => {
   const [recommendations, setRecommendationsState] =
     useState<RecommendationResponse | null>(null)
+  const [sourceText, setSourceText] = useState<string | null>(null)
 
-  const setRecommendations = (data: RecommendationResponse | null) => {
+  const setRecommendations = (
+    data: RecommendationResponse | null,
+    nextSourceText?: string | null,
+  ) => {
     setRecommendationsState(data)
+    if (typeof nextSourceText !== 'undefined') {
+      setSourceText(nextSourceText)
+    }
   }
 
   const clearRecommendations = () => {
     setRecommendationsState(null)
+    setSourceText(null)
   }
 
   const contextValue = useMemo(
     () => ({
       recommendations,
+      sourceText,
       setRecommendations,
       clearRecommendations,
     }),
-    [recommendations],
+    [recommendations, sourceText],
   )
 
   return (

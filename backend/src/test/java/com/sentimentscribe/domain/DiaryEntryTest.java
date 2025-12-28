@@ -81,8 +81,8 @@ public class DiaryEntryTest {
     @Test
     public void testRecommendationsListsCanBeSet() {
         DiaryEntry entry = new DiaryEntry();
-        SongRecommendation song = new SongRecommendation("2020", "img", "song", "artist", "90", "url");
-        MovieRecommendation movie = new MovieRecommendation("2019", "img2", "title", "8", "overview");
+        SongRecommendation song = new SongRecommendation("track-1", "2020", "img", "song", "artist", "90", "url");
+        MovieRecommendation movie = new MovieRecommendation("movie-1", "2019", "img2", "title", "8", "overview");
 
         entry.setSongRecommendations(List.of(song));
         entry.setMovieRecommendations(List.of(movie));

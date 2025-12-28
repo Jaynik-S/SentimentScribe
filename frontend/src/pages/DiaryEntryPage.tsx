@@ -50,11 +50,11 @@ const validateText = (value: string): string | null => {
   if (!trimmed) {
     return 'Text is required.'
   }
-  if (trimmed.length < 50) {
-    return 'Text must be at least 50 characters.'
+  if (trimmed.length < 100) {
+    return 'Text must be at least 100 characters.'
   }
-  if (trimmed.length > 1000) {
-    return 'Text must be 1000 characters or fewer.'
+  if (trimmed.length > 5000) {
+    return 'Text must be 5000 characters or fewer.'
   }
   return null
 }
@@ -429,10 +429,11 @@ export const DiaryEntryPage = () => {
     clearPageError()
 
     try {
+      const requestText = `${draft.title}\n\n${draft.text}`
       const response = await getRecommendations({
-        text: `${draft.title}\n\n${draft.text}`,
+        text: requestText,
       })
-      setRecommendations(response)
+      setRecommendations(response, requestText)
       const trimmedTitle = draft.title.trim()
       navigate('/recommendations', {
         state: {

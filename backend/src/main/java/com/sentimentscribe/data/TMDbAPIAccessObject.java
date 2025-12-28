@@ -58,13 +58,19 @@ public class TMDbAPIAccessObject {
         return ids;
     }
 
-    private List<JSONObject> discoverMovies(List<String> ids)
+    private List<JSONObject> discoverMovies(List<String> ids,
+                                            Set<String> excludeIds)
             throws Exception {
         if (ids == null || ids.isEmpty()) return List.of();
 
         HttpClient client = HttpClient.newHttpClient();
         List<JSONObject> collected = new ArrayList<>();
         Set<String> seenTitles = new HashSet<>();
+        Set<String> seenIds = new HashSet<>();
+
+        if (excludeIds != null && !excludeIds.isEmpty()) {
+            seenIds.addAll(excludeIds);
+        }
 
         List<String> queries = new ArrayList<>();
         for (int i = 0; i < ids.size(); i++) {
@@ -74,40 +80,57 @@ public class TMDbAPIAccessObject {
         }
         queries.add(String.join("|", ids));
 
+        int maxPages = 3;
+
         for (String keywordStr : queries) {
             if (collected.size() >= limit) break;
             String encoded = URLEncoder.encode(keywordStr, StandardCharsets.UTF_8);
 
-            String url = String.format(
-                    "https://api.themoviedb.org/3/discover/movie?api_key=%s&with_keywords=%s&include_adult=false" +
-                            "&sort_by=vote_average.desc&vote_count.gte=350&language=en-US&page=1",
-                    apiKey,
-                    encoded
-            );
+            for (int page = 1; page <= maxPages && collected.size() < limit; page++) {
+                String url = String.format(
+                        "https://api.themoviedb.org/3/discover/movie?api_key=%s&with_keywords=%s&include_adult=false" +
+                                "&sort_by=vote_average.desc&vote_count.gte=350&language=en-US&page=%d",
+                        apiKey,
+                        encoded,
+                        page
+                );
 
-            HttpRequest req = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
-            HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+                HttpRequest req = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+                HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
 
-            if (res.statusCode() < 200 || res.statusCode() >= 300) {
-                throw new Exception("TMDb discover failed: " + res.statusCode());
-            }
-
-            JSONArray results = new JSONObject(res.body()).optJSONArray("results");
-            if (results == null) continue;
-
-            for (int i = 0; i < results.length(); i++) {
-                if (collected.size() >= limit) break;
-
-                JSONObject movie = results.getJSONObject(i);
-                String title = movie.optString("title", "").trim();
-
-                // Ensure we don't collect movies that share the same title
-                if (title.isEmpty() || seenTitles.contains(title)) {
-                    continue;
+                if (res.statusCode() < 200 || res.statusCode() >= 300) {
+                    throw new Exception("TMDb discover failed: " + res.statusCode());
                 }
 
-                seenTitles.add(title);
-                collected.add(movie);
+                JSONArray results = new JSONObject(res.body()).optJSONArray("results");
+                if (results == null || results.length() == 0) {
+                    break;
+                }
+
+                for (int i = 0; i < results.length(); i++) {
+                    if (collected.size() >= limit) break;
+
+                    JSONObject movie = results.getJSONObject(i);
+                    String title = movie.optString("title", "").trim();
+                    String id = String.valueOf(movie.optInt("id", 0));
+
+                    if (id.isEmpty() || "0".equals(id)) {
+                        continue;
+                    }
+
+                    if (excludeIds != null && excludeIds.contains(id)) {
+                        continue;
+                    }
+
+                    // Ensure we don't collect movies that share the same title
+                    if (title.isEmpty() || seenTitles.contains(title) || seenIds.contains(id)) {
+                        continue;
+                    }
+
+                    seenTitles.add(title);
+                    seenIds.add(id);
+                    collected.add(movie);
+                }
             }
         }
 
@@ -115,24 +138,32 @@ public class TMDbAPIAccessObject {
     }
     
     public MovieRecommendation JSONtoMovieRecommendation(JSONObject movie) {
-        String title = movie.optString("title", "—");
-        String year = movie.optString("release_date", "—");
+        String movieId = String.valueOf(movie.optInt("id", 0));
+        String title = movie.optString("title", "-");
+        String year = movie.optString("release_date", "-");
         year = year.isEmpty() ? "—" : year.substring(0, Math.min(4, year.length()));
         String voteAvg = movie.optString("vote_average", "—");
         voteAvg = voteAvg + "/10";
         String overview = movie.optString("overview", "");
         String posterPath = movie.optString("poster_path", null);
         String posterUrl = (posterPath == null || posterPath.isEmpty())
-                ? "—"
+                ? "-"
                 : "https://image.tmdb.org/t/p/original" + posterPath;
         System.out.println(title + " " + year + " " + voteAvg);
-        return new MovieRecommendation(year, posterUrl, title, voteAvg, overview);
+        return new MovieRecommendation(movieId, year, posterUrl, title, voteAvg, overview);
     }
     
     public List<MovieRecommendation> fetchMovieRecommendations() throws Exception {
+        return fetchMovieRecommendations(List.of());
+    }
+
+    public List<MovieRecommendation> fetchMovieRecommendations(List<String> excludeMovieIds) throws Exception {
         try {
             List<String> ids = getKeywordIds(terms);
-            List<JSONObject> movies = discoverMovies(ids);
+            Set<String> exclude = excludeMovieIds == null
+                    ? new HashSet<>()
+                    : new HashSet<>(excludeMovieIds);
+            List<JSONObject> movies = discoverMovies(ids, exclude);
             List<MovieRecommendation> movieList = new ArrayList<>();
             for (JSONObject movie : movies) {
                 movieList.add(JSONtoMovieRecommendation(movie));

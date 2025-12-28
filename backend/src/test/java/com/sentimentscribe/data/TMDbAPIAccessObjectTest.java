@@ -14,6 +14,7 @@ public class TMDbAPIAccessObjectTest {
     @Test
     public void testJSONtoMovieRecommendation_AllFieldsPresent() {
         JSONObject movie = new JSONObject()
+                .put("id", 123)
                 .put("title", "Movie Title")
                 .put("release_date", "2015-10-21")
                 .put("vote_average", "9.5")
@@ -24,6 +25,7 @@ public class TMDbAPIAccessObjectTest {
                 new TmdbProperties(""));
         MovieRecommendation rec = dao.JSONtoMovieRecommendation(movie);
 
+        assertEquals("123", rec.getMovieId());
         assertEquals("2015", rec.getReleaseYear());
         assertEquals("https://image.tmdb.org/t/p/original/poster.jpg", rec.getImageUrl());
         assertEquals("Movie Title", rec.getMovieTitle());
@@ -35,6 +37,7 @@ public class TMDbAPIAccessObjectTest {
     public void testJSONtoMovieRecommendation_MissingOptionalFields() {
         // No poster path, empty release_date
         JSONObject movie = new JSONObject()
+                .put("id", 456)
                 .put("title", "Another Movie")
                 .put("release_date", "")
                 .put("vote_average", "7.0");
@@ -43,8 +46,9 @@ public class TMDbAPIAccessObjectTest {
                 new TmdbProperties(""));
         MovieRecommendation rec = dao.JSONtoMovieRecommendation(movie);
 
-        assertEquals("—", rec.getReleaseYear());
-        assertEquals("—", rec.getImageUrl());
+        assertEquals("456", rec.getMovieId());
+        assertEquals("\u2014", rec.getReleaseYear());
+        assertEquals("-", rec.getImageUrl());
         assertEquals("Another Movie", rec.getMovieTitle());
         assertEquals("7.0/10", rec.getMovieRating());
         assertEquals("", rec.getOverview());

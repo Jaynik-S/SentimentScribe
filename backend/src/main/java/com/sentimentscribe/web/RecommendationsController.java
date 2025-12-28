@@ -30,7 +30,12 @@ public class RecommendationsController {
 
     @PostMapping
     public ResponseEntity<?> recommend(@RequestBody RecommendationRequest request) {
-        ServiceResult<GetRecommendationsOutputData> result = recommendationService.recommend(request.text());
+        List<String> excludeSongIds =
+                request.excludeSongIds() == null ? List.of() : request.excludeSongIds();
+        List<String> excludeMovieIds =
+                request.excludeMovieIds() == null ? List.of() : request.excludeMovieIds();
+        ServiceResult<GetRecommendationsOutputData> result =
+                recommendationService.recommend(request.text(), excludeSongIds, excludeMovieIds);
         if (!result.success()) {
             return ResponseEntity.badRequest().body(new ErrorResponse(result.errorMessage()));
         }
@@ -48,6 +53,7 @@ public class RecommendationsController {
 
     private static SongRecommendationResponse toSongResponse(SongRecommendation song) {
         return new SongRecommendationResponse(
+                song.getSongId(),
                 song.getReleaseYear(),
                 song.getImageUrl(),
                 song.getSongName(),
@@ -59,6 +65,7 @@ public class RecommendationsController {
 
     private static MovieRecommendationResponse toMovieResponse(MovieRecommendation movie) {
         return new MovieRecommendationResponse(
+                movie.getMovieId(),
                 movie.getReleaseYear(),
                 movie.getImageUrl(),
                 movie.getMovieTitle(),

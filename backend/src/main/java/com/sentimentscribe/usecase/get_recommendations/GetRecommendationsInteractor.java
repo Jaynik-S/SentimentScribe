@@ -28,9 +28,14 @@ public class GetRecommendationsInteractor implements GetRecommendationsInputBoun
         else {
             try {
                 List<String> keywords = userDataAccessObject.fetchKeywords(textBody);
-                List<SongRecommendation> songRecommendations = userDataAccessObject.fetchSongRecommendations(keywords);
+                List<SongRecommendation> songRecommendations =
+                        userDataAccessObject.fetchSongRecommendations(
+                                keywords,
+                                inputData.getExcludeSongIds());
                 List<MovieRecommendation> movieRecommendations =
-                        userDataAccessObject.fetchMovieRecommendations(keywords);
+                        userDataAccessObject.fetchMovieRecommendations(
+                                keywords,
+                                inputData.getExcludeMovieIds());
                 GetRecommendationsOutputData outputData =
                         new GetRecommendationsOutputData(keywords, songRecommendations, movieRecommendations);
                 recommendationPresenter.prepareSuccessView(outputData);

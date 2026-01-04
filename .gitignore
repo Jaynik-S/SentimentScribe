@@ -2,6 +2,9 @@
 target/
 .vscode/
 
+#backend
+backend/sentimentscribe-prod.pem
+
 # frontend 
 frontend/logs
 frontend/*.log

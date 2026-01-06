@@ -24,7 +24,7 @@ public class SpotifyAPIAccessObject {
     private String accessToken;
     private static String yearRange = "2006-2025";
     private static int limit = 6;
-    private static final int MIN_POPULARITY = 15;
+    private static final int MIN_POPULARITY = 35;
 
     private final List<String> terms;
 

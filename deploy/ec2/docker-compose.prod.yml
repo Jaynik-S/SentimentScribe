@@ -1,0 +1,63 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: sentimentscribe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sentiment_scribe
+      POSTGRES_USER: ${POSTGRES_USER?set POSTGRES_USER in .env.prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?set POSTGRES_PASSWORD in .env.prod}
+    volumes:
+      - ${POSTGRES_DATA_DIR:-/home/ubuntu/sentimentscribe/data/postgres}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER?set POSTGRES_USER in .env.prod} -d sentiment_scribe"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - internal
+
+  backend:
+    image: ${ECR_REGISTRY?set ECR_REGISTRY in .env.prod}/sentimentscribe-backend:${BACKEND_IMAGE_TAG:-latest}
+    container_name: sentimentscribe-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/sentiment_scribe
+      POSTGRES_USER: ${POSTGRES_USER?set POSTGRES_USER in .env.prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD?set POSTGRES_PASSWORD in .env.prod}
+      SENTIMENTSCRIBE_CORS_ORIGINS: ${SENTIMENTSCRIBE_CORS_ORIGINS:-}
+      SENTIMENTSCRIBE_CORS_ORIGIN: ${SENTIMENTSCRIBE_CORS_ORIGIN:-}
+      SENTIMENTSCRIBE_CORS_ORIGIN_2: ${SENTIMENTSCRIBE_CORS_ORIGIN_2:-}
+    networks:
+      - internal
+      - reverse-proxy
+
+  caddy:
+    image: caddy:2
+    container_name: sentimentscribe-caddy
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - reverse-proxy
+
+networks:
+  internal:
+    internal: true
+  reverse-proxy:
+    name: sentimentscribe_reverse_proxy
+
+volumes:
+  caddy_data:
+  caddy_config:

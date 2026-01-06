@@ -580,7 +580,7 @@ These are **not** requests to change the backend in this plan—just items the f
 - [ ] Create `backend/` and move the existing backend project files into it (no code changes; only relocation)
 - [ ] Create `frontend/` React project (Vite React + TypeScript recommended)
 - [ ] Configure the frontend dev server to run on `http://localhost:3000` (matches backend CORS default)
-- [ ] Add `frontend/.env.development` with `VITE_API_BASE_URL=http://localhost:8080`
+- [ ] Use a local env file like `frontend/.env.local` with `VITE_API_BASE_URL=http://localhost:8080` (do not commit)
 - [ ] Document how to run locally:
   - `cd backend; mvn spring-boot:run`
   - `cd frontend; npm run dev`

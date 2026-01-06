@@ -14,7 +14,7 @@ Moved the Spring Boot backend into `backend/` and scaffolded a Vite React + Type
 - Moved: `src/` -> `backend/src/`
 - Moved: `target/` -> `backend/target/`
 - Added: `frontend/` (Vite React + TypeScript scaffold)
-- Added: `frontend/.env.development`
+- Added: local env guidance (`frontend/.env.local`, not committed)
 - Updated: `frontend/vite.config.ts`
 - Updated: `README.md`
 
@@ -22,7 +22,7 @@ Moved the Spring Boot backend into `backend/` and scaffolded a Vite React + Type
 
 - `backend/pom.xml`, `backend/src/`, `backend/target/`: backend project relocated to match `/backend` monorepo layout.
 - `frontend/vite.config.ts`: set dev server port to `3000` to align with backend CORS defaults.
-- `frontend/.env.development`: sets `VITE_API_BASE_URL=http://localhost:8080` for local API calls.
+- `frontend/.env.local`: sets `VITE_API_BASE_URL=http://localhost:8080` for local API calls (not committed).
 - `README.md`: added local run commands for `backend` and `frontend` apps.
 
 ### How to verify (commands + manual checks)

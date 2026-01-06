@@ -1,4 +1,5 @@
 .env
+deploy/ec2/.env.prod
 target/
 .vscode/
 
@@ -26,4 +27,3 @@ frontend/*.ntvs*
 frontend/*.njsproj
 frontend/*.sln
 frontend/*.sw?
-frontend/.env.development

@@ -1,0 +1,4 @@
+api.sentimentscribe.cloud {
+    reverse_proxy backend:8080
+}
+

@@ -240,12 +240,12 @@ Introduce Postgres connectivity and migrations infrastructure without changing d
   - `spring.jpa.hibernate.ddl-auto=validate`
   - `spring.flyway.enabled=true`
 - Add local Postgres container definition:
-  - Prefer `docker-compose.yml` at repo root with a `postgres` service (or `docker-compose.postgres.yml` if you want isolation).
+- Prefer `docker-compose.prod.yml` at repo root with a `postgres` service.
 
 ### Files touched (planned)
 - `backend/pom.xml`
 - `backend/src/main/resources/application-postgres.yml`
-- `docker-compose.yml` (repo root) or `docker-compose.postgres.yml`
+- `docker-compose.prod.yml` (repo root)
 - `README.md` (add “Local Postgres” run notes)
 
 ### Verification checklist

@@ -60,7 +60,7 @@
 
 - [ ] Containerize the backend (and optionally the frontend for local prod-parity)
   - Add `backend/Dockerfile` to build and run the Spring Boot jar.
-  - Expand `docker-compose.yml` to include `backend` + `postgres` (and `frontend` if desired).
+  - Use `docker-compose.prod.yml` for local prod-parity (`backend` + `postgres`).
   - Ensure Flyway migrations run on startup in the container environment.
 - [ ] Deploy backend container on EC2 (minimal but real)
   - Build image locally or in CI, ship to EC2 (or push to ECR).

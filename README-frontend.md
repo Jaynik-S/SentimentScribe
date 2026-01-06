@@ -33,7 +33,6 @@ Repo-specific architecture:
   - Tests: `frontend/src/**/__tests__/*` + `frontend/src/test/*`
 - `frontend/public/`: static assets copied as-is (e.g. `vite.svg` favicon)
 - `frontend/vite.config.ts`: dev server config (port `3000`, no proxy)
-- `frontend/.env.development`: dev backend base URL (`VITE_API_BASE_URL=http://localhost:8080`)
 - `frontend/dist/`, `frontend/node_modules/`, `frontend/.vite/`: generated outputs (not authored app code)
 
 ---
@@ -120,8 +119,14 @@ Loading + error pattern (repo-specific):
 
 ### Base URL and dev setup
 
-- `frontend/.env.development` sets `VITE_API_BASE_URL=http://localhost:8080`.
 - `frontend/src/api/http.ts` reads `import.meta.env.VITE_API_BASE_URL` and falls back to `http://localhost:8080`.
+- For local dev, set `VITE_API_BASE_URL=http://localhost:8080` in a local env file such as `frontend/.env.local` (not committed).
+
+### Production build (static hosting)
+
+- Build:
+  - PowerShell: `$env:VITE_API_BASE_URL='https://api.sentimentscribe.cloud'; npm run build`
+  - macOS/Linux: `VITE_API_BASE_URL=https://api.sentimentscribe.cloud npm run build`
 
 ### CORS/proxy handling in this repo
 
@@ -334,6 +339,6 @@ Backend (from repo root):
 
 Integration checklist:
 
-- `frontend/.env.development` points to the backend (`VITE_API_BASE_URL`).
+- Ensure `VITE_API_BASE_URL` points to the backend (`http://localhost:8080` for dev, or your deployed API in prod builds).
 - Backend CORS allows `http://localhost:3000` (see backend `application.yml` + `WebConfig`).
 

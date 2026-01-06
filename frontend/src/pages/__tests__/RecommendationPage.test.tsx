@@ -41,7 +41,7 @@ describe('RecommendationPage', () => {
         {
           songId: 'track-1',
           releaseYear: '2024',
-          imageUrl: 'https://example.com/song.jpg',
+          imageUrl: 'https://sentimentscribe.cloud/song.jpg',
           songName: 'Quiet Storm',
           artistName: 'Dawn',
           popularityScore: '88',
@@ -52,7 +52,7 @@ describe('RecommendationPage', () => {
         {
           movieId: 'movie-1',
           releaseYear: '2022',
-          imageUrl: 'https://example.com/movie.jpg',
+          imageUrl: 'https://sentimentscribe.cloud/movie.jpg',
           movieTitle: 'Night Walk',
           movieRating: 'PG-13',
           overview: 'A reflective journey.',

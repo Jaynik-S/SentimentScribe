@@ -2,6 +2,11 @@ server:
   port: 8080
   servlet:
     context-path: /
+  error:
+    include-message: never
+    include-stacktrace: never
+    include-binding-errors: never
+    include-exception: false
 
 spring:
   profiles:
@@ -19,6 +24,7 @@ sentimentscribe:
     issuer: ${SENTIMENTSCRIBE_JWT_ISSUER:sentimentscribe}
     ttl-seconds: ${SENTIMENTSCRIBE_JWT_TTL_SECONDS:3600}
   cors:
+    allowed-origins-csv: ${SENTIMENTSCRIBE_CORS_ORIGINS:}
     allowed-origins:
       - ${SENTIMENTSCRIBE_CORS_ORIGIN:http://localhost:3000}
       - ${SENTIMENTSCRIBE_CORS_ORIGIN_2:http://127.0.0.1:3000}

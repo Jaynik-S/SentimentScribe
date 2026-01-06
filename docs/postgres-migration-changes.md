@@ -32,13 +32,13 @@
 ### Exact changes made
 - Added JPA, Postgres driver, Flyway, and Testcontainers dependencies in `backend/pom.xml`.
 - Added `backend/src/main/resources/application-postgres.yml` for DB profile settings.
-- Added root `docker-compose.yml` with a local Postgres service and volume.
+- Added root `docker-compose.prod.yml` with a local Postgres service and volume.
 - Documented local Postgres run notes in the root README.
 
 ### Files touched (actual)
 - `backend/pom.xml`
 - `backend/src/main/resources/application-postgres.yml`
-- `docker-compose.yml`
+- `docker-compose.prod.yml`
 - `README.md`
 
 ### Verification notes

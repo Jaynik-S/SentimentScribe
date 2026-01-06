@@ -49,7 +49,7 @@ Frontend approach: separate SPA consuming the backend API.
 Backend:
 
 ```
-docker compose up -d postgres
+docker compose -f docker-compose.prod.yml up -d postgres
 ```
 
 ```
@@ -78,7 +78,9 @@ npm install
 npm run build
 ```
 
-- Set `VITE_API_BASE_URL` in the frontend build environment to the deployed backend URL.
+- Set `VITE_API_BASE_URL` in the frontend build environment to the deployed backend URL. Example:
+  - PowerShell: `$env:VITE_API_BASE_URL='https://api.sentimentscribe.cloud'; npm run build`
+  - macOS/Linux: `VITE_API_BASE_URL=https://api.sentimentscribe.cloud npm run build`
 - Deploy the frontend build output from `frontend/dist`.
 
 Backend deployment:

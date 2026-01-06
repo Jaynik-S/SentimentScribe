@@ -39,7 +39,7 @@ This is a **planning + checklist** document only. It does **not** deploy anythin
 - [ ] **MFA** enabled on your AWS root account (security requirement).
 - [ ] Local tools installed: **Docker Desktop**, **Git**, and **Node.js** (for frontend builds).
 - [ ] Your Git working tree is clean: no uncommitted work you’d be sad to lose.
-- [ ] Optional but recommended: a **domain decision**, e.g. `example.com` with `api.example.com` for backend and `app.example.com` for frontend.
+- [ ] Optional but recommended: a **domain decision**, e.g. `sentimentscribe.cloud` with `api.sentimentscribe.cloud` for backend and `app.sentimentscribe.cloud` for frontend.
 - [ ] Your secrets ready (you will store them in SSM later):
   - Spotify: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`
   - TMDb: `TMDB_API_KEY`
@@ -92,8 +92,8 @@ Recommended (do early; helps later when using AWS CLI):
 #### 0.4 Decide your domains (recommended)
 
 - Choose:
-  - Frontend: `app.example.com`
-  - Backend: `api.example.com`
+  - Frontend: `app.sentimentscribe.cloud`
+  - Backend: `api.sentimentscribe.cloud`
 - You can buy from Namecheap / Google Domains successor / Route 53 registration.
 
 ### CODEX DOES THIS
@@ -115,14 +115,15 @@ No repo changes required in this phase.
 ### YOU DO THIS (local)
 
 1) Ensure Docker is running.
-2) From repo root, run local parity checks using the compose file(s) that Codex will prepare:
-   - Build images: `docker compose build`
-   - Start: `docker compose up -d`
+2) From repo root, run local parity checks using `docker-compose.prod.yml`:
+   - Build images: `docker compose -f docker-compose.prod.yml build`
+   - Start: `docker compose -f docker-compose.prod.yml up -d`
    - Watch logs:
-     - `docker compose logs -f postgres`
-     - `docker compose logs -f backend`
-3) Confirm Flyway migrations applied (you should see Flyway logs during backend start).
-4) Smoke test the API locally:
+     - `docker compose -f docker-compose.prod.yml logs -f postgres`
+     - `docker compose -f docker-compose.prod.yml logs -f backend`
+3) Optional: copy `.env.example` to `.env` and fill in values for local parity (API keys can be blank).
+4) Confirm Flyway migrations applied (you should see Flyway logs during backend start).
+5) Smoke test the API locally:
    - `http://localhost:8080/api/health` should return `{"status":"ok"}`.
 
 ### CODEX DOES THIS (repo changes)
@@ -136,9 +137,9 @@ Codex Step 1 — Add production backend image build
   - APIs: `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `TMDB_API_KEY`
   - CORS: `SENTIMENTSCRIBE_CORS_ORIGIN`, `SENTIMENTSCRIBE_CORS_ORIGIN_2` (and possibly a list-friendly variant)
 
-Codex Step 2 — Create/adjust “prod-parity” Compose
+Codex Step 2 - Create/adjust "prod-parity" Compose
 
-- Update `docker-compose.yml` and/or add a new file like `docker-compose.prod.yml` so you can run:
+- Add `docker-compose.prod.yml` so you can run:
   - backend + postgres with **no code bind-mounts**
   - postgres data persisted via a **named volume**
   - backend reads config via env vars (no secrets hardcoded)
@@ -146,11 +147,11 @@ Codex Step 2 — Create/adjust “prod-parity” Compose
 
 ### VERIFY
 
-- [ ] `docker compose ps` shows `postgres` healthy and `backend` running.
+- [ ] `docker compose -f docker-compose.prod.yml ps` shows `postgres` healthy and `backend` running.
 - [ ] `GET http://localhost:8080/api/health` returns `200`.
 - [ ] Stop + start again and confirm DB persists:
-  - `docker compose down`
-  - `docker compose up -d`
+  - `docker compose -f docker-compose.prod.yml down`
+  - `docker compose -f docker-compose.prod.yml up -d`
   - Confirm app still starts without re-initializing data unexpectedly.
 
 ---
@@ -255,7 +256,7 @@ Run on EC2:
 2) `sudo apt-get install -y ca-certificates curl gnupg`
 3) `sudo install -m 0755 -d /etc/apt/keyrings`
 4) `curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg`
-5) `echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null`
+5) `echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null`
 6) `sudo apt-get update`
 7) `sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin`
 8) `sudo systemctl enable --now docker`
@@ -410,11 +411,11 @@ For each parameter:
 
 **CORS value suggestion** (comma-separated):
 
-- `https://<YOUR_CLOUDFRONT_DOMAIN>,https://app.example.com,http://localhost:3000`
+- `https://<YOUR_CLOUDFRONT_DOMAIN>,https://app.sentimentscribe.cloud,http://localhost:3000`
 
 Common mistakes to avoid:
 
-- Putting your raw secrets into `docker-compose.yml` or committing `.env` files.
+- Putting your raw secrets into `docker-compose.prod.yml` or committing `.env` files.
 - Using the wrong region (Parameter Store is region-specific; keep consistent).
 
 #### 5.2 Ensure the EC2 instance can read parameters
@@ -460,7 +461,7 @@ On EC2:
 
 Recommended:
 
-- `api.example.com` → points to your EC2 **Elastic IP**
+- `api.sentimentscribe.cloud` → points to your EC2 **Elastic IP**
 
 If you don’t have a domain yet, you can temporarily use `https://<EIP>` is **not** ideal (TLS cert won’t match an IP); prefer a domain.
 
@@ -470,14 +471,14 @@ If using Route 53:
 
 1) AWS Console → **Route 53** → **Hosted zones** → your zone
 2) **Create record**
-3) Record name: `api` (for `api.example.com`)
+3) Record name: `api` (for `api.sentimentscribe.cloud`)
 4) Record type: **A**
 5) Value: your **Elastic IP**
 6) TTL: 300 → **Create records**
 
 If using an external DNS provider:
 
-- Create an **A record** for `api.example.com` pointing to your Elastic IP.
+- Create an **A record** for `api.sentimentscribe.cloud` pointing to your Elastic IP.
 
 #### 6.3 Run a reverse proxy that terminates TLS and forwards to the backend container
 
@@ -492,7 +493,7 @@ In this plan, you’ll run **Caddy** as a container:
 Codex Step 7 — Add Caddy reverse proxy configuration for prod
 
 - Add `deploy/ec2/Caddyfile` defining:
-  - site: `api.example.com`
+  - site: `api.sentimentscribe.cloud`
   - reverse proxy to `backend:8080`
   - basic security headers (Phase 9) if appropriate at the proxy layer
 - Update `deploy/ec2/docker-compose.prod.yml` to include a `caddy` service:
@@ -504,8 +505,8 @@ Codex Step 7 — Add Caddy reverse proxy configuration for prod
 
 ### VERIFY
 
-- [ ] From your laptop: `https://api.example.com/api/health` returns `200` and valid JSON.
-- [ ] HTTP redirects to HTTPS (try `http://api.example.com/api/health`).
+- [ ] From your laptop: `https://api.sentimentscribe.cloud/api/health` returns `200` and valid JSON.
+- [ ] HTTP redirects to HTTPS (try `http://api.sentimentscribe.cloud/api/health`).
 - [ ] EC2 security group inbound rules: only 22 (your IP), 80/443 (world). No 8080.
 
 ---
@@ -521,8 +522,8 @@ From repo root:
 1) `cd frontend`
 2) `npm ci`
 3) Set the API base URL for the build:
-   - PowerShell (one-off): `$env:VITE_API_BASE_URL='https://api.example.com'; npm run build`
-   - macOS/Linux: `VITE_API_BASE_URL=https://api.example.com npm run build`
+   - PowerShell (one-off): `$env:VITE_API_BASE_URL='https://api.sentimentscribe.cloud'; npm run build`
+   - macOS/Linux: `VITE_API_BASE_URL=https://api.sentimentscribe.cloud npm run build`
 4) Confirm output exists in `frontend/dist/`
 
 #### 7.2 Create an S3 bucket (private) to store the built frontend
@@ -583,10 +584,9 @@ After uploading new files:
 
 ### CODEX DOES THIS
 
-Codex Step 8 — Confirm frontend uses runtime API base
+Codex Step 8 - Confirm frontend uses runtime API base
 
 - Ensure the frontend uses `VITE_API_BASE_URL` for API calls (currently in `frontend/src/api/http.ts`) and document the production build command.
-- Optional: add a clear `.env.production.example` for the frontend so the required variable is obvious.
 
 ### VERIFY
 
@@ -594,7 +594,7 @@ Codex Step 8 — Confirm frontend uses runtime API base
   - `https://<DISTRIBUTION_ID>.cloudfront.net`
 - [ ] App loads without 403/404 for static assets.
 - [ ] Open browser devtools → Network:
-  - API calls go to `https://api.example.com/...` (not localhost).
+  - API calls go to `https://api.sentimentscribe.cloud/...` (not localhost).
 
 ---
 
@@ -602,8 +602,8 @@ Codex Step 8 — Confirm frontend uses runtime API base
 
 This phase covers a nice end state:
 
-- Frontend: `https://app.example.com` (CloudFront + ACM in `us-east-1`)
-- Backend: `https://api.example.com` (Caddy + Let’s Encrypt on EC2)
+- Frontend: `https://app.sentimentscribe.cloud` (CloudFront + ACM in `us-east-1`)
+- Backend: `https://api.sentimentscribe.cloud` (Caddy + Let’s Encrypt on EC2)
 
 ### YOU DO THIS
 
@@ -615,7 +615,7 @@ Option B: Buy directly in AWS (Route 53 → Domains → Register domain)
 #### 8.2 Create a Route 53 hosted zone (if using Route 53 for DNS)
 
 1) AWS Console → **Route 53** → **Hosted zones** → **Create hosted zone**
-2) Domain name: `example.com`
+2) Domain name: `sentimentscribe.cloud`
 3) Type: **Public hosted zone**
 4) Create hosted zone
 
@@ -631,7 +631,7 @@ If you bought the domain outside AWS:
 2) AWS Console → **ACM (Certificate Manager)** → **Request a certificate**
 3) Type: **Public certificate**
 4) Fully qualified domain name:
-   - `app.example.com` (and optionally `example.com` if you want apex)
+   - `app.sentimentscribe.cloud` (and optionally `sentimentscribe.cloud` if you want apex)
 5) Validation method: **DNS validation**
 6) Request
 7) On the cert details page → **Create records in Route 53** (if using Route 53)
@@ -641,7 +641,7 @@ If you bought the domain outside AWS:
 #### 8.4 Attach the custom domain + cert to CloudFront
 
 1) CloudFront → your distribution → **Settings** → **Edit**
-2) Alternate domain name (CNAME): add `app.example.com`
+2) Alternate domain name (CNAME): add `app.sentimentscribe.cloud`
 3) Custom SSL certificate: select the ACM cert you requested (must be in `us-east-1`)
 4) Save changes
 
@@ -658,23 +658,23 @@ If using Route 53:
 
 If using an external DNS provider:
 
-- For `app.example.com`, create a **CNAME** to your CloudFront domain (looks like `dxxxxx.cloudfront.net`).
-- For apex `example.com`, you may need ALIAS/ANAME support; otherwise use `app.example.com` and redirect.
+- For `app.sentimentscribe.cloud`, create a **CNAME** to your CloudFront domain (looks like `dxxxxx.cloudfront.net`).
+- For apex `sentimentscribe.cloud`, you may need ALIAS/ANAME support; otherwise use `app.sentimentscribe.cloud` and redirect.
 
 ### CODEX DOES THIS
 
 Codex Step 9 — Finalize CORS allowlist for real domains
 
 - Ensure backend CORS allowlist supports:
-  - `https://app.example.com`
+  - `https://app.sentimentscribe.cloud`
   - the CloudFront domain `https://dxxxxx.cloudfront.net` (optional once custom domain works)
   - local dev `http://localhost:3000` (dev only)
 
 ### VERIFY
 
-- [ ] `https://app.example.com` loads via CloudFront with a valid cert.
-- [ ] Browser console shows no CORS errors when calling `https://api.example.com`.
-- [ ] `https://api.example.com/api/health` works.
+- [ ] `https://app.sentimentscribe.cloud` loads via CloudFront with a valid cert.
+- [ ] Browser console shows no CORS errors when calling `https://api.sentimentscribe.cloud`.
+- [ ] `https://api.sentimentscribe.cloud/api/health` works.
 
 ---
 
@@ -749,9 +749,9 @@ Codex Step 10 — “Just enough” app-level hardening
 #### 10.1 End-to-end functionality checks
 
 - [ ] Backend health works publicly over HTTPS:
-  - `GET https://api.example.com/api/health` returns `200`
+  - `GET https://api.sentimentscribe.cloud/api/health` returns `200`
 - [ ] Frontend loads over HTTPS:
-  - `https://app.example.com` (or CloudFront domain if no custom domain)
+  - `https://app.sentimentscribe.cloud` (or CloudFront domain if no custom domain)
 - [ ] Frontend can call backend without CORS errors
 - [ ] Login/auth flow works (current password gate or future auth)
 - [ ] Create/edit/delete entry works end-to-end
@@ -786,7 +786,7 @@ Frontend update (S3/CloudFront):
 
 1) Local: build with correct API URL:
    - `cd frontend`
-   - `VITE_API_BASE_URL=https://api.example.com npm run build` (or PowerShell variant)
+   - `VITE_API_BASE_URL=https://api.sentimentscribe.cloud npm run build` (or PowerShell variant)
 2) Upload:
    - `aws s3 sync frontend/dist s3://sentimentscribe-frontend-<suffix> --delete`
 3) Invalidate:
@@ -798,8 +798,8 @@ No additional repo changes required in this phase.
 
 ### VERIFY (quick “green lights”)
 
-- [ ] `https://app.example.com` loads and can fetch data from API
-- [ ] `https://api.example.com/api/health` is OK
+- [ ] `https://app.sentimentscribe.cloud` loads and can fetch data from API
+- [ ] `https://api.sentimentscribe.cloud/api/health` is OK
 - [ ] No open inbound SG ports besides 22 (your IP), 80/443
 - [ ] SSM parameters exist and instance role can read them
 - [ ] Postgres not publicly exposed, and data persists across restarts

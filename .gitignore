@@ -2,6 +2,7 @@
 deploy/ec2/.env.prod
 target/
 .vscode/
+docs/files
 
 #backend
 backend/sentimentscribe-prod.pem

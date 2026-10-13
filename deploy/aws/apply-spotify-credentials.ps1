@@ -27,6 +27,7 @@ install -d -m 700 '$remoteDirectory'
 set -C
 : > '$candidate'
 "@
+$prepare = $prepare.Replace("`r`n", "`n")
 & ssh.exe @connection $hostName $prepare
 if ($LASTEXITCODE -ne 0) { throw 'Could not prepare a private candidate on the verified instance.' }
 & scp.exe @connection $environment "${hostName}:$candidate"

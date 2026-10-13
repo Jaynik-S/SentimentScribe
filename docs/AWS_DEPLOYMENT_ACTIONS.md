@@ -2,6 +2,18 @@
 
 The architecture and full deployment instructions remain in [AWS_REHOSTING_GUIDE.md](AWS_REHOSTING_GUIDE.md). Initial deployment is complete. This document records the deployment results and the remaining maintenance actions; do not repeat completed provisioning or credential-generation steps on the existing application.
 
+## Latest verified result: October 13, 2026
+
+Spotify credentials were entered through the masked local helper and applied to account **`920235987728`** without printing or committing secrets. Spotify OAuth/search, TMDb authentication, and public backend HTTPS all pass. The previous Spotify deferral described in the historical sections below is over.
+
+The live website workflow passed registration, login, unlock, encrypted save, refresh, fresh-browser server reload/decryption, analysis, and recommendations. Recommendations returned **6 songs and 4 movies**, with HTTP 200 and no API network/CORS failures. Verification created two synthetic accounts/entries during diagnosis and retesting; existing user data was not changed or deleted.
+
+The compatibility release is **`rehost-20261013220407-417d9824`**, ECR digest `sha256:0bf8364fe31ea6cfba88030bb4583b1da35b24982b1187e99926c70c1bbda9d1`. The backend now uses Spotify's 10-result search maximum and accepts tracks without the deprecated popularity field; unavailable scores display as `Unknown`. [Spotify API changes](https://developer.spotify.com/documentation/web-api/references/changes/february-2026).
+
+Only the backend was recreated. PostgreSQL and Caddy container identities were unchanged; PostgreSQL remained healthy. Production environment ownership is `ubuntu:ubuntu`, mode `600`; PostgreSQL/JWT/TMDb values were preserved. Previous images and private environment rollback copies were retained. Every temporary current-IP SSH rule was removed; the original SSH rule remains unchanged.
+
+Eleven focused Spotify/recommendation/domain tests and the offline LF/CRLF SSH regression check passed. The local database-backed integration test could not start because Docker Desktop was unavailable; the production browser and provider checks above passed. No architecture, DNS, region, budget, or instance-size change was made.
+
 ## Confirmed deployment choices
 
 - New AWS account: **`920235987728`**. This replaces the previously supplied account ID; do not use the earlier account.
@@ -9,11 +21,11 @@ The architecture and full deployment instructions remain in [AWS_REHOSTING_GUIDE
 - Database: **start empty**. Do not access the old AWS account.
 - Application resources: **`ca-central-1`**. CloudFront ACM certificate: **`us-east-1`**.
 
-## Current checkpoint
+## Historical checkpoint: October 12, 2026
 
 **Latest user-reported status, October 12, 2026: AWS is running and working, except for the deferred Spotify credentials.** This repository cleanup did not recheck or change live AWS resources. Historically, AWS confirmed a user-initiated stop of instance `i-09763071d6129c44f` on **October 6, 2026 at 4:32:58 a.m. America/Toronto**; that earlier paused state is not the current availability claim. The encrypted 30 GiB disk and Elastic IP were retained. No DNS changes are needed. Before the pause, registration, login, unlock, encrypted entry save, refresh, fresh-browser server reload/decryption, analysis, and API network/CORS checks passed.
 
-**Your latest decision:** leave only Spotify credentials blank and configure them later. Both Spotify fields are now blank locally and in the running backend; TMDb, PostgreSQL, JWT, and other settings were preserved. Combined music/movie recommendations remain unavailable until Spotify is configured and its access checks pass. No subscription or app-ownership change was made.
+**Decision at that checkpoint:** leave only Spotify credentials blank and configure them later. Both Spotify fields were blanked locally and in the running backend; TMDb, PostgreSQL, JWT, and other settings were preserved. Combined music/movie recommendations were unavailable until the October 13 update above. No subscription or app-ownership change was made by the agent.
 
 **Approved backup completed:** a private database dump was transferred off EC2 and restored successfully in an isolated local PostgreSQL 15 container. Your **$3 USD monthly AWS budget** and email alerts above **$1, $2, and $3** are created and verified. This is not a hard spending cap. Daily backups still need a retention choice. The one-time dump does not protect entries created afterward.
 
@@ -139,9 +151,9 @@ The initial `invalid_client` issue was corrected using the targeted steps below,
 
 You confirmed **Development Mode** and **Spotify Free**. Spotify's Premium requirement applies to existing Development Mode integrations from **March 9, 2026**; its later postponement of some endpoint changes did not postpone Premium. This explains why the app could previously work on Free, while its current owner plan fails the prerequisite. [Spotify's March 9 clarification](https://developer.spotify.com/blog/2026-02-06-update-on-developer-access-and-platform-security), [current quota-mode requirements](https://developer.spotify.com/documentation/web-api/concepts/quota-modes). Adding diary users to a Spotify allowlist or changing redirect URIs is not a verified fix for this application's server-side client-credentials search; do not do either speculatively.
 
-## Deferred action: add Spotify credentials later
+## Spotify credential update procedure
 
-No Spotify action is required now. Do not rerun initial `configure-secrets.ps1`, replace the entire `.env.prod`, or regenerate database/JWT secrets.
+Credentials were added and verified on October 13. The procedure below is retained for future targeted Spotify updates. Do not rerun initial `configure-secrets.ps1`, replace the entire `.env.prod`, or regenerate database/JWT secrets.
 
 When you are ready:
 

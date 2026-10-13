@@ -2,7 +2,9 @@
 
 Privacy-first journaling with end-to-end encrypted entries, offline-first sync, and intelligent music/movie recommendations.
 
-~~**Live**: https://sentimentscribe.cloud~~ [OUT OF SERVICE]  
+<!-- ~~**Live**: https://sentimentscribe.cloud~~ [OUT OF SERVICE]   -->
+
+**Live**: https://sentimentscribe.cloud
 
 ---
 

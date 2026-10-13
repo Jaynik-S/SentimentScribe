@@ -41,10 +41,6 @@ export const SongsTable = ({ songs }: SongsTableProps) => {
                   <dt>Year</dt>
                   <dd>{song.releaseYear || '-'}</dd>
                 </div>
-                <div>
-                  <dt>Popularity</dt>
-                  <dd>{song.popularityScore || '-'}</dd>
-                </div>
               </dl>
               {song.externalUrl ? (
                 <a

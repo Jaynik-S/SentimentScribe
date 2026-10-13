@@ -91,7 +91,7 @@ public class SpotifyAPIAccessObject {
             String q = "(" + keywordStr + ")" + yearClause;
             // System.out.println(q);
             String encoded = URLEncoder.encode(q, StandardCharsets.UTF_8);
-            int perRequest = 50; // Spotify limit is 50
+            int perRequest = 10;
             int maxPages = 3;
 
             for (int page = 0; page < maxPages && collected.size() < limit; page++) {
@@ -131,9 +131,8 @@ public class SpotifyAPIAccessObject {
 
                     // System.out.println("========\n" + track.toString(2) + "\n========"); // Debug print
 
-                    // Skip tracks with popularity below the minimum
-                    int popularity = track.optInt("popularity", 0);
-                    if (popularity < MIN_POPULARITY) {
+                    // Development Mode responses may omit the deprecated popularity field.
+                    if (!track.isNull("popularity") && track.optInt("popularity", 0) < MIN_POPULARITY) {
                         continue;
                     }
 
@@ -183,8 +182,9 @@ public class SpotifyAPIAccessObject {
                 coverUrl = images.getJSONObject(0).optString("url", "—");
             }
         }
-        String popularity = track.optString("popularity", "");
-        popularity = popularity + "/100";
+        String popularity = track.isNull("popularity")
+                ? "Unknown"
+                : track.optString("popularity", "") + "/100";
 
         System.out.println(songName + " by " + artistName + " (" + releaseYear + ") " + popularity); // Debug print
         return new SongRecommendation(songId, releaseYear, coverUrl, songName, artistName, popularity, externalUrl);

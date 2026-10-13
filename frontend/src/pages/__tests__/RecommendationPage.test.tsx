@@ -72,5 +72,7 @@ describe('RecommendationPage', () => {
 
     expect(await screen.findByText('Quiet Storm')).toBeInTheDocument()
     expect(screen.getByText('Night Walk')).toBeInTheDocument()
+    expect(screen.queryByText('Popularity')).not.toBeInTheDocument()
+    expect(screen.queryByText('88')).not.toBeInTheDocument()
   })
 })

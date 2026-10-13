@@ -1,5 +1,6 @@
 .env
 deploy/ec2/.env.prod
+deploy/aws/.state/
 target/
 .vscode/
 docs/files
@@ -17,6 +18,7 @@ frontend/pnpm-debug.log*
 frontend/lerna-debug.log*
 frontend/.vite/deps
 frontend/node_modules
+frontend/.npm-cache/
 frontend/dist
 frontend/dist-ssr
 frontend/*.local

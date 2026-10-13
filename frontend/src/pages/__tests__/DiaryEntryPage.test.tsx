@@ -88,7 +88,7 @@ const LocationSpy = () => {
   return <div data-testid="location">{location.pathname + location.search}</div>
 }
 
-const longText = 'a'.repeat(60)
+const longText = 'a'.repeat(100)
 const passphrase = 'correct horse'
 const params = { kdf: 'PBKDF2-SHA256', salt: 'c2FsdA==', iterations: 1 }
 
